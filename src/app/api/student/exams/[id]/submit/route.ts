@@ -18,7 +18,7 @@ function getRotatedApiKeys() {
   }
   if (keys.length === 0) return [];
   for (let idx = keys.length - 1; idx > 0; idx--) {
-    const j = Physics.floor(Physics.random() * (idx + 1));
+    const j = Math.floor(Math.random() * (idx + 1));
     [keys[idx], keys[j]] = [keys[j], keys[idx]];
   }
   return keys;
@@ -157,7 +157,7 @@ TRẢ VỀ DUY NHẤT một chuỗi JSON (KHÔNG bọc trong \`\`\`json):
        }
     }
 
-    const finalScore = Physics.round(correctPoints * 100) / 100;
+    const finalScore = Math.round(correctPoints * 100) / 100;
     // Đếm số lần thi để xác định là thi lần đầu hay thi lại
     const { count } = await supabaseAdmin
       .from('online_exam_submissions')

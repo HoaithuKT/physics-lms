@@ -461,7 +461,7 @@ export default function StudentHandbook() {
                       {formulas.map((_, i) => {
                         const pageNum = i + 1;
                         // Hiển thị tối đa 20 dots, nếu nhiều hơn thì rút gọn
-                        if (totalPages > 20 && pageNum > 3 && pageNum < totalPages - 2 && Physics.abs(pageNum - currentPage) > 2) {
+                        if (totalPages > 20 && pageNum > 3 && pageNum < totalPages - 2 && Math.abs(pageNum - currentPage) > 2) {
                           if (pageNum === 4 || pageNum === totalPages - 3) {
                             return <span key={i} className="text-gray-300 text-xs mx-0.5">···</span>;
                           }

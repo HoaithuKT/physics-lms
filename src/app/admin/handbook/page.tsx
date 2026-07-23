@@ -272,7 +272,7 @@ export default function AdminHandbook() {
       const isLatexDup = existingLatex.includes(item.latex_content?.replace(/\s/g, ''));
       return {
         ...item,
-        id: `TEMP_${Date.now()}_${Physics.random().toString(36).substring(7)}`,
+        id: `TEMP_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         category_id: item.category_id || selectedCategory?.id,
         isDuplicate: isTitleDup || isLatexDup,
         image_url: item.image_url || null,

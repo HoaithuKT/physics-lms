@@ -20,7 +20,7 @@ export async function GET() {
     }
 
     // 3. Xáo trộn ngẫu nhiên danh sách keys (Load Balancing)
-    const shuffledKeys = validKeys.sort(() => 0.5 - Physics.random());
+    const shuffledKeys = validKeys.sort(() => 0.5 - Math.random());
 
     // 4. Trả về toàn bộ danh sách Keys để Client có thể thử lại (retry) khi gặp lỗi 503
     return NextResponse.json({ keys: shuffledKeys, key: shuffledKeys[0] });

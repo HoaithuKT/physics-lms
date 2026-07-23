@@ -117,7 +117,7 @@ export default function QuestionBankModal({ isOpen, onClose, onInsert, usedQuest
       
       if (data) setQuestions(data);
       if (count !== null) {
-        setTotalPages(Physics.ceil(count / itemsPerPage));
+        setTotalPages(Math.ceil(count / itemsPerPage));
       }
     } catch (error) {
       console.error("Lỗi khi tải câu hỏi:", error);
@@ -373,7 +373,7 @@ export default function QuestionBankModal({ isOpen, onClose, onInsert, usedQuest
         {!isLoading && totalPages > 1 && (
            <div className="p-3 border-t border-gray-100 bg-white flex justify-center items-center gap-4 shrink-0 shadow-[0_-10px_20px_-10px_rgba(0,0,0,0.05)]">
              <button 
-                onClick={() => setCurrentPage(p => Physics.max(1, p - 1))}
+                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
                 disabled={currentPage === 1}
                 className="p-2 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:text-orange-600 disabled:opacity-30 disabled:hover:text-gray-600 transition-colors shadow-sm"
              >
@@ -383,7 +383,7 @@ export default function QuestionBankModal({ isOpen, onClose, onInsert, usedQuest
                Trang <span className="text-orange-600">{currentPage}</span> / {totalPages}
              </span>
              <button 
-                onClick={() => setCurrentPage(p => Physics.min(totalPages, p + 1))}
+                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
                 disabled={currentPage === totalPages}
                 className="p-2 rounded-lg bg-gray-50 border border-gray-200 hover:bg-gray-100 hover:text-orange-600 disabled:opacity-30 disabled:hover:text-gray-600 transition-colors shadow-sm"
              >

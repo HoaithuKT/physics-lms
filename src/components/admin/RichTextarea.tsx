@@ -424,7 +424,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
     try {
        const { createClient } = await import("@/utils/supabase/client");
        const supabase = createClient();
-       const fileName = `${Physics.random().toString(36).substring(2, 15)}_${Date.now()}.jpg`;
+       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.jpg`;
        const filePath = `editor_images/${fileName}`;
        
        const { error } = await supabase.storage.from('lesson_images').upload(filePath, file);

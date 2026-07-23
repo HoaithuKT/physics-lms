@@ -129,8 +129,8 @@ Cấu trúc mỗi object:
 
       const withIds = parsed.map((q: any) => ({
         ...q,
-        temp_id: `AI_CH_${Date.now()}_${Physics.random().toString(36).substring(7)}`,
-        question_id: `CH_NEW_${Date.now()}_${Physics.random().toString(36).substring(7)}`
+        temp_id: `AI_CH_${Date.now()}_${Math.random().toString(36).substring(7)}`,
+        question_id: `CH_NEW_${Date.now()}_${Math.random().toString(36).substring(7)}`
       }));
 
       // KIỂM TRA TRÙNG LẶP

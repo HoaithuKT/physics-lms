@@ -507,14 +507,14 @@ const parseMarkdownToBlocks = (content: string): Block[] => {
                     if (item.question) {
                         item.question = item.question.replace(/^(Câu|Bài)\s*\d+[\.\:\-\s]*/i, '');
                     }
-                    res.push({ id: Physics.random().toString(36).substring(7), type: 'quiz', content: item });
+                    res.push({ id: Math.random().toString(36).substring(7), type: 'quiz', content: item });
                 });
                 return res;
             } else if (data.type) {
                 if (data.question) {
                     data.question = data.question.replace(/^(Câu|Bài)\s*\d+[\.\:\-\s]*/i, '');
                 }
-                return [{ id: Physics.random().toString(36).substring(7), type: 'quiz', content: data }];
+                return [{ id: Math.random().toString(36).substring(7), type: 'quiz', content: data }];
             }
         } catch(e) {
             // Ignore and fall through to regex parsing
@@ -528,7 +528,7 @@ const parseMarkdownToBlocks = (content: string): Block[] => {
     while ((match = regex.exec(content)) !== null) {
       if (match.index > lastIndex) {
           const txt = content.substring(lastIndex, match.index).trim();
-          if (txt) res.push({ id: Physics.random().toString(36).substring(7), type: 'md', content: txt });
+          if (txt) res.push({ id: Math.random().toString(36).substring(7), type: 'md', content: txt });
       }
       try {
           const data = JSON.parse(match[1].replace(/\n$/, ''));
@@ -537,24 +537,24 @@ const parseMarkdownToBlocks = (content: string): Block[] => {
                   if (item.question) {
                       item.question = item.question.replace(/^(Câu|Bài)\s*\d+[\.\:\-\s]*/i, '');
                   }
-                  res.push({ id: Physics.random().toString(36).substring(7), type: 'quiz', content: item });
+                  res.push({ id: Math.random().toString(36).substring(7), type: 'quiz', content: item });
               });
           } else {
               if (data.question) {
                   data.question = data.question.replace(/^(Câu|Bài)\s*\d+[\.\:\-\s]*/i, '');
               }
-              res.push({ id: Physics.random().toString(36).substring(7), type: 'quiz', content: data });
+              res.push({ id: Math.random().toString(36).substring(7), type: 'quiz', content: data });
           }
       } catch(e) {
-          res.push({ id: Physics.random().toString(36).substring(7), type: 'md', content: match[0] });
+          res.push({ id: Math.random().toString(36).substring(7), type: 'md', content: match[0] });
       }
       lastIndex = match.index + match[0].length;
     }
     if (lastIndex < content.length) {
         const txt = content.substring(lastIndex).trim();
-        if (txt) res.push({ id: Physics.random().toString(36).substring(7), type: 'md', content: txt });
+        if (txt) res.push({ id: Math.random().toString(36).substring(7), type: 'md', content: txt });
     }
-    return res.length > 0 ? res : [{ id: Physics.random().toString(36).substring(7), type: 'md', content: "" }];
+    return res.length > 0 ? res : [{ id: Math.random().toString(36).substring(7), type: 'md', content: "" }];
 };
 
 const serializeBlocksToMarkdown = (blocks: Block[]): string => {
@@ -925,7 +925,7 @@ function EditorContent() {
   };
 
   const addToQueue = (file: File) => {
-    setPendingImages(prev => [...prev, { id: Physics.random().toString(36).substring(7), file, previewUrl: URL.createObjectURL(file) }]);
+    setPendingImages(prev => [...prev, { id: Math.random().toString(36).substring(7), file, previewUrl: URL.createObjectURL(file) }]);
   };
 
   const removePendingImage = (id: string) => {
@@ -1324,7 +1324,7 @@ function EditorContent() {
     try {
       const blob = await getCroppedImg(imgRef.current, crop, 'crop.jpg');
       const file = new File([blob], 'crop.jpg', { type: 'image/jpeg' });
-      const fileName = `${Physics.random().toString(36).substring(2, 15)}_${Date.now()}.jpg`;
+      const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.jpg`;
       const filePath = `editor_images/${fileName}`;
 
       const { error: uploadError } = await supabase.storage.from('lesson_images').upload(filePath, file);
@@ -1637,7 +1637,7 @@ function EditorContent() {
              <div className="flex flex-col h-full bg-gray-50 p-6 overflow-y-auto">
                 <div className="mb-6 flex justify-between items-center">
                    <h3 className="text-lg font-bold text-gray-800">Quản lý Tài liệu & Video</h3>
-                   <button onClick={() => setDocList([...docList, { id: Physics.random().toString(36).substring(7), title: '', doc_url: '', video_url: '' }])} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors">+ Thêm Mục mới</button>
+                   <button onClick={() => setDocList([...docList, { id: Math.random().toString(36).substring(7), title: '', doc_url: '', video_url: '' }])} className="bg-indigo-600 text-white px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-700 transition-colors">+ Thêm Mục mới</button>
                 </div>
                 <div className="flex flex-col gap-4 max-w-4xl">
                    {docList.map((doc: any, idx) => (
@@ -1663,7 +1663,7 @@ function EditorContent() {
                       <div className="text-center py-16 bg-white border-2 border-dashed border-gray-300 rounded-xl">
                          <div className="flex items-center justify-center gap-2 mb-3"><FileText className="w-8 h-8 text-gray-300" /><Video className="w-8 h-8 text-gray-300" /></div>
                          <p className="text-gray-500 font-medium mb-4">Chưa có tài liệu hay video nào trong mục này.</p>
-                         <button onClick={() => setDocList([{ id: Physics.random().toString(36).substring(7), title: '', doc_url: '', video_url: '' }])} className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-100 transition-colors">+ Bấm để thêm mục đầu tiên</button>
+                         <button onClick={() => setDocList([{ id: Math.random().toString(36).substring(7), title: '', doc_url: '', video_url: '' }])} className="bg-indigo-50 text-indigo-700 px-4 py-2 rounded-lg text-sm font-bold shadow-sm hover:bg-indigo-100 transition-colors">+ Bấm để thêm mục đầu tiên</button>
                       </div>
                    )}
                 </div>

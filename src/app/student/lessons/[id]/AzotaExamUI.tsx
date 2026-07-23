@@ -371,7 +371,7 @@ export default function AzotaExamUI({
   const recalculateAndSaveScore = async (newScores: Record<string, { earned: number; max: number }>) => {
     let total = 0;
     Object.values(newScores).forEach(s => total += s.earned);
-    const finalScore = Physics.round(total * 100) / 100;
+    const finalScore = Math.round(total * 100) / 100;
     setScore(finalScore);
     
     if (lessonId) {
@@ -398,7 +398,7 @@ export default function AzotaExamUI({
       const result = await gradeOneEssay(qIndex, data, maxScoreForQ);
       setGradingStatus(prev => ({ ...prev, [qIndex]: { isGrading: false, result } }));
       
-      const earned = typeof result.scoreNumber === 'number' ? Physics.min(result.scoreNumber, maxScoreForQ) : 0;
+      const earned = typeof result.scoreNumber === 'number' ? Math.min(result.scoreNumber, maxScoreForQ) : 0;
       setQuestionScores(prev => {
         const newScores = { ...prev, [qIndex]: { earned, max: maxScoreForQ } };
         recalculateAndSaveScore(newScores);
@@ -530,7 +530,7 @@ export default function AzotaExamUI({
 
           const previousResult = gradingStatus[qIndex]?.result;
           if (previousResult && typeof previousResult.scoreNumber === 'number' && !previousResult.error && !previousResult.feedback?.includes('Lỗi')) {
-              const earned = Physics.min(previousResult.scoreNumber, task.maxScore);
+              const earned = Math.min(previousResult.scoreNumber, task.maxScore);
               essayTotalScore += earned;
               updatedScores[qIndex] = { earned, max: task.maxScore };
               setGradingStatus(prev => ({ ...prev, [qIndex]: { isGrading: false, result: previousResult } }));
@@ -550,11 +550,11 @@ export default function AzotaExamUI({
           try {
             const result = await gradeOneEssay(qIndex, task.data, task.maxScore);
             setGradingStatus(prev => ({ ...prev, [qIndex]: { isGrading: false, result } }));
-            const earned = typeof result.scoreNumber === 'number' ? Physics.min(result.scoreNumber, task.maxScore) : 0;
+            const earned = typeof result.scoreNumber === 'number' ? Math.min(result.scoreNumber, task.maxScore) : 0;
             updatedScores[qIndex] = { earned, max: task.maxScore };
             essayTotalScore += earned;
             setQuestionScores({ ...updatedScores });
-            setScore(Physics.round((immediateScore + essayTotalScore) * 100) / 100);
+            setScore(Math.round((immediateScore + essayTotalScore) * 100) / 100);
             finalGradingDetails.push({
                qIndex: task.qIndex,
                type: 'essay',
@@ -587,7 +587,7 @@ export default function AzotaExamUI({
 
       setQuestionScores(updatedScores);
       const globalImages = Object.values(answers).flatMap((ans: any) => ans.images || []);
-      const finalScore = Physics.round((immediateScore + essayTotalScore) * 100) / 100;
+      const finalScore = Math.round((immediateScore + essayTotalScore) * 100) / 100;
       setScore(finalScore);
       setTotalScore(10);
       setIsGradingAll(false);
@@ -601,7 +601,7 @@ export default function AzotaExamUI({
       }
     } else {
       const globalImages = Object.values(answers).flatMap((ans: any) => ans.images || []);
-      const finalScore = Physics.round(immediateScore * 100) / 100;
+      const finalScore = Math.round(immediateScore * 100) / 100;
       setScore(finalScore);
       setTotalScore(10);
       setIsGradingAll(false);
@@ -866,7 +866,7 @@ export default function AzotaExamUI({
                              <div className={`mt-2 p-4 rounded-xl border flex items-start gap-3 ${isPerfect ? 'bg-green-50 text-green-800 border-green-200' : (sc > 0 ? 'bg-orange-50 text-orange-800 border-orange-200' : 'bg-red-50 text-red-800 border-red-200')}`}>
                                 {isPerfect ? <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0"/> : <AlertCircle className="w-5 h-5 mt-0.5 shrink-0"/>}
                                 <div className="flex-1">
-                                   <p className="font-bold">Đúng {Physics.round(sc * 4)}/4 mệnh đề</p>
+                                   <p className="font-bold">Đúng {Math.round(sc * 4)}/4 mệnh đề</p>
                                 </div>
                              </div>
                           );

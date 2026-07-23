@@ -174,7 +174,7 @@ export default function StudentExamRoom() {
   };
 
   const formatTime = (seconds: number) => {
-    const m = Physics.floor(seconds / 60);
+    const m = Math.floor(seconds / 60);
     const s = seconds % 60;
     return `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
@@ -383,7 +383,7 @@ export default function StudentExamRoom() {
                         <div className="w-20 text-center text-green-600">ĐÚNG</div>
                         <div className="w-20 text-center text-red-500">SAI</div>
                       </div>
-                      {Array.from({ length: Physics.max(4, currentQ.options?.length || 4) }).map((_, optIdx: number) => {
+                      {Array.from({ length: Math.max(4, currentQ.options?.length || 4) }).map((_, optIdx: number) => {
                         const opt = currentQ.options?.[optIdx] || `Ý ${String.fromCharCode(97 + optIdx)})`;
                         const currentArr = answers[currentQuestionIdx] || [null, null, null, null];
                         const isTrue = currentArr[optIdx] === true;
@@ -454,14 +454,14 @@ export default function StudentExamRoom() {
 
               <div className="flex items-center justify-between">
                 <button 
-                  onClick={() => setCurrentQuestionIdx(prev => Physics.max(0, prev - 1))}
+                  onClick={() => setCurrentQuestionIdx(prev => Math.max(0, prev - 1))}
                   disabled={currentQuestionIdx === 0}
                   className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-slate-600 bg-white border border-slate-200 hover:bg-slate-50 disabled:opacity-50"
                 >
                   <ArrowLeft className="w-5 h-5" /> Câu trước
                 </button>
                 <button 
-                  onClick={() => setCurrentQuestionIdx(prev => Physics.min(questions.length - 1, prev + 1))}
+                  onClick={() => setCurrentQuestionIdx(prev => Math.min(questions.length - 1, prev + 1))}
                   disabled={currentQuestionIdx === questions.length - 1}
                   className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50"
                 >

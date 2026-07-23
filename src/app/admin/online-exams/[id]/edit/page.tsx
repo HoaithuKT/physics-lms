@@ -623,7 +623,7 @@ export default function EditOnlineExamPage() {
                             <div className="w-16 text-center text-green-600">Đúng</div>
                             <div className="w-16 text-center text-red-500">Sai</div>
                           </div>
-                          {Array.from({ length: Physics.max(4, q.options?.length || 4) }).map((_, i: number) => {
+                          {Array.from({ length: Math.max(4, q.options?.length || 4) }).map((_, i: number) => {
                             const opt = q.options?.[i] || "";
                             const isTrue = q.answers && q.answers[i] === true;
                             const isFalse = q.answers && q.answers[i] === false;

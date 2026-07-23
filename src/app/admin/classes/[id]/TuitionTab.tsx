@@ -161,12 +161,12 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
         const enrollDate = new Date(en.profiles.enrollment_date);
         if (enrollDate.getMonth() + 1 === month && enrollDate.getFullYear() === year) {
           const dayEnrolled = enrollDate.getDate();
-          missedBeforeEnrollment = Physics.round((dayEnrolled - 1) / currentMonthDays * standardSessions);
+          missedBeforeEnrollment = Math.round((dayEnrolled - 1) / currentMonthDays * standardSessions);
         }
       }
       
       const totalMissed = teacherAbsent + missedBeforeEnrollment;
-      const calculatedDiscount = Physics.round(totalMissed * feePerSession);
+      const calculatedDiscount = Math.round(totalMissed * feePerSession);
       
       const current = newTuitionData[stId] || { base_fee: classInfo?.tuition_fee || 0, old_debt: 0, paid_amount: 0, status: 'UNPAID' };
       

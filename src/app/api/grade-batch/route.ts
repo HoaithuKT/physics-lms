@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Máy chủ chưa được cấu hình bất kỳ API Key nào." }, { status: 500 });
     }
 
-    const startIndex = Physics.floor(Physics.random() * keys.length);
+    const startIndex = Math.floor(Math.random() * keys.length);
     const rotatedKeys = [...keys.slice(startIndex), ...keys.slice(0, startIndex)];
 
     const prompt = `Bạn là một Giáo viên Vật lý cực kỳ tận tâm và chấm bài rất chuẩn xác.

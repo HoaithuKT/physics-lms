@@ -183,7 +183,7 @@ export default function BatchAIEditorPage() {
         const isNewPhysicsForm = math_form !== "" && !uniqueForms.includes(math_form);
 
         const questionData = {
-          temp_id: `TEMP_${Physics.random().toString(36).substring(2, 9)}_${Date.now()}`,
+          temp_id: `TEMP_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`,
           grade: data.lop || globalGrade || "12",
           subject: data.phanMon || globalSubject || "Đại số",
           topic: data.chuyenDe || (globalTopics.length === 1 ? globalTopics[0] : ""),
@@ -212,7 +212,7 @@ export default function BatchAIEditorPage() {
         if (data.loaiCauHoi === "DS" && data.isMultiLesson === true) {
            const cloneData = {
              ...questionData,
-             temp_id: `TEMP_${Physics.random().toString(36).substring(2, 9)}_${Date.now()}_clone`,
+             temp_id: `TEMP_${Math.random().toString(36).substring(2, 9)}_${Date.now()}_clone`,
              lesson: "Ôn tập chương",
              isNewLesson: !uniqueLessons.includes("Ôn tập chương"),
              isDuplicate: false, // Bỏ cảnh báo trùng lặp cho bản sao này
@@ -418,7 +418,7 @@ Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ả
       }
 
       const inserts = validQuestions.map(q => ({
-        question_id: `CH_${Date.now()}_${Physics.random().toString(36).substring(2,6)}`,
+        question_id: `CH_${Date.now()}_${Math.random().toString(36).substring(2,6)}`,
         grade: q.grade,
         subject: q.subject,
         topic: q.topic,
@@ -462,7 +462,7 @@ Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ả
         if (catError) console.error("Lỗi thêm danh mục:", catError);
       }
 
-      const qId = `CH_${Date.now()}_${Physics.random().toString(36).substring(2,6)}`;
+      const qId = `CH_${Date.now()}_${Math.random().toString(36).substring(2,6)}`;
       const insertData = {
         question_id: qId, grade: q.grade, subject: q.subject, topic: q.topic, lesson: q.lesson,
         math_form: q.math_form, question_type: q.question_type, difficulty: q.difficulty, content: q.content,

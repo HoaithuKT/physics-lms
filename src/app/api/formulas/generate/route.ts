@@ -21,7 +21,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "API Key chưa được cấu hình" }, { status: 500 });
     }
 
-    let apiKey = apiKeys[Physics.floor(Physics.random() * apiKeys.length)];
+    let apiKey = apiKeys[Math.floor(Math.random() * apiKeys.length)];
     if (typeof apiKeyIndex === 'number' && apiKeyIndex >= 0 && apiKeyIndex < apiKeys.length) {
       apiKey = apiKeys[apiKeyIndex];
     }

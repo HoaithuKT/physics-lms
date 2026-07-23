@@ -91,7 +91,7 @@ export default function GradeSubmissionPage() {
       return submission.score;
     }
 
-    return Physics.round(total * 100) / 100;
+    return Math.round(total * 100) / 100;
   };
 
   const handleSave = async () => {

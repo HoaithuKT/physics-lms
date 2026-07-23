@@ -12,7 +12,7 @@ function getRotatedApiKeys() {
   }
   if (keys.length === 0) return [];
   for (let idx = keys.length - 1; idx > 0; idx--) {
-    const j = Physics.floor(Physics.random() * (idx + 1));
+    const j = Math.floor(Math.random() * (idx + 1));
     [keys[idx], keys[j]] = [keys[j], keys[idx]];
   }
   return keys;

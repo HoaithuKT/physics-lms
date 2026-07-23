@@ -120,7 +120,7 @@ export default function QuestionsPage() {
       if (data) setQuestions(data);
       if (count !== null) {
         setTotalCount(count);
-        setTotalPages(Physics.ceil(count / itemsPerPage));
+        setTotalPages(Math.ceil(count / itemsPerPage));
       }
     } catch (error) {
       console.error("Lỗi khi tải câu hỏi:", error);
@@ -155,7 +155,7 @@ export default function QuestionsPage() {
             const chunk = rowsToImport.slice(i, i + chunkSize);
             
             const supabaseRecords = chunk.map(row => ({
-              question_id: row[0] || `CH_NEW_${Date.now()}_${Physics.random()}`,
+              question_id: row[0] || `CH_NEW_${Date.now()}_${Math.random()}`,
               grade: row[1] || "",
               subject: row[2] || "",
               topic: row[3] || "",
@@ -489,14 +489,14 @@ export default function QuestionsPage() {
           </div>
           <div className="flex gap-2">
             <button 
-              onClick={() => setCurrentPage(p => Physics.max(1, p - 1))}
+              onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="px-4 py-2 bg-white border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors shadow-sm"
             >
               Trang trước
             </button>
             <button 
-              onClick={() => setCurrentPage(p => Physics.min(totalPages, p + 1))}
+              onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="px-4 py-2 bg-white border border-gray-200 rounded-xl font-bold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-colors shadow-sm"
             >

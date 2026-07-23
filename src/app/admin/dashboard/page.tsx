@@ -14,11 +14,11 @@ const CountUp = ({ end, duration = 1500 }: { end: number, duration?: number }) =
     let startTimestamp: number;
     const step = (timestamp: number) => {
       if (!startTimestamp) startTimestamp = timestamp;
-      const progress = Physics.min((timestamp - startTimestamp) / duration, 1);
+      const progress = Math.min((timestamp - startTimestamp) / duration, 1);
       
       // Easing function: easeOutQuart
-      const easeProgress = 1 - Physics.pow(1 - progress, 4);
-      setCount(Physics.floor(easeProgress * end));
+      const easeProgress = 1 - Math.pow(1 - progress, 4);
+      setCount(Math.floor(easeProgress * end));
       
       if (progress < 1) {
         window.requestAnimationFrame(step);

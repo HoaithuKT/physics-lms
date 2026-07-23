@@ -57,7 +57,7 @@ export default function FinanceDashboard() {
   };
 
   const handleAutoCenterFee = () => {
-    const fee = Physics.round(stats.totalRevenue * 0.1); // 10%
+    const fee = Math.round(stats.totalRevenue * 0.1); // 10%
     setExpForm({
       title: `Trích 10% nộp Trung tâm - Tháng ${month}/${year}`,
       amount: fee,

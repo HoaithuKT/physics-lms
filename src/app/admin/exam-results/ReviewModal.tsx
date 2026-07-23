@@ -98,7 +98,7 @@ export default function ReviewModal({ isOpen, onClose, resultData, onUpdateSucce
     gradingDetails.forEach((d: any) => {
       total += Number(d.score || 0);
     });
-    setEditedScore(Physics.round(total * 100) / 100);
+    setEditedScore(Math.round(total * 100) / 100);
   };
 
   const handleCustomAIGrade = async (index: number, detail: any) => {
@@ -230,7 +230,7 @@ NHIỆM VỤ CỦA BẠN:
         const scale = img.width > MAX_WIDTH ? MAX_WIDTH / img.width : 1;
         const w = img.width * scale;
         const h = img.height * scale;
-        maxWidth = Physics.max(maxWidth, w);
+        maxWidth = Math.max(maxWidth, w);
         totalHeight += h;
         return { img, w, h };
       });

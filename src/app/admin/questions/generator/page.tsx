@@ -110,7 +110,7 @@ Trả về DUY NHẤT một mảng JSON (không bọc trong markdown tick \`\`\`
       ];
 
       for (let i = allOptions.length - 1; i > 0; i--) {
-        const j = Physics.floor(Physics.random() * (i + 1));
+        const j = Math.floor(Math.random() * (i + 1));
         [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
       }
 
@@ -190,7 +190,7 @@ Trả về DUY NHẤT một mảng JSON (không bọc trong markdown tick \`\`\`
       const keys = keyData.keys;
       if (!keys || keys.length === 0) throw new Error("Không tìm thấy danh sách khóa API.");
       
-      const shuffledKeys = [...keys].sort(() => Physics.random() - 0.5);
+      const shuffledKeys = [...keys].sort(() => Math.random() - 0.5);
       let result;
       let success = false;
       let lastError;

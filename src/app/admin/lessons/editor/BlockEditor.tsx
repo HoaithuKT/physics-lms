@@ -170,7 +170,7 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
          }
 
          return {
-            id: Physics.random().toString(36).substring(7),
+            id: Math.random().toString(36).substring(7),
             type: 'quiz',
             content
          };
@@ -198,7 +198,7 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
   const addBlock = (index: number, type: 'md' | 'quiz') => {
       const newBlocks = [...blocks];
       const newBlock: Block = {
-          id: Physics.random().toString(36).substring(7),
+          id: Math.random().toString(36).substring(7),
           type,
           content: type === 'md' ? "" : { type: 'multiple_choice', question: "", options: ["A", "B", "C", "D"], answerIndex: 0 }
       };

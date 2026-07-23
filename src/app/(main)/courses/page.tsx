@@ -381,7 +381,7 @@ export default function CoursePlayerPage() {
                 <div className="flex-1 flex flex-col relative w-full max-w-5xl mx-auto">
                   {(() => {
                     const slides = activeModule.content_markdown.split('---').map((s: string) => s.trim()).filter(Boolean);
-                    const totalSlides = Physics.max(slides.length, 1);
+                    const totalSlides = Math.max(slides.length, 1);
                     const activeSlideContent = slides[currentSlideIndex] || "*Chưa có nội dung để hiển thị...*";
                     const hasQuiz = activeSlideContent.includes('```quiz');
                     const isQuizPassed = passedSlides[currentSlideIndex];

@@ -156,7 +156,7 @@ const fetchImageWithDimensions = async (url: string): Promise<{buffer: Uint8Arra
     if (width > MAX_WIDTH) {
        const ratio = MAX_WIDTH / width;
        width = MAX_WIDTH;
-       height = Physics.round(height * ratio);
+       height = Math.round(height * ratio);
     }
 
     return { buffer, width, height };

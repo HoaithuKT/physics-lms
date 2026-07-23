@@ -239,7 +239,7 @@ export default function ExamsManagerPage() {
         
         if (data && data.length > 0) {
           // Bước 1: Trộn ngẫu nhiên
-          const shuffled = data.sort(() => 0.5 - Physics.random());
+          const shuffled = data.sort(() => 0.5 - Math.random());
           // Bước 2: Ưu tiên các câu chưa dùng hoặc dùng ít
           const sorted = shuffled.sort((a, b) => (a.usage_count || 0) - (b.usage_count || 0));
           const selected = sorted.slice(0, item.count);
