@@ -1,7 +1,7 @@
 import { BookOpen, Clock } from "lucide-react";
 
 export const metadata = {
-  title: 'Tài khoản chờ duyệt - LMS TOÁN THẦY PHÚC',
+  title: 'Tài khoản chờ duyệt - LMS Lí Cô Thu',
 };
 
 export default function PendingApprovalPage() {

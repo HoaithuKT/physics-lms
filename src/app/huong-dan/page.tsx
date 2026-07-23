@@ -12,7 +12,7 @@ export default function GuidePage() {
           <div className="relative z-10 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold mb-2">Hướng dẫn sử dụng Hệ thống</h1>
-              <p className="text-orange-100">LMS TOÁN THẦY PHÚC - Dành cho Học sinh</p>
+              <p className="text-orange-100">LMS Lí Cô Thu - Dành cho Học sinh</p>
             </div>
             <Link 
               href="/"

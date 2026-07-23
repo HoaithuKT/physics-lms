@@ -2,8 +2,8 @@ import { createClient } from '@/utils/supabase/server';
 import RegisterForm from './register-form';
 
 export const metadata = {
-  title: 'Đăng ký Tài khoản - LMS TOÁN THẦY PHÚC',
-  description: 'Đăng ký tài khoản học sinh cho nền tảng LMS TOÁN THẦY PHÚC',
+  title: 'Đăng ký Tài khoản - LMS Lí Cô Thu',
+  description: 'Đăng ký tài khoản học sinh cho nền tảng LMS Lí Cô Thu',
 };
 
 export default async function RegisterPage() {

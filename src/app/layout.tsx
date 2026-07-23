@@ -13,7 +13,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "LMS VẬT LÝ CÔ HOÀI THU",
+  title: "LMS Lí Cô Thu",
   description: "Hệ thống quản lý học tập Môn Vật lý",
   manifest: "/manifest.json",
   appleWebApp: {
