@@ -1,0 +1,154 @@
+"use client";
+
+import { useState } from "react";
+import { BookOpen, Loader2, FileText, PlayCircle } from "lucide-react";
+import { createClient } from "@/utils/supabase/client";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+
+export default function LoginPage() {
+  const [identifier, setIdentifier] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!identifier || !password) {
+      setError("Vui lòng nhập tài khoản và mật khẩu");
+      return;
+    }
+    
+    setIsLoading(true);
+    setError("");
+
+    try {
+      // Nếu không có '@', mặc định là username -> thêm @edu.local
+      let email = identifier.trim();
+      if (!email.includes("@")) {
+        email = `${email}@edu.local`;
+      }
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (signInError) {
+        throw new Error("Tài khoản hoặc mật khẩu không chính xác");
+      }
+
+      // Xác định Role của User để chuyển hướng
+      const userId = data?.user?.id;
+      if (userId) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', userId)
+          .single();
+
+        if (profile?.role === 'admin' || profile?.role === 'teacher') {
+          router.push("/admin/dashboard");
+        } else {
+          router.push("/student/dashboard");
+        }
+      } else {
+        router.push("/student/dashboard"); // Fallback
+      }
+      
+      router.refresh();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-orange-50 p-4 font-sans">
+      <div className="w-full max-w-md bg-white rounded-3xl shadow-xl overflow-hidden border border-orange-50">
+        
+        {/* Header Section */}
+        <div className="bg-orange-600 p-8 text-center text-white flex flex-col items-center">
+          <img src="/logo.jpg" alt="Digital Physics by Phuc" className="w-56 h-auto object-contain mx-auto mb-4 rounded-3xl shadow-xl border-4 border-white/10" />
+          <p className="text-orange-100 text-sm font-medium tracking-wide mt-2">Nền tảng Quản lý Học tập Môn Vật lý</p>
+        </div>
+
+        {/* Form Section */}
+        <div className="p-8">
+          <h2 className="text-xl font-bold text-gray-800 mb-6 text-center">Đăng nhập tài khoản</h2>
+          
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 text-red-600 rounded-xl text-sm font-medium border border-red-100 text-center">
+              {error}
+            </div>
+          )}
+
+          <form className="space-y-5" onSubmit={handleLogin}>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Email / Tài khoản</label>
+              <input 
+                type="text" 
+                value={identifier}
+                onChange={(e) => setIdentifier(e.target.value)}
+                placeholder="Ví dụ: hocsinh01 hoặc hocsinh@gmail.com"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-600/20 focus:border-orange-600 transition-colors"
+                disabled={isLoading}
+              />
+            </div>
+            
+            <div>
+              <div className="flex justify-between items-center mb-1">
+                <label className="block text-sm font-medium text-gray-700">Mật khẩu</label>
+                <a href="#" className="text-xs text-orange-600 hover:underline font-medium">Quên mật khẩu?</a>
+              </div>
+              <input 
+                type="password" 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                className="w-full px-4 py-3 rounded-xl border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-600/20 focus:border-orange-600 transition-colors"
+                disabled={isLoading}
+              />
+            </div>
+
+            <button 
+              type="submit"
+              disabled={isLoading}
+              className="w-full bg-orange-600 text-white font-semibold py-3.5 rounded-xl hover:bg-orange-700 transition-colors shadow-md shadow-orange-600/20 mt-2 flex items-center justify-center gap-2 disabled:opacity-70"
+            >
+              {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+              {isLoading ? "Đang đăng nhập..." : "Đăng nhập"}
+            </button>
+          </form>
+
+          <div className="mt-8 pt-6 border-t border-gray-100 text-center space-y-4">
+            <div className="flex flex-col sm:flex-row justify-center items-center gap-3 sm:gap-4 bg-orange-50/50 p-3 rounded-xl border border-orange-100">
+              <Link href="/huong-dan" className="text-sm font-medium text-orange-600 hover:text-orange-700 flex items-center gap-2 hover:underline">
+                <FileText className="w-4 h-4"/> 
+                Hướng dẫn (Văn bản)
+              </Link>
+              <span className="hidden sm:inline text-orange-200">|</span>
+              <a href="https://youtu.be/I_o9_16INwo" target="_blank" rel="noopener noreferrer" className="text-sm font-medium text-orange-600 hover:text-orange-700 flex items-center gap-2 hover:underline">
+                <PlayCircle className="w-4 h-4"/> 
+                Video hướng dẫn
+              </a>
+            </div>
+
+            <p className="text-sm text-gray-500">
+              Học sinh mới? {" "}
+              <Link href="/register" className="text-orange-600 font-bold hover:underline">
+                Đăng ký tài khoản
+              </Link>
+            </p>
+            <p className="text-xs text-gray-400">
+              hoặc <a href="#" className="hover:text-gray-600 underline">Liên hệ giáo viên để nhận mã lớp</a>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
