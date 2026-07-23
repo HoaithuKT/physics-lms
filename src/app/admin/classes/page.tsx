@@ -297,7 +297,7 @@ export default function AdminClassesPage() {
                     <div className="w-full bg-gray-100 rounded-full h-1.5 overflow-hidden">
                       <div 
                         className={`h-full rounded-full transition-all duration-500 ${isFull ? 'bg-red-500' : 'bg-orange-500'}`} 
-                        style={{ width: `${Physics.min((enrolled / max) * 100, 100)}%` }}
+                        style={{ width: `${Math.min((enrolled / max) * 100, 100)}%` }}
                       />
                     </div>
                   </div>
