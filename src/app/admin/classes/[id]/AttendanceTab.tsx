@@ -2,30 +2,75 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Check, Download, Save, Loader2, ImageIcon, Trash2, Calendar, AlertCircle } from "lucide-react";
-import html2canvas from "html2canvas";
 import { getSessions, createSession, deleteSession, getAttendance, saveBulkAttendance } from "./attendanceActions";
 
-const Base64Image = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
-  const [base64, setBase64] = useState<string>('');
-  useEffect(() => {
-    let isMounted = true;
-    fetch(src)
-      .then(r => r.blob())
-      .then(b => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (isMounted) setBase64(reader.result as string);
-        };
-        reader.readAsDataURL(b);
-      }).catch(e => {
-        console.error(e);
-        if (isMounted) setBase64(src); // fallback
+/* Hàm chụp ảnh tương thích iOS Safari */
+async function imgToBase64(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    const blob = await res.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return url;
+  }
+}
+
+async function captureElement(element: HTMLElement): Promise<string> {
+  const imgs = element.querySelectorAll('img');
+  const base64Map = new Map<string, string>();
+  await Promise.all(
+    Array.from(imgs).map(async (img) => {
+      const src = img.src;
+      if (src && !src.startsWith('data:') && !base64Map.has(src)) {
+        base64Map.set(src, await imgToBase64(src));
+      }
+    })
+  );
+  const html2canvas = (await import('html2canvas')).default;
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    scrollX: 0,
+    scrollY: 0,
+    onclone: (_doc: Document, clonedEl: HTMLElement) => {
+      clonedEl.style.position = 'static';
+      clonedEl.style.opacity = '1';
+      clonedEl.style.overflow = 'visible';
+      clonedEl.querySelectorAll('img').forEach((img: HTMLImageElement) => {
+        const b64 = base64Map.get(img.src);
+        if (b64) { img.src = b64; img.removeAttribute('crossorigin'); }
       });
-    return () => { isMounted = false; };
-  }, [src]);
-  if (!base64) return <div className={className} />;
-  return <img src={base64} alt={alt} className={className} crossOrigin="anonymous" />;
-};
+    }
+  });
+  return canvas.toDataURL('image/png');
+}
+
+async function downloadOrShare(dataUrl: string, fileName: string) {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+    (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+  if (isIOS && navigator.share) {
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], fileName, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName });
+        return;
+      }
+    } catch (e) { console.log('Share failed:', e); }
+  }
+  const link = document.createElement("a");
+  link.download = fileName;
+  link.href = dataUrl;
+  link.click();
+}
 
 export default function AttendanceTab({ classId, enrollments, className }: { classId: string, enrollments: any[], className?: string }) {
   const printRef = useRef<HTMLDivElement>(null);
@@ -175,42 +220,11 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
     if (!printRef.current) return;
     setSaving(true); 
     try {
-      // Dummy render no longer strictly necessary with html2canvas
-      await html2canvas(printRef.current, { scale: 1, useCORS: true });
-
-      const canvas = await html2canvas(printRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff"
-      });
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = await captureElement(printRef.current);
       const fileName = `Bao_cao_diem_danh_${className || 'Lop'}_${getTodayString()}.png`;
-      
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
-      if (isIOS && navigator.share) {
-        try {
-          const res = await fetch(dataUrl);
-          const blob = await res.blob();
-          const file = new File([blob], fileName, { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-             await navigator.share({
-               files: [file],
-               title: fileName,
-             });
-             setSaving(false);
-             return;
-          }
-        } catch (error) {
-          console.log('Error sharing:', error);
-        }
-      }
-
-      const link = document.createElement("a");
-      link.download = fileName;
-      link.href = dataUrl;
-      link.click();
+      await downloadOrShare(dataUrl, fileName);
     } catch (err) {
-      console.error(err);
+      console.error('Export attendance image error:', err);
       alert("Đã xảy ra lỗi khi xuất ảnh! Vui lòng thử lại.");
     }
     setSaving(false);
@@ -352,20 +366,19 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
       </div>
 
       {/* GIAO DIỆN BÁO CÁO ẨN ĐỂ XUẤT ẢNH */}
-      <div className="fixed top-[200vh] left-0 pointer-events-none -z-50">
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, overflow: 'hidden', height: 0 }}>
         <div ref={printRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
-          <div className="bg-rose-400 rounded-[2rem] p-3 shadow-xl">
-             <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
-                {/* Decoration */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-pink-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
+          <div className="bg-rose-400 rounded-[2rem] p-3">
+             <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white flex flex-col h-full relative overflow-hidden">
+                {/* Decoration - dùng gradient thay vì blur/mix-blend */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-pink-200/40 to-transparent rounded-full translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-rose-200/40 to-transparent rounded-full -translate-x-1/2 translate-y-1/2"></div>
                 
                 {/* Header Top: Logo & Title */}
                 <div className="flex flex-col items-center mb-8 relative z-10 w-full">
-                   {/* Logo Image */}
                    <div className="flex flex-col pb-4 mb-6 relative w-full items-center">
                       <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-rose-500 to-transparent rounded-full opacity-70"></div>
-                      <Base64Image src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
+                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
                    </div>
                    
                    {/* Title & Info */}

@@ -1,31 +1,102 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Loader2, DollarSign, CalendarDays, Download, CreditCard, Send, Edit, Save, ShieldAlert, ArrowRight, ImageIcon } from "lucide-react";
-import html2canvas from "html2canvas";
 import { getTuitionFees, updateTuitionFee, rolloverDebt } from "./tuitionActions";
 
-const Base64Image = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
-  const [base64, setBase64] = useState<string>('');
-  useEffect(() => {
-    let isMounted = true;
-    fetch(src)
-      .then(r => r.blob())
-      .then(b => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          if (isMounted) setBase64(reader.result as string);
-        };
-        reader.readAsDataURL(b);
-      }).catch(e => {
-        console.error(e);
-        if (isMounted) setBase64(src); // fallback
+/* =============================================
+   HÀM CHỤP ẢNH TƯƠNG THÍCH iOS SAFARI
+   - Chuyển tất cả <img> sang base64 inline (tránh CORS/cache iOS)
+   - Dùng html2canvas với onclone để fix positioning
+   - Xử lý canvas size limit trên iOS
+   ============================================= */
+async function imgToBase64(url: string): Promise<string> {
+  try {
+    const res = await fetch(url, { cache: 'no-store' });
+    const blob = await res.blob();
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => resolve(reader.result as string);
+      reader.onerror = reject;
+      reader.readAsDataURL(blob);
+    });
+  } catch {
+    return url; // fallback giữ nguyên URL gốc
+  }
+}
+
+async function captureElement(element: HTMLElement): Promise<string> {
+  // Bước 1: Thu thập tất cả ảnh trong element và chuyển sang base64
+  const imgs = element.querySelectorAll('img');
+  const base64Map = new Map<string, string>();
+  
+  await Promise.all(
+    Array.from(imgs).map(async (img) => {
+      const src = img.src;
+      if (src && !src.startsWith('data:') && !base64Map.has(src)) {
+        const b64 = await imgToBase64(src);
+        base64Map.set(src, b64);
+      }
+    })
+  );
+
+  // Bước 2: Dynamic import html2canvas (tránh lỗi SSR)
+  const html2canvas = (await import('html2canvas')).default;
+
+  // Bước 3: Chụp với onclone — trong DOM clone, thay tất cả img src bằng base64
+  const canvas = await html2canvas(element, {
+    scale: 2,
+    useCORS: true,
+    allowTaint: true,
+    backgroundColor: '#ffffff',
+    scrollX: 0,
+    scrollY: 0,
+    onclone: (clonedDoc, clonedEl) => {
+      // Đảm bảo phần tử clone visible và đúng vị trí
+      clonedEl.style.position = 'static';
+      clonedEl.style.opacity = '1';
+      clonedEl.style.pointerEvents = 'auto';
+      clonedEl.style.overflow = 'visible';
+      
+      // Thay thế tất cả img src trong clone bằng base64
+      const clonedImgs = clonedEl.querySelectorAll('img');
+      clonedImgs.forEach((img: HTMLImageElement) => {
+        const b64 = base64Map.get(img.src);
+        if (b64) {
+          img.src = b64;
+          img.removeAttribute('crossorigin');
+          img.removeAttribute('crossOrigin');
+        }
       });
-    return () => { isMounted = false; };
-  }, [src]);
-  if (!base64) return <div className={className} />;
-  return <img src={base64} alt={alt} className={className} crossOrigin="anonymous" />;
-};
+    }
+  });
+
+  return canvas.toDataURL('image/png');
+}
+
+async function downloadOrShare(dataUrl: string, fileName: string) {
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || 
+    (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+  
+  if (isIOS && navigator.share) {
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const file = new File([blob], fileName, { type: 'image/png' });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        await navigator.share({ files: [file], title: fileName });
+        return;
+      }
+    } catch (e) {
+      console.log('Share failed, falling back to download:', e);
+    }
+  }
+
+  const link = document.createElement("a");
+  link.download = fileName;
+  link.href = dataUrl;
+  link.click();
+}
 
 export default function TuitionTab({ classId, classInfo, enrollments }: { classId: string, classInfo: any, enrollments: any[] }) {
   const currentDate = new Date();
@@ -248,42 +319,11 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
     if (!printRef.current) return;
     setExportingImage(true); 
     try {
-      // Dummy render no longer strictly necessary with html2canvas, but we'll leave it in case
-      await html2canvas(printRef.current, { scale: 1, useCORS: true });
-      
-      const canvas = await html2canvas(printRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff"
-      });
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = await captureElement(printRef.current);
       const fileName = `Bao_cao_hoc_phi_Thang_${month}_${year}_Lop_${classInfo?.name}.png`;
-      
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
-      if (isIOS && navigator.share) {
-        try {
-          const res = await fetch(dataUrl);
-          const blob = await res.blob();
-          const file = new File([blob], fileName, { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-             await navigator.share({
-               files: [file],
-               title: fileName,
-             });
-             setExportingImage(false);
-             return;
-          }
-        } catch (error) {
-          console.log('Error sharing:', error);
-        }
-      }
-
-      const link = document.createElement("a");
-      link.download = fileName;
-      link.href = dataUrl;
-      link.click();
+      await downloadOrShare(dataUrl, fileName);
     } catch (err) {
-      console.error(err);
+      console.error('Export image error:', err);
       alert("Đã xảy ra lỗi khi xuất ảnh! Vui lòng thử lại.");
     }
     setExportingImage(false);
@@ -293,42 +333,11 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
     if (!printUnpaidRef.current) return;
     setExportingImage(true); 
     try {
-      // Dummy render no longer strictly necessary with html2canvas
-      await html2canvas(printUnpaidRef.current, { scale: 1, useCORS: true });
-
-      const canvas = await html2canvas(printUnpaidRef.current, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff"
-      });
-      const dataUrl = canvas.toDataURL('image/png');
+      const dataUrl = await captureElement(printUnpaidRef.current);
       const fileName = `Chua_nop_Thang_${month}_${year}_Lop_${classInfo?.name}.png`;
-      
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
-      if (isIOS && navigator.share) {
-        try {
-          const res = await fetch(dataUrl);
-          const blob = await res.blob();
-          const file = new File([blob], fileName, { type: 'image/png' });
-          if (navigator.canShare && navigator.canShare({ files: [file] })) {
-             await navigator.share({
-               files: [file],
-               title: fileName,
-             });
-             setExportingImage(false);
-             return;
-          }
-        } catch (error) {
-          console.log('Error sharing:', error);
-        }
-      }
-
-      const link = document.createElement("a");
-      link.download = fileName;
-      link.href = dataUrl;
-      link.click();
+      await downloadOrShare(dataUrl, fileName);
     } catch (err) {
-      console.error(err);
+      console.error('Export unpaid image error:', err);
       alert("Đã xảy ra lỗi khi xuất ảnh! Vui lòng thử lại.");
     }
     setExportingImage(false);
@@ -352,15 +361,11 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
     }
 
     try {
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        useCORS: true,
-        backgroundColor: "#ffffff"
-      });
+      const dataUrl = await captureElement(element as HTMLElement);
       
-      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
-      
-      if (!blob) throw new Error("Không tạo được ảnh");
+      // Chuyển dataUrl sang blob để copy vào clipboard
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
       
       await navigator.clipboard.write([
         new ClipboardItem({ 'image/png': blob })
@@ -368,7 +373,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
       
       const rawPhone = String(student.parent_phone).replace(/[^0-9]/g, '');
       
-      // Sử dụng Deep link để mở trực tiếp Zalo PC, bỏ qua tab web trung gian
+      // Sử dụng Deep link để mở trực tiếp Zalo PC
       window.location.href = `zalo://conversation?phone=${rawPhone}`;
       
     } catch (err) {
@@ -572,24 +577,22 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
         </div>
       )}
 
-      {/* GIAO DIỆN BÁO CÁO ẨN ĐỂ XUẤT ẢNH */}
-      <div className="fixed top-[200vh] left-0 pointer-events-none -z-50">
+      {/* === VÙNG ẨN: BÁO CÁO TỔNG HỢP === */}
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, overflow: 'hidden', height: 0 }}>
         <div ref={printRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
-          <div className="bg-rose-400 rounded-[2rem] p-3 shadow-xl">
-             <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
-                {/* Decoration */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-pink-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
+          <div className="bg-rose-400 rounded-[2rem] p-3">
+             <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white flex flex-col h-full relative overflow-hidden">
+                {/* Decoration - dùng gradient thay vì blur/mix-blend để tương thích iOS */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-pink-200/40 to-transparent rounded-full translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-rose-200/40 to-transparent rounded-full -translate-x-1/2 translate-y-1/2"></div>
                 
                 {/* Header Top: Logo & Title */}
                 <div className="flex flex-col items-center mb-6 relative z-10 w-full">
-                   {/* Logo Image */}
                    <div className="flex flex-col pb-3 mb-4 relative w-full items-center">
                       <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-rose-500 to-transparent rounded-full opacity-70"></div>
-                      <Base64Image src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
+                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
                    </div>
                    
-                   {/* Title & Info - Separated clearly */}
                    <div className="text-center mt-2">
                      <h1 className="text-3xl font-black text-rose-900 uppercase tracking-wider mb-4 whitespace-nowrap">
                        THÔNG BÁO HỌC PHÍ
@@ -597,7 +600,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                      <div className="text-lg font-bold text-gray-500 mb-3">
                        Tháng {month}/{year}
                      </div>
-                     <div className="inline-block bg-rose-100 text-rose-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase shadow-sm border border-rose-200 whitespace-nowrap">
+                     <div className="inline-block bg-rose-100 text-rose-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase border border-rose-200 whitespace-nowrap">
                        Lớp: {classInfo?.name || 'Chưa cập nhật'}
                      </div>
                    </div>
@@ -607,10 +610,10 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                 <div className="w-full h-0.5 bg-gradient-to-r from-rose-100 via-rose-300 to-rose-100 mb-6 rounded-full"></div>
 
                 {/* Table */}
-                <div className="bg-white rounded-2xl shadow-sm border border-rose-100 mb-8 overflow-hidden relative z-10">
+                <div className="bg-white rounded-2xl border border-rose-100 mb-8 overflow-hidden relative z-10">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="bg-rose-50/80 border-b border-rose-100">
+                      <tr className="bg-rose-50 border-b border-rose-100">
                         <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs w-20 text-center">STT</th>
                         <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs">Học Sinh</th>
                         <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs text-right w-40">Số Tiền</th>
@@ -626,7 +629,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                           const t = tuitionData[stId] || { base_fee: 0, old_debt: 0, discount: 0, paid_amount: 0, status: 'UNPAID' };
                           const totalDue = t.base_fee + t.old_debt - t.discount;
                           return (
-                            <tr key={stId} className="hover:bg-gray-50/50 transition-colors">
+                            <tr key={stId}>
                               <td className="py-2 px-3 text-center font-bold text-gray-500">{idx + 1}</td>
                               <td className="py-2 px-3">
                                 <div className="font-bold text-gray-800 text-lg uppercase">{en.profiles.full_name}</div>
@@ -652,22 +655,22 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                 </div>
 
                 {/* THÔNG TIN CHUYỂN KHOẢN */}
-                <div className="bg-blue-50/50 border-2 border-dashed border-blue-300 rounded-3xl p-6 flex items-center justify-between relative z-10 shadow-sm mt-auto mb-4 mx-2">
+                <div className="bg-rose-50 border-2 border-dashed border-rose-300 rounded-3xl p-6 flex items-center justify-between relative z-10 mt-auto mb-4 mx-2">
                    <div className="flex-1 pr-6">
-                     <h3 className="text-2xl font-black text-blue-800 uppercase tracking-widest mb-6">Thông Tin Chuyển Khoản</h3>
+                     <h3 className="text-2xl font-black text-rose-800 uppercase tracking-widest mb-6">Thông Tin Chuyển Khoản</h3>
                      <div className="space-y-4 text-xl font-bold text-gray-700">
-                       <p>Ngân hàng: <span className="text-blue-700">BIDV</span></p>
-                       <p>Số tài khoản: <span className="text-blue-700 tracking-widest text-2xl">8860010112</span></p>
-                       <p>Chủ TK: <span className="text-blue-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
+                       <p>Ngân hàng: <span className="text-rose-700">BIDV</span></p>
+                       <p>Số tài khoản: <span className="text-rose-700 tracking-widest text-2xl">8860010112</span></p>
+                       <p>Chủ TK: <span className="text-rose-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
                      </div>
-                     <div className="mt-6 bg-orange-100 text-orange-800 px-5 py-3 rounded-xl font-bold border border-orange-200 text-sm shadow-sm inline-block">
+                     <div className="mt-6 bg-pink-100 text-pink-800 px-5 py-3 rounded-xl font-bold border border-pink-200 text-sm inline-block">
                        ⚠️ PH chuyển khoản nhớ <b>CHỤP BILL</b> gửi lại để tránh nhầm lẫn nhé ạ.
                      </div>
                    </div>
                    
-                   <div className="shrink-0 bg-white border border-gray-200 rounded-2xl p-3 shadow-sm w-48 flex items-center justify-center flex-col">
+                   <div className="shrink-0 bg-white border border-gray-200 rounded-2xl p-3 w-48 flex items-center justify-center flex-col">
                      <div className="text-rose-600 font-bold text-sm mb-2 uppercase">VietQR</div>
-                     <img src="https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" crossOrigin="anonymous" className="w-full h-full object-contain rounded-xl" />
+                     <img src="https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" className="w-full h-full object-contain rounded-xl" />
                    </div>
                 </div>
 
@@ -676,14 +679,13 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
         </div>
       </div>
 
-      {/* GIAO DIỆN BÁO CÁO ẨN: CHỈ HỌC SINH CHƯA NỘP */}
-      <div className="fixed top-[200vh] left-[200vw] pointer-events-none -z-50">
+      {/* === VÙNG ẨN: BÁO CÁO CHỈ HỌC SINH CHƯA NỘP === */}
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, overflow: 'hidden', height: 0 }}>
         <div ref={printUnpaidRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
-          <div className="bg-rose-500 rounded-[2rem] p-3 shadow-xl">
-             <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
-                {/* Decoration */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-rose-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
+          <div className="bg-rose-500 rounded-[2rem] p-3">
+             <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white flex flex-col h-full relative overflow-hidden">
+                <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-rose-200/40 to-transparent rounded-full translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-gradient-to-tr from-red-200/40 to-transparent rounded-full -translate-x-1/2 translate-y-1/2"></div>
                 
                 {/* Header */}
                 <div className="flex flex-col items-center mb-6 relative z-10 w-full">
@@ -698,7 +700,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                      <div className="text-lg font-bold text-gray-500 mb-3">
                        Tháng {month}/{year}
                      </div>
-                     <div className="inline-block bg-rose-100 text-rose-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase shadow-sm border border-rose-200">
+                     <div className="inline-block bg-rose-100 text-rose-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase border border-rose-200">
                        Lớp: {classInfo?.name || 'Chưa cập nhật'}
                      </div>
                    </div>
@@ -707,10 +709,10 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                 <div className="w-full h-0.5 bg-gradient-to-r from-rose-100 via-rose-300 to-rose-100 mb-6 rounded-full"></div>
 
                 {/* Table */}
-                <div className="bg-white rounded-2xl shadow-sm border border-rose-100 mb-8 overflow-hidden relative z-10">
+                <div className="bg-white rounded-2xl border border-rose-100 mb-8 overflow-hidden relative z-10">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="bg-gray-50/80 border-b border-gray-100">
+                      <tr className="bg-gray-50 border-b border-gray-100">
                         <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs w-20 text-center">STT</th>
                         <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs">Học Sinh</th>
                         <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs text-right w-40">Số Tiền</th>
@@ -732,7 +734,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                           const totalDue = t.base_fee + t.old_debt - t.discount;
                           const remaining = totalDue - t.paid_amount;
                           return (
-                            <tr key={stId} className="hover:bg-gray-50/50 transition-colors">
+                            <tr key={stId}>
                               <td className="py-2 px-3 text-center font-bold text-gray-500">{idx + 1}</td>
                               <td className="py-2 px-3">
                                 <div className="font-bold text-gray-800 text-lg uppercase">{en.profiles.full_name}</div>
@@ -757,7 +759,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                 </div>
 
                 {/* THÔNG TIN CHUYỂN KHOẢN */}
-                <div className="bg-rose-50/50 border-2 border-dashed border-rose-300 rounded-3xl p-6 flex items-center justify-between relative z-10 shadow-sm mt-auto mb-4 mx-2">
+                <div className="bg-rose-50 border-2 border-dashed border-rose-300 rounded-3xl p-6 flex items-center justify-between relative z-10 mt-auto mb-4 mx-2">
                    <div className="flex-1 pr-6">
                      <h3 className="text-2xl font-black text-rose-800 uppercase tracking-widest mb-6">Thông Tin Chuyển Khoản</h3>
                      <div className="space-y-4 text-xl font-bold text-gray-700">
@@ -765,14 +767,14 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                        <p>Số tài khoản: <span className="text-rose-700 tracking-widest text-2xl">8860010112</span></p>
                        <p>Chủ TK: <span className="text-rose-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
                      </div>
-                     <div className="mt-6 bg-pink-100 text-pink-800 px-5 py-3 rounded-xl font-bold border border-pink-200 text-sm shadow-sm inline-block">
+                     <div className="mt-6 bg-pink-100 text-pink-800 px-5 py-3 rounded-xl font-bold border border-pink-200 text-sm inline-block">
                        ⚠️ PH chuyển khoản nhớ <b>CHỤP BILL</b> gửi lại để tránh nhầm lẫn nhé ạ.
                      </div>
                    </div>
                    
-                   <div className="shrink-0 bg-white border border-gray-200 rounded-2xl p-3 shadow-sm w-48 flex items-center justify-center flex-col">
+                   <div className="shrink-0 bg-white border border-gray-200 rounded-2xl p-3 w-48 flex items-center justify-center flex-col">
                      <div className="text-rose-600 font-bold text-sm mb-2 uppercase">VietQR</div>
-                     <Base64Image src="https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" className="w-full h-full object-contain rounded-xl" />
+                     <img src="https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" className="w-full h-full object-contain rounded-xl" />
                    </div>
                 </div>
              </div>
@@ -780,27 +782,27 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
         </div>
       </div>
 
-      {/* KHỐI ẨN: GIAO DIỆN BÁO CÁO CÁ NHÂN TỪNG HỌC SINH */}
-      <div className="fixed top-[300vh] left-0 pointer-events-none -z-50 opacity-0">
-        {enrollments.map((en, idx) => {
+      {/* === VÙNG ẨN: BÁO CÁO CÁ NHÂN TỪNG HỌC SINH === */}
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, overflow: 'hidden', height: 0 }}>
+        {enrollments.map((en) => {
           const stId = en.profiles.id;
           const t = tuitionData[stId] || { base_fee: 0, old_debt: 0, discount: 0, paid_amount: 0, status: 'UNPAID' };
           const totalDue = t.base_fee + t.old_debt - t.discount;
           
           return (
             <div key={`print-${stId}`} id={`print-tuition-${stId}`} className="w-[500px] bg-white p-0 font-sans border-0 relative mb-10">
-              <div className="bg-rose-400 rounded-3xl p-2 shadow-xl">
-                 <div className="bg-rose-50 rounded-[1.2rem] p-6 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-pink-200/50 rounded-full mix-blend-multiply filter blur-2xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-rose-200/50 rounded-full mix-blend-multiply filter blur-2xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
+              <div className="bg-rose-400 rounded-3xl p-2">
+                 <div className="bg-rose-50 rounded-[1.2rem] p-6 border-4 border-white flex flex-col h-full relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-gradient-to-bl from-pink-200/40 to-transparent rounded-full translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-rose-200/40 to-transparent rounded-full -translate-x-1/2 translate-y-1/2"></div>
                     
                     <div className="flex flex-col items-center mb-6 relative z-10 w-full">
                        <div className="flex flex-col pb-3 mb-4 w-full items-center relative">
                           <div className="absolute bottom-0 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-rose-500 to-transparent rounded-full opacity-70"></div>
-                          <Base64Image src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-24 object-contain mb-2" />
+                          <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-24 object-contain mb-2" />
                        </div>
                        <div className="text-center w-full">
-                         <h1 className="text-2xl sm:text-3xl font-black text-rose-600 uppercase tracking-wider mb-2 drop-shadow-sm whitespace-nowrap">
+                         <h1 className="text-2xl font-black text-rose-600 uppercase tracking-wider mb-2 whitespace-nowrap">
                            THÔNG BÁO HỌC PHÍ
                          </h1>
                          <div className="flex items-center justify-center gap-2 text-base font-bold text-gray-700 mb-2">
@@ -809,7 +811,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                        </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm border border-rose-100 mb-6 p-5 relative z-10">
+                    <div className="bg-white rounded-2xl border border-rose-100 mb-6 p-5 relative z-10">
                       <div className="text-center mb-4">
                          <div className="text-sm font-bold text-gray-500 uppercase">Học sinh</div>
                          <div className="text-xl font-black text-gray-800 uppercase">{en.profiles.full_name}</div>
@@ -840,19 +842,18 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                       </div>
                     </div>
 
-                    <div className="bg-rose-50/50 border-2 border-dashed border-rose-300 rounded-2xl p-4 flex flex-col items-center relative z-10 shadow-sm mt-auto mb-2">
+                    <div className="bg-rose-50 border-2 border-dashed border-rose-300 rounded-2xl p-4 flex flex-col items-center relative z-10 mt-auto mb-2">
                        <h3 className="text-lg font-black text-rose-800 uppercase tracking-widest mb-3">Thông Tin Chuyển Khoản</h3>
-                       <div className="shrink-0 bg-white border border-gray-200 rounded-xl p-2 shadow-sm w-36 mb-4 flex items-center justify-center flex-col">
+                       <div className="shrink-0 bg-white border border-gray-200 rounded-xl p-2 w-36 mb-4 flex items-center justify-center flex-col">
                          <div className="text-rose-600 font-bold text-[10px] mb-1 uppercase">VietQR</div>
-                         <Base64Image src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" className="w-full object-contain rounded-lg" />
-                         <Base64Image src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" className="w-full object-contain rounded-lg hidden" />
+                         <img src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" className="w-full object-contain rounded-lg" />
                        </div>
                        <div className="space-y-1 text-sm font-bold text-gray-700 text-center mb-3">
                          <p>Ngân hàng: <span className="text-rose-700">BIDV</span></p>
                          <p>Số tài khoản: <span className="text-rose-700 tracking-widest text-lg">8860010112</span></p>
                          <p>Chủ TK: <span className="text-rose-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
                        </div>
-                       <div className="bg-pink-100 text-pink-800 px-3 py-2 rounded-lg font-bold border border-pink-200 text-[11px] shadow-sm text-center">
+                       <div className="bg-pink-100 text-pink-800 px-3 py-2 rounded-lg font-bold border border-pink-200 text-[11px] text-center">
                          ⚠️ Nhớ <b>CHỤP BILL</b> gửi lại để cô tránh nhầm lẫn nhé.
                        </div>
                     </div>
