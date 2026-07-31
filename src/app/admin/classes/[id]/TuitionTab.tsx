@@ -12,7 +12,7 @@ import { getTuitionFees, updateTuitionFee, rolloverDebt } from "./tuitionActions
    ============================================= */
 async function imgToBase64(url: string): Promise<string> {
   try {
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url, { cache: 'no-store', mode: 'cors' });
     const blob = await res.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -20,8 +20,9 @@ async function imgToBase64(url: string): Promise<string> {
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
-  } catch {
-    return url; // fallback giữ nguyên URL gốc
+  } catch (e) {
+    console.error('imgToBase64 error for', url, e);
+    return url; // fallback
   }
 }
 
@@ -47,7 +48,7 @@ async function captureElement(element: HTMLElement): Promise<string> {
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
-    allowTaint: true,
+    allowTaint: false, // DO NOT USE true! It taints the canvas and causes iOS SecurityError on toDataURL
     backgroundColor: '#ffffff',
     scrollX: 0,
     scrollY: 0,
@@ -578,7 +579,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
       )}
 
       {/* === VÙNG ẨN: BÁO CÁO TỔNG HỢP === */}
-      <div style={{ position: 'absolute', left: '-9999px', top: 0, overflow: 'hidden', height: 0 }}>
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, opacity: 0, pointerEvents: 'none' }}>
         <div ref={printRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
           <div className="bg-rose-400 rounded-[2rem] p-3">
              <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white flex flex-col h-full relative overflow-hidden">
@@ -680,7 +681,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
       </div>
 
       {/* === VÙNG ẨN: BÁO CÁO CHỈ HỌC SINH CHƯA NỘP === */}
-      <div style={{ position: 'absolute', left: '-9999px', top: 0, overflow: 'hidden', height: 0 }}>
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, opacity: 0, pointerEvents: 'none' }}>
         <div ref={printUnpaidRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
           <div className="bg-rose-500 rounded-[2rem] p-3">
              <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white flex flex-col h-full relative overflow-hidden">
@@ -783,7 +784,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
       </div>
 
       {/* === VÙNG ẨN: BÁO CÁO CÁ NHÂN TỪNG HỌC SINH === */}
-      <div style={{ position: 'absolute', left: '-9999px', top: 0, overflow: 'hidden', height: 0 }}>
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, opacity: 0, pointerEvents: 'none' }}>
         {enrollments.map((en) => {
           const stId = en.profiles.id;
           const t = tuitionData[stId] || { base_fee: 0, old_debt: 0, discount: 0, paid_amount: 0, status: 'UNPAID' };

@@ -7,7 +7,7 @@ import { getSessions, createSession, deleteSession, getAttendance, saveBulkAtten
 /* Hàm chụp ảnh tương thích iOS Safari */
 async function imgToBase64(url: string): Promise<string> {
   try {
-    const res = await fetch(url, { cache: 'no-store' });
+    const res = await fetch(url, { cache: 'no-store', mode: 'cors' });
     const blob = await res.blob();
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
@@ -15,7 +15,8 @@ async function imgToBase64(url: string): Promise<string> {
       reader.onerror = reject;
       reader.readAsDataURL(blob);
     });
-  } catch {
+  } catch (e) {
+    console.error('imgToBase64 error for', url, e);
     return url;
   }
 }
@@ -35,7 +36,7 @@ async function captureElement(element: HTMLElement): Promise<string> {
   const canvas = await html2canvas(element, {
     scale: 2,
     useCORS: true,
-    allowTaint: true,
+    allowTaint: false,
     backgroundColor: '#ffffff',
     scrollX: 0,
     scrollY: 0,
@@ -366,7 +367,7 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
       </div>
 
       {/* GIAO DIỆN BÁO CÁO ẨN ĐỂ XUẤT ẢNH */}
-      <div style={{ position: 'absolute', left: '-9999px', top: 0, overflow: 'hidden', height: 0 }}>
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, opacity: 0, pointerEvents: 'none' }}>
         <div ref={printRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
           <div className="bg-rose-400 rounded-[2rem] p-3">
              <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white flex flex-col h-full relative overflow-hidden">
