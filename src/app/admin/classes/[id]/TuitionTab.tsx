@@ -41,9 +41,6 @@ async function captureElement(element: HTMLElement): Promise<string> {
       }
     })
   );
-
-  const html2canvas = (await import('html2canvas')).default;
-
   // Tính toán scale an toàn cho iOS (Max height ~4096px)
   const elementHeight = element.offsetHeight || 2000;
   const safeScale = elementHeight > 2000 ? 1 : 1.5;
