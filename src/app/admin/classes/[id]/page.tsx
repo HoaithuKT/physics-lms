@@ -36,7 +36,7 @@ export default function ClassDetailsPage() {
   const [isCreating, setIsCreating] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingStudent, setEditingStudent] = useState<any>(null);
-  const [editForm, setEditForm] = useState({ full_name: "", student_phone: "", school: "", parent_name: "", parent_phone: "" });
+  const [editForm, setEditForm] = useState({ full_name: "", student_phone: "", school: "", parent_name: "", parent_phone: "", enrollment_date: "" });
   const [savingEdit, setSavingEdit] = useState(false);
 
   // Excel Import
@@ -128,7 +128,8 @@ export default function ClassDetailsPage() {
       student_phone: student.student_phone || "",
       school: student.school || "",
       parent_name: student.parent_name || "",
-      parent_phone: student.parent_phone || ""
+      parent_phone: student.parent_phone || "",
+      enrollment_date: student.enrollment_date ? new Date(student.enrollment_date).toISOString().split('T')[0] : ""
     });
     setIsEditModalOpen(true);
   };
@@ -554,7 +555,10 @@ export default function ClassDetailsPage() {
                   <label className="block text-sm font-bold text-gray-700 mb-1">Họ và tên Học sinh</label>
                   <input type="text" value={editForm.full_name} onChange={e => setEditForm({...editForm, full_name: e.target.value})} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:bg-white transition-colors" />
                 </div>
-                
+                <div>
+                  <label className="block text-sm font-bold text-gray-700 mb-1">Ngày vào học</label>
+                  <input type="date" value={editForm.enrollment_date || ""} onChange={e => setEditForm({...editForm, enrollment_date: e.target.value})} className="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:outline-none focus:border-orange-500 focus:bg-white transition-colors" />
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
