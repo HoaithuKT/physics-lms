@@ -226,6 +226,9 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
     if (!printRef.current) return;
     setExportingImage(true); 
     try {
+      // Dummy render to ensure images are fully loaded into canvas context
+      await toPng(printRef.current, { cacheBust: true, pixelRatio: 1, skipFonts: true });
+      
       const dataUrl = await toPng(printRef.current, {
         cacheBust: true,
         backgroundColor: "#ffffff",
@@ -268,6 +271,9 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
     if (!printUnpaidRef.current) return;
     setExportingImage(true); 
     try {
+      // Dummy render to ensure images are fully loaded into canvas context
+      await toPng(printUnpaidRef.current, { cacheBust: true, pixelRatio: 1, skipFonts: true });
+
       const dataUrl = await toPng(printUnpaidRef.current, {
         cacheBust: true,
         backgroundColor: "#ffffff",
@@ -546,42 +552,42 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
       {/* GIAO DIỆN BÁO CÁO ẨN ĐỂ XUẤT ẢNH */}
       <div className="fixed top-[200vh] left-0 pointer-events-none -z-50">
         <div ref={printRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
-          <div className="bg-orange-500 rounded-[2rem] p-3 shadow-xl">
-             <div className="bg-orange-50 rounded-[1.5rem] p-8 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
+          <div className="bg-rose-400 rounded-[2rem] p-3 shadow-xl">
+             <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
                 {/* Decoration */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-orange-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-amber-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-pink-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
                 
                 {/* Header Top: Logo & Title */}
                 <div className="flex flex-col items-center mb-6 relative z-10 w-full">
                    {/* Logo Image */}
                    <div className="flex flex-col pb-3 mb-4 relative w-full items-center">
-                      <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-orange-500 to-transparent rounded-full opacity-70"></div>
-                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
+                      <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-rose-500 to-transparent rounded-full opacity-70"></div>
+                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" loading="eager" className="h-32 object-contain mb-2" />
                    </div>
                    
                    {/* Title & Info - Separated clearly */}
                    <div className="text-center mt-2">
-                     <h1 className="text-3xl font-black text-gray-800 uppercase tracking-wider mb-4 whitespace-nowrap">
+                     <h1 className="text-3xl font-black text-rose-900 uppercase tracking-wider mb-4 whitespace-nowrap">
                        THÔNG BÁO HỌC PHÍ
                      </h1>
                      <div className="text-lg font-bold text-gray-500 mb-3">
                        Tháng {month}/{year}
                      </div>
-                     <div className="inline-block bg-blue-100 text-blue-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase shadow-sm border border-blue-200">
+                     <div className="inline-block bg-rose-100 text-rose-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase shadow-sm border border-rose-200 whitespace-nowrap">
                        Lớp: {classInfo?.name || 'Chưa cập nhật'}
                      </div>
                    </div>
                 </div>
 
                 {/* Divider */}
-                <div className="w-full h-0.5 bg-gradient-to-r from-orange-100 via-orange-300 to-orange-100 mb-6 rounded-full"></div>
+                <div className="w-full h-0.5 bg-gradient-to-r from-rose-100 via-rose-300 to-rose-100 mb-6 rounded-full"></div>
 
                 {/* Table */}
-                <div className="bg-white rounded-2xl shadow-sm border border-orange-100 mb-8 overflow-hidden relative z-10">
+                <div className="bg-white rounded-2xl shadow-sm border border-rose-100 mb-8 overflow-hidden relative z-10">
                   <table className="w-full text-left">
                     <thead>
-                      <tr className="bg-gray-50/80 border-b border-gray-100">
+                      <tr className="bg-rose-50/80 border-b border-rose-100">
                         <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs w-20 text-center">STT</th>
                         <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs">Học Sinh</th>
                         <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs text-right w-40">Số Tiền</th>
@@ -728,22 +734,22 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                 </div>
 
                 {/* THÔNG TIN CHUYỂN KHOẢN */}
-                <div className="bg-blue-50/50 border-2 border-dashed border-blue-300 rounded-3xl p-6 flex items-center justify-between relative z-10 shadow-sm mt-auto mb-4 mx-2">
+                <div className="bg-rose-50/50 border-2 border-dashed border-rose-300 rounded-3xl p-6 flex items-center justify-between relative z-10 shadow-sm mt-auto mb-4 mx-2">
                    <div className="flex-1 pr-6">
-                     <h3 className="text-2xl font-black text-blue-800 uppercase tracking-widest mb-6">Thông Tin Chuyển Khoản</h3>
+                     <h3 className="text-2xl font-black text-rose-800 uppercase tracking-widest mb-6">Thông Tin Chuyển Khoản</h3>
                      <div className="space-y-4 text-xl font-bold text-gray-700">
-                       <p>Ngân hàng: <span className="text-blue-700">BIDV</span></p>
-                       <p>Số tài khoản: <span className="text-blue-700 tracking-widest text-2xl">8860010112</span></p>
-                       <p>Chủ TK: <span className="text-blue-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
+                       <p>Ngân hàng: <span className="text-rose-700">BIDV</span></p>
+                       <p>Số tài khoản: <span className="text-rose-700 tracking-widest text-2xl">8860010112</span></p>
+                       <p>Chủ TK: <span className="text-rose-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
                      </div>
-                     <div className="mt-6 bg-orange-100 text-orange-800 px-5 py-3 rounded-xl font-bold border border-orange-200 text-sm shadow-sm inline-block">
+                     <div className="mt-6 bg-pink-100 text-pink-800 px-5 py-3 rounded-xl font-bold border border-pink-200 text-sm shadow-sm inline-block">
                        ⚠️ PH chuyển khoản nhớ <b>CHỤP BILL</b> gửi lại để tránh nhầm lẫn nhé ạ.
                      </div>
                    </div>
                    
                    <div className="shrink-0 bg-white border border-gray-200 rounded-2xl p-3 shadow-sm w-48 flex items-center justify-center flex-col">
                      <div className="text-rose-600 font-bold text-sm mb-2 uppercase">VietQR</div>
-                     <img src="https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" crossOrigin="anonymous" className="w-full h-full object-contain rounded-xl" />
+                     <img src="https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" loading="eager" crossOrigin="anonymous" className="w-full h-full object-contain rounded-xl" />
                    </div>
                 </div>
              </div>
@@ -760,18 +766,18 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
           
           return (
             <div key={`print-${stId}`} id={`print-tuition-${stId}`} className="w-[500px] bg-white p-0 font-sans border-0 relative mb-10">
-              <div className="bg-orange-500 rounded-3xl p-2 shadow-xl">
-                 <div className="bg-orange-50 rounded-[1.2rem] p-6 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-48 h-48 bg-orange-200/50 rounded-full mix-blend-multiply filter blur-2xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-amber-200/50 rounded-full mix-blend-multiply filter blur-2xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
+              <div className="bg-rose-400 rounded-3xl p-2 shadow-xl">
+                 <div className="bg-rose-50 rounded-[1.2rem] p-6 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-48 h-48 bg-pink-200/50 rounded-full mix-blend-multiply filter blur-2xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
+                    <div className="absolute bottom-0 left-0 w-48 h-48 bg-rose-200/50 rounded-full mix-blend-multiply filter blur-2xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
                     
                     <div className="flex flex-col items-center mb-6 relative z-10 w-full">
                        <div className="flex flex-col pb-3 mb-4 w-full items-center relative">
-                          <div className="absolute bottom-0 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent rounded-full opacity-70"></div>
-                          <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-24 object-contain mb-2" />
+                          <div className="absolute bottom-0 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-rose-500 to-transparent rounded-full opacity-70"></div>
+                          <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" loading="eager" className="h-24 object-contain mb-2" />
                        </div>
                        <div className="text-center w-full">
-                         <h1 className="text-2xl sm:text-3xl font-black text-orange-600 uppercase tracking-wider mb-2 drop-shadow-sm whitespace-nowrap">
+                         <h1 className="text-2xl sm:text-3xl font-black text-rose-600 uppercase tracking-wider mb-2 drop-shadow-sm whitespace-nowrap">
                            THÔNG BÁO HỌC PHÍ
                          </h1>
                          <div className="flex items-center justify-center gap-2 text-base font-bold text-gray-700 mb-2">
@@ -780,11 +786,11 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                        </div>
                     </div>
 
-                    <div className="bg-white rounded-2xl shadow-sm border border-orange-100 mb-6 p-5 relative z-10">
+                    <div className="bg-white rounded-2xl shadow-sm border border-rose-100 mb-6 p-5 relative z-10">
                       <div className="text-center mb-4">
                          <div className="text-sm font-bold text-gray-500 uppercase">Học sinh</div>
                          <div className="text-xl font-black text-gray-800 uppercase">{en.profiles.full_name}</div>
-                         <div className="text-xs font-bold text-blue-700 mt-1 uppercase">{classInfo?.name || ''}</div>
+                         <div className="text-xs font-bold text-rose-700 mt-1 uppercase whitespace-nowrap">{classInfo?.name || ''}</div>
                       </div>
                       
                       <div className="space-y-3">
@@ -801,29 +807,30 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                          {t.discount > 0 && (
                            <div className="flex justify-between items-center border-b border-gray-50 pb-2">
                               <span className="text-gray-500 font-medium text-sm">Giảm trừ</span>
-                              <span className="font-bold text-orange-600">-{t.discount.toLocaleString('vi-VN')} đ</span>
+                              <span className="font-bold text-rose-600">-{t.discount.toLocaleString('vi-VN')} đ</span>
                            </div>
                          )}
                          <div className="flex justify-between items-center pt-2">
                             <span className="text-gray-800 font-black uppercase">Cần thanh toán</span>
-                            <span className="font-black text-orange-700 text-2xl">{totalDue.toLocaleString('vi-VN')} đ</span>
+                            <span className="font-black text-rose-700 text-2xl">{totalDue.toLocaleString('vi-VN')} đ</span>
                          </div>
                       </div>
                     </div>
 
-                    <div className="bg-blue-50/50 border-2 border-dashed border-blue-300 rounded-2xl p-4 flex flex-col items-center relative z-10 shadow-sm mt-auto mb-2">
-                       <h3 className="text-lg font-black text-blue-800 uppercase tracking-widest mb-3">Thông Tin Chuyển Khoản</h3>
+                    <div className="bg-rose-50/50 border-2 border-dashed border-rose-300 rounded-2xl p-4 flex flex-col items-center relative z-10 shadow-sm mt-auto mb-2">
+                       <h3 className="text-lg font-black text-rose-800 uppercase tracking-widest mb-3">Thông Tin Chuyển Khoản</h3>
                        <div className="shrink-0 bg-white border border-gray-200 rounded-xl p-2 shadow-sm w-36 mb-4 flex items-center justify-center flex-col">
                          <div className="text-rose-600 font-bold text-[10px] mb-1 uppercase">VietQR</div>
-                         <img src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" crossOrigin="anonymous" className="w-full object-contain rounded-lg" />
+                         <img src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" loading="eager" crossOrigin="anonymous" className="w-full object-contain rounded-lg" />
+                         <img src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" loading="eager" crossOrigin="anonymous" className="w-full object-contain rounded-lg hidden" />
                        </div>
                        <div className="space-y-1 text-sm font-bold text-gray-700 text-center mb-3">
-                         <p>Ngân hàng: <span className="text-blue-700">BIDV</span></p>
-                         <p>Số tài khoản: <span className="text-blue-700 tracking-widest text-lg">8860010112</span></p>
-                         <p>Chủ TK: <span className="text-blue-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
+                         <p>Ngân hàng: <span className="text-rose-700">BIDV</span></p>
+                         <p>Số tài khoản: <span className="text-rose-700 tracking-widest text-lg">8860010112</span></p>
+                         <p>Chủ TK: <span className="text-rose-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
                        </div>
-                       <div className="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg font-bold border border-orange-200 text-[11px] shadow-sm text-center">
-                         ⚠️ Nhớ <b>CHỤP BILL</b> gửi lại để thầy tránh nhầm lẫn nhé.
+                       <div className="bg-pink-100 text-pink-800 px-3 py-2 rounded-lg font-bold border border-pink-200 text-[11px] shadow-sm text-center">
+                         ⚠️ Nhớ <b>CHỤP BILL</b> gửi lại để cô tránh nhầm lẫn nhé.
                        </div>
                     </div>
                  </div>

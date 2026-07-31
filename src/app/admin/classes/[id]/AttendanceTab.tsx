@@ -153,6 +153,9 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
     if (!printRef.current) return;
     setSaving(true); 
     try {
+      // Dummy render to ensure images are fully loaded into canvas context
+      await toPng(printRef.current, { cacheBust: true, pixelRatio: 1, skipFonts: true });
+
       const dataUrl = await toPng(printRef.current, {
         cacheBust: true,
         backgroundColor: "#ffffff",
@@ -329,23 +332,23 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
       {/* GIAO DIỆN BÁO CÁO ẨN ĐỂ XUẤT ẢNH */}
       <div className="fixed top-[200vh] left-0 pointer-events-none -z-50">
         <div ref={printRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
-          <div className="bg-amber-500 rounded-[2rem] p-3 shadow-xl">
-             <div className="bg-amber-50 rounded-[1.5rem] p-8 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
+          <div className="bg-rose-400 rounded-[2rem] p-3 shadow-xl">
+             <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
                 {/* Decoration */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-amber-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-orange-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-pink-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-rose-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
                 
                 {/* Header Top: Logo & Title */}
                 <div className="flex flex-col items-center mb-8 relative z-10 w-full">
                    {/* Logo Image */}
                    <div className="flex flex-col pb-4 mb-6 relative w-full items-center">
-                      <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-amber-500 to-transparent rounded-full opacity-70"></div>
-                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
+                      <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-rose-500 to-transparent rounded-full opacity-70"></div>
+                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" loading="eager" className="h-32 object-contain mb-2" />
                    </div>
                    
                    {/* Title & Info */}
                    <div className="text-center">
-                     <h1 className="text-5xl font-black text-orange-700 uppercase tracking-widest mb-4 drop-shadow-sm">
+                     <h1 className="text-5xl font-black text-rose-900 uppercase tracking-widest mb-4 drop-shadow-sm">
                        THÔNG BÁO ĐIỂM DANH
                      </h1>
                      <div className="flex items-center justify-center gap-4 text-xl font-bold text-gray-700 mb-4">
@@ -355,14 +358,14 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                            : new Date(sessions.find(s => s.id === selectedSessionId)?.session_date || Date.now()).toLocaleDateString('vi-VN')
                        }
                      </div>
-                     <div className="inline-block bg-amber-100 text-amber-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase shadow-sm border border-amber-200">
+                     <div className="inline-block bg-rose-100 text-rose-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase shadow-sm border border-rose-200 whitespace-nowrap">
                        Lớp: {className || 'Chưa cập nhật'}
                      </div>
                    </div>
                 </div>
 
                 {/* Summary Table */}
-                <div className="bg-white rounded-2xl shadow-sm border border-amber-100 mb-6 overflow-hidden relative z-10">
+                <div className="bg-white rounded-2xl shadow-sm border border-rose-100 mb-6 overflow-hidden relative z-10">
                   <table className="w-full text-center">
                     <thead>
                       <tr className="bg-gray-50/50">
@@ -375,7 +378,7 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                     <tbody className="divide-x divide-gray-100 border-t border-gray-100">
                       <tr>
                         <td className="py-4 text-3xl font-black text-gray-800">{enrollments.length}</td>
-                        <td className="py-4 text-3xl font-black text-orange-600">{enrollments.filter(en => attendance[en.profiles.id]?.status === 'PRESENT').length}</td>
+                        <td className="py-4 text-3xl font-black text-green-600">{enrollments.filter(en => attendance[en.profiles.id]?.status === 'PRESENT').length}</td>
                         <td className="py-4 text-3xl font-black text-orange-500">{enrollments.filter(en => attendance[en.profiles.id]?.status === 'EXCUSED_ABSENCE').length}</td>
                         <td className="py-4 text-3xl font-black text-rose-600">{enrollments.filter(en => attendance[en.profiles.id]?.status === 'UNEXCUSED_ABSENCE').length}</td>
                       </tr>
