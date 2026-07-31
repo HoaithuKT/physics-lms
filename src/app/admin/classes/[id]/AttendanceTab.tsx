@@ -316,19 +316,10 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                 
                 {/* Header Top: Logo & Title */}
                 <div className="flex flex-col items-center mb-8 relative z-10 w-full">
-                   {/* Logo Text */}
+                   {/* Logo Image */}
                    <div className="flex flex-col pb-4 mb-6 relative w-full items-center">
                       <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-amber-500 to-transparent rounded-full opacity-70"></div>
-                      <h2 className="text-4xl font-black text-amber-800 tracking-tight uppercase flex items-center gap-3">
-                        <span className="text-amber-400">✦</span>
-                        <span>
-                          <span className="text-red-600 text-5xl leading-none font-serif">T</span>OÁN
-                          <span className="text-red-600 text-5xl leading-none font-serif ml-1">T</span>HẦY
-                          <span className="text-red-600 text-5xl leading-none font-serif ml-1">P</span>HÚC
-                        </span>
-                        <span className="text-amber-400">✦</span>
-                      </h2>
-                      <div className="text-xs text-amber-700 tracking-[0.3em] font-bold mt-2 text-center whitespace-nowrap">NƠI KHƠI NGUỒN ĐAM MÊ</div>
+                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
                    </div>
                    
                    {/* Title & Info */}

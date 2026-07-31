@@ -512,19 +512,10 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                 
                 {/* Header Top: Logo & Title */}
                 <div className="flex flex-col items-center mb-6 relative z-10 w-full">
-                   {/* Logo Text */}
+                   {/* Logo Image */}
                    <div className="flex flex-col pb-3 mb-4 relative w-full items-center">
                       <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-orange-500 to-transparent rounded-full opacity-70"></div>
-                      <h2 className="text-4xl font-black text-orange-800 tracking-tight uppercase flex items-center gap-3">
-                        <span className="text-orange-400">✦</span>
-                        <span>
-                          <span className="text-red-600 text-5xl leading-none font-serif">V</span>ẬT LÍ
-                          <span className="text-red-600 text-5xl leading-none font-serif ml-1">C</span>Ô
-                          <span className="text-red-600 text-5xl leading-none font-serif ml-1">T</span>HU
-                        </span>
-                        <span className="text-orange-400">✦</span>
-                      </h2>
-                      <div className="text-xs text-orange-700 tracking-[0.3em] font-bold mt-2 text-center whitespace-nowrap">NƠI KHƠI NGUỒN ĐAM MÊ</div>
+                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
                    </div>
                    
                    {/* Title & Info - Separated clearly */}
@@ -628,16 +619,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                 <div className="flex flex-col items-center mb-6 relative z-10 w-full">
                    <div className="flex flex-col pb-3 mb-4 relative w-full items-center">
                       <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-rose-500 to-transparent rounded-full opacity-70"></div>
-                      <h2 className="text-4xl font-black text-rose-800 tracking-tight uppercase flex items-center gap-3">
-                        <span className="text-rose-400">✦</span>
-                        <span>
-                          <span className="text-red-600 text-5xl leading-none font-serif">V</span>ẬT LÍ
-                          <span className="text-red-600 text-5xl leading-none font-serif ml-1">C</span>Ô
-                          <span className="text-red-600 text-5xl leading-none font-serif ml-1">T</span>HU
-                        </span>
-                        <span className="text-rose-400">✦</span>
-                      </h2>
-                      <div className="text-xs text-rose-700 tracking-[0.3em] font-bold mt-2 text-center whitespace-nowrap">NƠI KHƠI NGUỒN ĐAM MÊ</div>
+                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
                    </div>
                    <div className="text-center mt-2">
                      <h1 className="text-3xl font-black text-gray-800 uppercase tracking-wider mb-4 whitespace-nowrap">
@@ -746,16 +728,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                     <div className="flex flex-col items-center mb-6 relative z-10 w-full">
                        <div className="flex flex-col pb-3 mb-4 w-full items-center relative">
                           <div className="absolute bottom-0 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent rounded-full opacity-70"></div>
-                          <h2 className="text-2xl font-black text-orange-800 tracking-tight uppercase whitespace-nowrap flex items-center gap-2">
-                            <span className="text-orange-400">✦</span>
-                            <span>
-                              <span className="text-red-600 text-3xl leading-none font-serif">V</span>ẬT LÍ
-                              <span className="text-red-600 text-3xl leading-none font-serif ml-1">C</span>Ô
-                              <span className="text-red-600 text-3xl leading-none font-serif ml-1">T</span>HU
-                            </span>
-                            <span className="text-orange-400">✦</span>
-                          </h2>
-                          <div className="text-[9px] text-orange-700 tracking-[0.2em] font-bold mt-1.5 text-center whitespace-nowrap">NƠI KHƠI NGUỒN ĐAM MÊ</div>
+                          <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-24 object-contain mb-2" />
                        </div>
                        <div className="text-center w-full">
                          <h1 className="text-2xl sm:text-3xl font-black text-orange-600 uppercase tracking-wider mb-2 drop-shadow-sm whitespace-nowrap">
