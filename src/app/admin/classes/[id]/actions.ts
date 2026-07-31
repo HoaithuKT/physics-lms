@@ -197,3 +197,18 @@ export async function createAndEnrollNewStudent(classId: string, studentData: an
     return { success: false, error: err.message };
   }
 }
+
+export async function getAllGlobalEnrollments() {
+  const { data, error } = await supabaseAdmin
+    .from('enrollments')
+    .select(`
+      class_id, student_id,
+      profiles (id, full_name, student_phone, parent_name, parent_phone)
+    `);
+    
+  if (error) {
+    console.error("Lỗi lấy danh sách học sinh toàn hệ thống:", error);
+    return [];
+  }
+  return data || [];
+}

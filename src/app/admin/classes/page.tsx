@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { Plus, Users, BookOpen, Trash2, Edit2, Loader2, Calendar, DollarSign, Search, X } from "lucide-react";
+import { Plus, Users, BookOpen, Trash2, Edit2, Loader2, Calendar, DollarSign, Search, X, FileDown } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { getEnrollmentCounts } from "./[id]/actions";
+import { getEnrollmentCounts, getAllGlobalEnrollments } from "./[id]/actions";
 
 export default function AdminClassesPage() {
   const [classes, setClasses] = useState<any[]>([]);
@@ -22,6 +22,7 @@ export default function AdminClassesPage() {
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const [editingClassId, setEditingClassId] = useState<string | null>(null);
   
   // Form State
@@ -163,6 +164,260 @@ export default function AdminClassesPage() {
     c.name?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const handleExportAllClasses = async () => {
+    const monthStr = prompt("Nhập THÁNG cần xuất báo cáo (VD: 7):", (new Date().getMonth() + 1).toString());
+    if (!monthStr) return;
+    const yearStr = prompt("Nhập NĂM cần xuất báo cáo (VD: 2026):", new Date().getFullYear().toString());
+    if (!yearStr) return;
+    
+    const month = parseInt(monthStr);
+    const year = parseInt(yearStr);
+    if (isNaN(month) || isNaN(year) || month < 1 || month > 12) return alert("Tháng/Năm không hợp lệ!");
+
+    setIsExporting(true);
+    try {
+      const [{ data: fees, error: feesError }, enrollments] = await Promise.all([
+        supabase.from('tuition_fees').select('*').eq('month', month).eq('year', year),
+        getAllGlobalEnrollments()
+      ]);
+        
+      if (feesError) throw feesError;
+      if (!fees) throw new Error("Không thể tải dữ liệu học phí");
+
+      const ExcelJS = (await import('exceljs')).default;
+      const { saveAs } = await import('file-saver');
+      
+      const workbook = new ExcelJS.Workbook();
+      
+      // ============ SHEET 1: TỔNG HỢP CÁC LỚP ============
+      const sheet = workbook.addWorksheet(`Tổng Hợp T${month}`);
+
+      sheet.columns = [
+        { header: 'STT', key: 'stt', width: 6 },
+        { header: 'Tên Lớp', key: 'name', width: 20 },
+        { header: 'Khóa học', key: 'course', width: 25 },
+        { header: 'Sĩ số', key: 'total', width: 10 },
+        { header: 'Học phí cơ bản', key: 'base', width: 18 },
+        { header: 'HS đã nộp', key: 'paid', width: 12 },
+        { header: 'HS còn nợ', key: 'unpaid', width: 12 },
+        { header: 'Tổng tiền ĐÃ THU', key: 'totalPaid', width: 20 },
+        { header: '% trích TT (10%)', key: 'tt', width: 20 },
+        { header: 'Còn lại của GV', key: 'gv', width: 20 },
+      ];
+
+      sheet.getRow(1).eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF0D9488' } };
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+      });
+
+      let sumPaid = 0;
+      let sumTotal = 0;
+      let sumPaidStudents = 0;
+      let sumUnpaidStudents = 0;
+
+      classes.forEach((cls, idx) => {
+        const classFees = fees.filter(f => f.class_id === cls.id);
+        const totalPaid = classFees.reduce((sum, f) => sum + (f.paid_amount || 0), 0);
+        const totalPaidStudents = classFees.filter(f => (f.paid_amount || 0) > 0 || f.status === 'PAID').length;
+        const totalStudents = enrollmentCounts.get(cls.id) || 0;
+
+        sumPaid += totalPaid;
+        sumTotal += totalStudents;
+        sumPaidStudents += totalPaidStudents;
+        sumUnpaidStudents += (totalStudents - totalPaidStudents);
+
+        sheet.addRow({
+          stt: idx + 1,
+          name: cls.name,
+          course: coursesMap.get(cls.course_id) || "",
+          total: totalStudents,
+          base: cls.tuition_fee || 0,
+          paid: totalPaidStudents,
+          unpaid: totalStudents - totalPaidStudents,
+          totalPaid: totalPaid,
+          tt: totalPaid * 0.1,
+          gv: totalPaid * 0.9
+        });
+      });
+
+      const sumRow = sheet.addRow({
+        name: 'TỔNG CỘNG',
+        total: sumTotal,
+        paid: sumPaidStudents,
+        unpaid: sumUnpaidStudents,
+        totalPaid: sumPaid,
+        tt: sumPaid * 0.1,
+        gv: sumPaid * 0.9
+      });
+      sumRow.font = { bold: true };
+      sumRow.eachCell((cell) => {
+         cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF3F4F6' } };
+      });
+
+      sheet.eachRow((row, rowNumber) => {
+        if (rowNumber > 1) {
+          row.eachCell((cell, colNumber) => {
+            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            if ([5, 8, 9, 10].includes(colNumber)) { cell.numFmt = '#,##0'; }
+            if ([1, 4, 6, 7].includes(colNumber)) { cell.alignment = { horizontal: 'center' }; }
+          });
+        }
+      });
+
+      // ============ SHEET NỢ HỌC PHÍ TỔNG ============
+      const uSheet = workbook.addWorksheet(`DS Nợ T${month}`);
+
+      uSheet.columns = [
+        { header: 'STT', key: 'stt', width: 6 },
+        { header: 'Tên Học sinh', key: 'name', width: 25 },
+        { header: 'SĐT Học sinh', key: 'phone', width: 15 },
+        { header: 'Tên Phụ huynh', key: 'parent', width: 25 },
+        { header: 'SĐT Phụ huynh', key: 'parentPhone', width: 15 },
+        { header: 'Lớp đang học', key: 'className', width: 20 },
+        { header: 'Khóa học', key: 'course', width: 25 },
+        { header: 'Học phí nợ (Dự kiến)', key: 'debt', width: 22 },
+        { header: 'Ghi chú', key: 'note', width: 20 },
+      ];
+
+      uSheet.getRow(1).eachCell((cell) => {
+        cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFDC2626' } };
+        cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+        cell.alignment = { vertical: 'middle', horizontal: 'center' };
+        cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+      });
+
+      let debtStt = 1;
+      (enrollments || []).forEach(en => {
+        const cls = classes.find(c => c.id === en.class_id);
+        if (!cls) return;
+
+        const profile = en.profiles as any;
+        if (!profile) return;
+
+        const feeRecord = (fees || []).find(f => f.class_id === en.class_id && f.student_id === profile.id);
+        const isPaid = feeRecord && (feeRecord.status === 'PAID' || (feeRecord.paid_amount || 0) > 0);
+        
+        if (!isPaid) {
+          const debtAmount = feeRecord 
+            ? ((feeRecord.base_fee || 0) + (feeRecord.old_debt || 0) - (feeRecord.discount || 0))
+            : (cls.tuition_fee || 0);
+
+          uSheet.addRow({
+            stt: debtStt++,
+            name: profile.full_name || "",
+            phone: profile.student_phone || "",
+            parent: profile.parent_name || "",
+            parentPhone: profile.parent_phone || "",
+            className: cls.name,
+            course: coursesMap.get(cls.course_id) || "",
+            debt: debtAmount,
+            note: ""
+          });
+        }
+      });
+
+      uSheet.eachRow((row, rowNumber) => {
+        if (rowNumber > 1) {
+          row.eachCell((cell, colNumber) => {
+            cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+            if (colNumber === 8) {
+              cell.numFmt = '#,##0';
+              cell.font = { color: { argb: 'FFDC2626' }, bold: true };
+            }
+            if ([1, 6].includes(colNumber)) { cell.alignment = { horizontal: 'center' }; }
+          });
+        }
+      });
+
+      // ============ CÁC SHEET CHI TIẾT THEO TỪNG LỚP ============
+      const classesToExport = classes.filter(cls => (enrollmentCounts.get(cls.id) || 0) > 0);
+      
+      classesToExport.forEach(cls => {
+        const classEnrollments = (enrollments || []).filter(en => en.class_id === cls.id);
+        if (classEnrollments.length === 0) return;
+        
+        let sheetName = cls.name.replace(/[\[\]\*\\\/\?]/g, '').trim(); 
+        if (sheetName.length > 30) sheetName = sheetName.substring(0, 30);
+        let count = 1;
+        let finalSheetName = sheetName;
+        while (workbook.getWorksheet(finalSheetName)) {
+           finalSheetName = `${sheetName}_${count}`;
+           count++;
+        }
+
+        const cSheet = workbook.addWorksheet(finalSheetName);
+        cSheet.columns = [
+          { header: 'STT', key: 'stt', width: 6 },
+          { header: 'Tên Học sinh', key: 'name', width: 25 },
+          { header: 'SĐT Học sinh', key: 'phone', width: 15 },
+          { header: 'Tên Phụ huynh', key: 'parent', width: 25 },
+          { header: 'SĐT Phụ huynh', key: 'parentPhone', width: 15 },
+          { header: 'Trạng thái', key: 'status', width: 15 },
+          { header: 'Số tiền Đã Nộp', key: 'paidAmount', width: 20 },
+          { header: 'Học phí nợ (Dự kiến)', key: 'debt', width: 22 },
+        ];
+
+        cSheet.getRow(1).eachCell((cell) => {
+          cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF2563EB' } }; // bg-blue-600
+          cell.font = { bold: true, color: { argb: 'FFFFFFFF' } };
+          cell.alignment = { vertical: 'middle', horizontal: 'center' };
+          cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+        });
+
+        let stt = 1;
+        classEnrollments.forEach(en => {
+          const profile = en.profiles as any;
+          if (!profile) return;
+
+          const feeRecord = (fees || []).find(f => f.class_id === en.class_id && f.student_id === profile.id);
+          const isPaid = feeRecord && (feeRecord.status === 'PAID' || (feeRecord.paid_amount || 0) > 0);
+          
+          let debtAmount = 0;
+          if (!isPaid) {
+            debtAmount = feeRecord 
+              ? ((feeRecord.base_fee || 0) + (feeRecord.old_debt || 0) - (feeRecord.discount || 0))
+              : (cls.tuition_fee || 0);
+          }
+
+          const row = cSheet.addRow({
+            stt: stt++,
+            name: profile.full_name || "",
+            phone: profile.student_phone || "",
+            parent: profile.parent_name || "",
+            parentPhone: profile.parent_phone || "",
+            status: isPaid ? "Đã nộp" : "Chưa nộp",
+            paidAmount: isPaid ? (feeRecord.paid_amount || 0) : 0,
+            debt: isPaid ? 0 : debtAmount,
+          });
+          
+          if (!isPaid) {
+             row.getCell('status').font = { color: { argb: 'FFEF4444' }, bold: true };
+          } else {
+             row.getCell('status').font = { color: { argb: 'FF10B981' }, bold: true };
+          }
+        });
+
+        cSheet.eachRow((row, rowNumber) => {
+          if (rowNumber > 1) {
+            row.eachCell((cell, colNumber) => {
+              cell.border = { top: { style: 'thin' }, left: { style: 'thin' }, bottom: { style: 'thin' }, right: { style: 'thin' } };
+              if ([7, 8].includes(colNumber)) { cell.numFmt = '#,##0'; }
+              if ([1, 6].includes(colNumber)) { cell.alignment = { horizontal: 'center' }; }
+            });
+          }
+        });
+      });
+      
+      const buffer = await workbook.xlsx.writeBuffer();
+      saveAs(new Blob([buffer]), `Bao_Cao_Hoc_Phi_Tat_Ca_Lop_T${month}_${year}.xlsx`);
+    } catch (e: any) {
+      alert("Lỗi xuất Excel: " + e.message);
+    }
+    setIsExporting(false);
+  };
+
   return (
     <div className="p-8 w-full">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
@@ -173,24 +428,34 @@ export default function AdminClassesPage() {
           </h1>
           <p className="text-gray-500 mt-2 font-medium">Tổ chức lớp học, sắp xếp học sinh và quản lý lịch học.</p>
         </div>
-        <button 
-          onClick={() => {
-            setEditingClassId(null);
-            setClassName("");
-            setGradeId("");
-            setCourseId("");
-            setSchedule("");
-            setStartDate("");
-            setTuitionFee("0");
-            setSessionsPerMonth("8");
-            setMaxStudents("30");
-            setIsModalOpen(true);
-          }}
-          className="flex items-center gap-2 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-orange-700 hover:shadow-lg hover:shadow-orange-600/20 transition-all active:scale-95"
-        >
-          <Plus size={20} strokeWidth={2.5} />
-          <span>Tạo lớp học mới</span>
-        </button>
+        <div className="flex gap-3">
+          <button 
+            onClick={handleExportAllClasses}
+            disabled={isExporting}
+            className="flex items-center gap-2 bg-green-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-green-700 hover:shadow-lg hover:shadow-green-600/20 transition-all active:scale-95 disabled:opacity-50"
+          >
+            {isExporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <FileDown size={20} strokeWidth={2.5} />}
+            <span>Xuất Excel Báo Cáo</span>
+          </button>
+          <button 
+            onClick={() => {
+              setEditingClassId(null);
+              setClassName("");
+              setGradeId("");
+              setCourseId("");
+              setSchedule("");
+              setStartDate("");
+              setTuitionFee("0");
+              setSessionsPerMonth("8");
+              setMaxStudents("30");
+              setIsModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-orange-700 hover:shadow-lg hover:shadow-orange-600/20 transition-all active:scale-95"
+          >
+            <Plus size={20} strokeWidth={2.5} />
+            <span>Tạo lớp học mới</span>
+          </button>
+        </div>
       </div>
 
       <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 mb-6 flex items-center gap-4">
