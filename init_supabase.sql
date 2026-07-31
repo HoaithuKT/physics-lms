@@ -126,7 +126,7 @@ CREATE TABLE public.classes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   name TEXT NOT NULL,
   grade_level_category_id UUID REFERENCES public.categories(id),
-  course_id UUID REFERENCES public.courses(id),
+  course_id UUID REFERENCES public.courses(id) ON DELETE SET NULL,
   teacher_id UUID REFERENCES public.profiles(id),
   status TEXT DEFAULT 'active',
   max_students INTEGER DEFAULT 30,
