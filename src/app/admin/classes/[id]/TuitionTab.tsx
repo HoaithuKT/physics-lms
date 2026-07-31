@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Loader2, DollarSign, CalendarDays, Download, CreditCard, Send, Edit, Save, ShieldAlert, ArrowRight, ImageIcon } from "lucide-react";
 import { getTuitionFees, updateTuitionFee, rolloverDebt } from "./tuitionActions";
+import html2canvas from "html2canvas-pro";
 
 /* =============================================
    HÀM CHỤP ẢNH TƯƠNG THÍCH iOS SAFARI
@@ -41,12 +42,15 @@ async function captureElement(element: HTMLElement): Promise<string> {
     })
   );
 
-  // Bước 2: Dynamic import html2canvas (tránh lỗi SSR)
   const html2canvas = (await import('html2canvas')).default;
+
+  // Tính toán scale an toàn cho iOS (Max height ~4096px)
+  const elementHeight = element.offsetHeight || 2000;
+  const safeScale = elementHeight > 2000 ? 1 : 1.5;
 
   // Bước 3: Chụp với onclone — trong DOM clone, thay tất cả img src bằng base64
   const canvas = await html2canvas(element, {
-    scale: 2,
+    scale: safeScale,
     useCORS: true,
     allowTaint: false, // DO NOT USE true! It taints the canvas and causes iOS SecurityError on toDataURL
     backgroundColor: '#ffffff',
@@ -323,9 +327,9 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
       const dataUrl = await captureElement(printRef.current);
       const fileName = `Bao_cao_hoc_phi_Thang_${month}_${year}_Lop_${classInfo?.name}.png`;
       await downloadOrShare(dataUrl, fileName);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Export image error:', err);
-      alert("Đã xảy ra lỗi khi xuất ảnh! Vui lòng thử lại.");
+      alert(`Đã xảy ra lỗi khi xuất ảnh! Chi tiết: ${err.message || 'Unknown error'}`);
     }
     setExportingImage(false);
   };
@@ -337,9 +341,9 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
       const dataUrl = await captureElement(printUnpaidRef.current);
       const fileName = `Chua_nop_Thang_${month}_${year}_Lop_${classInfo?.name}.png`;
       await downloadOrShare(dataUrl, fileName);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Export unpaid image error:', err);
-      alert("Đã xảy ra lỗi khi xuất ảnh! Vui lòng thử lại.");
+      alert(`Đã xảy ra lỗi khi xuất ảnh! Chi tiết: ${err.message || 'Unknown error'}`);
     }
     setExportingImage(false);
   };
@@ -579,7 +583,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
       )}
 
       {/* === VÙNG ẨN: BÁO CÁO TỔNG HỢP === */}
-      <div style={{ position: 'absolute', left: '-9999px', top: 0, opacity: 0, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, zIndex: -50 }}>
         <div ref={printRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
           <div className="bg-rose-400 rounded-[2rem] p-3">
              <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white flex flex-col h-full relative overflow-hidden">
@@ -681,7 +685,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
       </div>
 
       {/* === VÙNG ẨN: BÁO CÁO CHỈ HỌC SINH CHƯA NỘP === */}
-      <div style={{ position: 'absolute', left: '-9999px', top: 0, opacity: 0, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, zIndex: -50 }}>
         <div ref={printUnpaidRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
           <div className="bg-rose-500 rounded-[2rem] p-3">
              <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white flex flex-col h-full relative overflow-hidden">
@@ -784,7 +788,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
       </div>
 
       {/* === VÙNG ẨN: BÁO CÁO CÁ NHÂN TỪNG HỌC SINH === */}
-      <div style={{ position: 'absolute', left: '-9999px', top: 0, opacity: 0, pointerEvents: 'none' }}>
+      <div style={{ position: 'absolute', left: '-9999px', top: 0, zIndex: -50 }}>
         {enrollments.map((en) => {
           const stId = en.profiles.id;
           const t = tuitionData[stId] || { base_fee: 0, old_debt: 0, discount: 0, paid_amount: 0, status: 'UNPAID' };

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Check, Download, Save, Loader2, ImageIcon, Trash2, Calendar, AlertCircle } from "lucide-react";
+import html2canvas from "html2canvas-pro";
 import { getSessions, createSession, deleteSession, getAttendance, saveBulkAttendance } from "./attendanceActions";
 
 /* Hàm chụp ảnh tương thích iOS Safari */
@@ -32,9 +33,13 @@ async function captureElement(element: HTMLElement): Promise<string> {
       }
     })
   );
-  const html2canvas = (await import('html2canvas')).default;
+
+  // Tính toán scale an toàn cho iOS (Max height ~4096px)
+  const elementHeight = element.offsetHeight || 2000;
+  const safeScale = elementHeight > 2000 ? 1 : 1.5;
+
   const canvas = await html2canvas(element, {
-    scale: 2,
+    scale: safeScale,
     useCORS: true,
     allowTaint: false,
     backgroundColor: '#ffffff',
@@ -224,9 +229,9 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
       const dataUrl = await captureElement(printRef.current);
       const fileName = `Bao_cao_diem_danh_${className || 'Lop'}_${getTodayString()}.png`;
       await downloadOrShare(dataUrl, fileName);
-    } catch (err) {
+    } catch (err: any) {
       console.error('Export attendance image error:', err);
-      alert("Đã xảy ra lỗi khi xuất ảnh! Vui lòng thử lại.");
+      alert(`Đã xảy ra lỗi khi xuất ảnh! Chi tiết: ${err.message || 'Unknown error'}`);
     }
     setSaving(false);
   };
