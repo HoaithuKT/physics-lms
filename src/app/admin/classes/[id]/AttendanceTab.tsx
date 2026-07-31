@@ -159,8 +159,29 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
         pixelRatio: 2,
         skipFonts: true // Tránh lỗi load font nếu có
       });
+      const fileName = `Bao_cao_diem_danh_${className || 'Lop'}_${getTodayString()}.png`;
+      
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+      if (isIOS && navigator.share) {
+        try {
+          const res = await fetch(dataUrl);
+          const blob = await res.blob();
+          const file = new File([blob], fileName, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+             await navigator.share({
+               files: [file],
+               title: fileName,
+             });
+             setSaving(false);
+             return;
+          }
+        } catch (error) {
+          console.log('Error sharing:', error);
+        }
+      }
+
       const link = document.createElement("a");
-      link.download = `Bao_cao_diem_danh_${className || 'Lop'}_${getTodayString()}.png`;
+      link.download = fileName;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -367,9 +388,9 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-gray-50/80 border-b border-gray-100">
-                        <th className="py-3 px-6 text-gray-500 font-bold uppercase text-xs w-20 text-center">STT</th>
-                        <th className="py-3 px-6 text-gray-500 font-bold uppercase text-xs">Học Sinh</th>
-                        <th className="py-3 px-6 text-gray-500 font-bold uppercase text-xs w-48 text-center">Trạng Thái</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs w-20 text-center">STT</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs">Học Sinh</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs w-48 text-center">Trạng Thái</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -385,14 +406,14 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                           const note = attendance[en.profiles.id]?.note;
                           return (
                             <tr key={en.profiles.id} className="hover:bg-gray-50/50 transition-colors">
-                              <td className="py-4 px-6 text-center font-bold text-gray-500">{index + 1}</td>
-                              <td className="py-4 px-6">
+                              <td className="py-2 px-3 text-center font-bold text-gray-500">{index + 1}</td>
+                              <td className="py-2 px-3">
                                 <div className="font-bold text-gray-800 text-lg uppercase">{en.profiles.full_name}</div>
                                 {note && (
                                   <div className="text-sm text-gray-500 italic mt-1 pr-4 text-justify">Ghi chú: {note}</div>
                                 )}
                               </td>
-                              <td className="py-4 px-6 text-center">
+                              <td className="py-2 px-3 text-center">
                                 <span className={`px-4 py-2 text-sm font-bold rounded-full border whitespace-nowrap inline-block ${
                                     stat === 'LATE' ? 'bg-amber-100 text-amber-700 border-amber-200' : 
                                     stat === 'EXCUSED_ABSENCE' ? 'bg-orange-100 text-orange-700 border-orange-200' : 

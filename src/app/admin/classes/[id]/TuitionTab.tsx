@@ -232,8 +232,29 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
         pixelRatio: 2,
         skipFonts: true
       });
+      const fileName = `Bao_cao_hoc_phi_Thang_${month}_${year}_Lop_${classInfo?.name}.png`;
+      
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+      if (isIOS && navigator.share) {
+        try {
+          const res = await fetch(dataUrl);
+          const blob = await res.blob();
+          const file = new File([blob], fileName, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+             await navigator.share({
+               files: [file],
+               title: fileName,
+             });
+             setExportingImage(false);
+             return;
+          }
+        } catch (error) {
+          console.log('Error sharing:', error);
+        }
+      }
+
       const link = document.createElement("a");
-      link.download = `Bao_cao_hoc_phi_Thang_${month}_${year}_Lop_${classInfo?.name}.png`;
+      link.download = fileName;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -253,8 +274,29 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
         pixelRatio: 2,
         skipFonts: true
       });
+      const fileName = `Chua_nop_Thang_${month}_${year}_Lop_${classInfo?.name}.png`;
+      
+      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
+      if (isIOS && navigator.share) {
+        try {
+          const res = await fetch(dataUrl);
+          const blob = await res.blob();
+          const file = new File([blob], fileName, { type: 'image/png' });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+             await navigator.share({
+               files: [file],
+               title: fileName,
+             });
+             setExportingImage(false);
+             return;
+          }
+        } catch (error) {
+          console.log('Error sharing:', error);
+        }
+      }
+
       const link = document.createElement("a");
-      link.download = `Chua_nop_Thang_${month}_${year}_Lop_${classInfo?.name}.png`;
+      link.download = fileName;
       link.href = dataUrl;
       link.click();
     } catch (err) {
@@ -540,10 +582,10 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-gray-50/80 border-b border-gray-100">
-                        <th className="py-4 px-6 text-gray-500 font-bold uppercase text-xs w-20 text-center">STT</th>
-                        <th className="py-4 px-6 text-gray-500 font-bold uppercase text-xs">Học Sinh</th>
-                        <th className="py-4 px-6 text-gray-500 font-bold uppercase text-xs text-right w-40">Số Tiền</th>
-                        <th className="py-4 px-6 text-gray-500 font-bold uppercase text-xs w-48 text-center">Trạng Thái</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs w-20 text-center">STT</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs">Học Sinh</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs text-right w-40">Số Tiền</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs w-48 text-center">Trạng Thái</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -556,15 +598,14 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                           const totalDue = t.base_fee + t.old_debt - t.discount;
                           return (
                             <tr key={stId} className="hover:bg-gray-50/50 transition-colors">
-                              <td className="py-5 px-6 text-center font-bold text-gray-500">{idx + 1}</td>
-                              <td className="py-5 px-6">
+                              <td className="py-2 px-3 text-center font-bold text-gray-500">{idx + 1}</td>
+                              <td className="py-2 px-3">
                                 <div className="font-bold text-gray-800 text-lg uppercase">{en.profiles.full_name}</div>
-                                <div className="text-sm font-bold text-blue-700 mt-1 uppercase">{classInfo?.name || ''}</div>
                               </td>
-                              <td className="py-5 px-6 text-right font-black text-gray-800 text-lg">
+                              <td className="py-2 px-3 text-right font-black text-gray-800 text-lg">
                                 {totalDue.toLocaleString('vi-VN')} đ
                               </td>
-                              <td className="py-5 px-6 text-center">
+                              <td className="py-2 px-3 text-center">
                                  <span className={`px-4 py-2 text-sm font-bold rounded-full border whitespace-nowrap inline-block ${
                                     t.status === 'PAID' ? 'bg-amber-100 text-amber-700 border-amber-200' : 
                                     t.status === 'PARTIAL' ? 'bg-orange-100 text-orange-700 border-orange-200' : 
@@ -641,10 +682,10 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-gray-50/80 border-b border-gray-100">
-                        <th className="py-4 px-6 text-gray-500 font-bold uppercase text-xs w-20 text-center">STT</th>
-                        <th className="py-4 px-6 text-gray-500 font-bold uppercase text-xs">Học Sinh</th>
-                        <th className="py-4 px-6 text-gray-500 font-bold uppercase text-xs text-right w-40">Số Tiền</th>
-                        <th className="py-4 px-6 text-gray-500 font-bold uppercase text-xs w-48 text-center">Trạng Thái</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs w-20 text-center">STT</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs">Học Sinh</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs text-right w-40">Số Tiền</th>
+                        <th className="py-2 px-3 text-gray-500 font-bold uppercase text-xs w-48 text-center">Trạng Thái</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
@@ -663,15 +704,14 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                           const remaining = totalDue - t.paid_amount;
                           return (
                             <tr key={stId} className="hover:bg-gray-50/50 transition-colors">
-                              <td className="py-5 px-6 text-center font-bold text-gray-500">{idx + 1}</td>
-                              <td className="py-5 px-6">
+                              <td className="py-2 px-3 text-center font-bold text-gray-500">{idx + 1}</td>
+                              <td className="py-2 px-3">
                                 <div className="font-bold text-gray-800 text-lg uppercase">{en.profiles.full_name}</div>
-                                <div className="text-sm font-bold text-blue-700 mt-1 uppercase">{classInfo?.name || ''}</div>
                               </td>
-                              <td className="py-5 px-6 text-right font-black text-rose-600 text-lg">
+                              <td className="py-2 px-3 text-right font-black text-rose-600 text-lg">
                                 {remaining.toLocaleString('vi-VN')} đ
                               </td>
-                              <td className="py-5 px-6 text-center">
+                              <td className="py-2 px-3 text-center">
                                  <span className={`px-4 py-2 text-sm font-bold rounded-full border whitespace-nowrap inline-block ${
                                     t.status === 'PARTIAL' ? 'bg-orange-100 text-orange-700 border-orange-200' : 
                                     'bg-rose-100 text-rose-700 border-rose-200'
