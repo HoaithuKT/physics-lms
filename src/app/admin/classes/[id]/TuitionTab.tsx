@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef } from "react";
 import { Loader2, DollarSign, CalendarDays, Download, CreditCard, Send, Edit, Save, ShieldAlert, ArrowRight, ImageIcon } from "lucide-react";
-import { toPng, toBlob } from "html-to-image";
+import html2canvas from "html2canvas";
 import { getTuitionFees, updateTuitionFee, rolloverDebt } from "./tuitionActions";
 
 const Base64Image = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
@@ -248,15 +248,15 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
     if (!printRef.current) return;
     setExportingImage(true); 
     try {
-      // Dummy render to ensure images are fully loaded into canvas context
-      await toPng(printRef.current, { cacheBust: true, pixelRatio: 1, skipFonts: true });
+      // Dummy render no longer strictly necessary with html2canvas, but we'll leave it in case
+      await html2canvas(printRef.current, { scale: 1, useCORS: true });
       
-      const dataUrl = await toPng(printRef.current, {
-        cacheBust: true,
-        backgroundColor: "#ffffff",
-        pixelRatio: 2,
-        skipFonts: true
+      const canvas = await html2canvas(printRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
       });
+      const dataUrl = canvas.toDataURL('image/png');
       const fileName = `Bao_cao_hoc_phi_Thang_${month}_${year}_Lop_${classInfo?.name}.png`;
       
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
@@ -293,15 +293,15 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
     if (!printUnpaidRef.current) return;
     setExportingImage(true); 
     try {
-      // Dummy render to ensure images are fully loaded into canvas context
-      await toPng(printUnpaidRef.current, { cacheBust: true, pixelRatio: 1, skipFonts: true });
+      // Dummy render no longer strictly necessary with html2canvas
+      await html2canvas(printUnpaidRef.current, { scale: 1, useCORS: true });
 
-      const dataUrl = await toPng(printUnpaidRef.current, {
-        cacheBust: true,
-        backgroundColor: "#ffffff",
-        pixelRatio: 2,
-        skipFonts: true
+      const canvas = await html2canvas(printUnpaidRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
       });
+      const dataUrl = canvas.toDataURL('image/png');
       const fileName = `Chua_nop_Thang_${month}_${year}_Lop_${classInfo?.name}.png`;
       
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
@@ -352,12 +352,13 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
     }
 
     try {
-      const blob = await toBlob(element, {
-        cacheBust: true,
-        backgroundColor: "#ffffff",
-        pixelRatio: 2,
-        skipFonts: true
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
       });
+      
+      const blob = await new Promise<Blob | null>(resolve => canvas.toBlob(resolve, 'image/png'));
       
       if (!blob) throw new Error("Không tạo được ảnh");
       

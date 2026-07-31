@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { Trash2, Save, Loader2, Calendar, Check, AlertCircle, ImageIcon, Download } from "lucide-react";
+import { Check, Download, Save, Loader2, ImageIcon, Trash2, Calendar, AlertCircle } from "lucide-react";
+import html2canvas from "html2canvas";
 import { getSessions, createSession, deleteSession, getAttendance, saveBulkAttendance } from "./attendanceActions";
-import { toPng } from "html-to-image";
 
 const Base64Image = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
   const [base64, setBase64] = useState<string>('');
@@ -175,15 +175,15 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
     if (!printRef.current) return;
     setSaving(true); 
     try {
-      // Dummy render to ensure images are fully loaded into canvas context
-      await toPng(printRef.current, { cacheBust: true, pixelRatio: 1, skipFonts: true });
+      // Dummy render no longer strictly necessary with html2canvas
+      await html2canvas(printRef.current, { scale: 1, useCORS: true });
 
-      const dataUrl = await toPng(printRef.current, {
-        cacheBust: true,
-        backgroundColor: "#ffffff",
-        pixelRatio: 2,
-        skipFonts: true // Tránh lỗi load font nếu có
+      const canvas = await html2canvas(printRef.current, {
+        scale: 2,
+        useCORS: true,
+        backgroundColor: "#ffffff"
       });
+      const dataUrl = canvas.toDataURL('image/png');
       const fileName = `Bao_cao_diem_danh_${className || 'Lop'}_${getTodayString()}.png`;
       
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.userAgent.includes("Mac") && "ontouchend" in document);
