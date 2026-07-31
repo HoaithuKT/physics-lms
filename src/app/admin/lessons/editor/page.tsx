@@ -3,9 +3,8 @@
 import Link from "next/link";
 
 import React, { useState, useEffect, useRef, Suspense, useMemo, useCallback } from "react";
-import { ArrowLeft, Save, Sparkles, Image as ImageIcon, Key, Loader2, RefreshCw, Video, Link as LinkIcon, FileText, X, CropIcon, Upload, ChevronLeft, ChevronRight, Maximize2, Minimize2, MonitorPlay, Presentation, CheckCircle2, XCircle, Edit2, Download, PlayCircle, Eye, ChevronRightCircle, RefreshCcw, Bot, Copy, Code2, ListTodo, ChevronUp, ChevronDown, AlertTriangle, Database } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
-import remarkPhysics from 'remark-math';
+import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
@@ -16,9 +15,11 @@ import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import ReactCrop, { type Crop } from 'react-image-crop';
 import BlockEditor, { Block } from "./BlockEditor";
+import PushToBankModal from './PushToBankModal';
 import 'react-image-crop/dist/ReactCrop.css';
 import confetti from 'canvas-confetti';
 import { Document, Packer, Paragraph, TextRun } from "docx";
+import { ArrowLeft, Save, Sparkles, Image as ImageIcon, Key, Loader2, RefreshCw, Video, Link as LinkIcon, FileText, X, CropIcon, Upload, ChevronLeft, ChevronRight, Maximize2, Minimize2, MonitorPlay, Presentation, CheckCircle2, XCircle, Edit2, Download, PlayCircle, Eye, ChevronRightCircle, RefreshCcw, Bot, Copy, Code2, ListTodo, ChevronUp, ChevronDown, AlertTriangle, Database, UploadCloud } from "lucide-react";
 
 interface PendingImage {
   id: string;
@@ -120,7 +121,7 @@ const InteractiveQuiz = ({ data, onPass, onEditCrop }: { data: any, onPass: () =
     return (
       <div className="prose prose-slate max-w-none prose-p:leading-relaxed prose-p:my-2 prose-pre:bg-slate-800 prose-pre:text-slate-100 prose-img:rounded-xl prose-img:shadow-md">
         <ReactMarkdown
-          remarkPlugins={[remarkPhysics, remarkBreaks]}
+          remarkPlugins={[remarkMath, remarkBreaks]}
           rehypePlugins={[rehypeKatex, rehypeRaw]}
           components={{
              span: ({node, style, children, ...props}: any) => {
@@ -177,7 +178,7 @@ const InteractiveQuiz = ({ data, onPass, onEditCrop }: { data: any, onPass: () =
         )}
 
         <div className="flex items-center gap-3 mb-4 relative z-10">
-          <div className="w-8 h-8 bg-[#f0f9ff] text-[#0e6263] rounded-lg flex items-center justify-center font-bold border border-orange-100 shadow-sm">
+          <div className="w-8 h-8 bg-[#f0f9ff] text-[#0e6263] rounded-lg flex items-center justify-center font-bold border border-teal-100 shadow-sm">
             <span className="text-sm">Q</span>
           </div>
           <h3 className="text-[15px] font-bold text-slate-700 tracking-wide">Nội dung câu hỏi</h3>
@@ -192,7 +193,7 @@ const InteractiveQuiz = ({ data, onPass, onEditCrop }: { data: any, onPass: () =
       <div className="p-5 md:p-6 bg-slate-50/50 flex flex-col relative z-20">
         {type === "true_false_cluster" && (
           <div className="flex flex-col gap-4 w-full">
-            <div className="text-sm font-medium text-orange-800 bg-orange-50 px-4 py-3 rounded-xl border border-orange-100 flex items-center gap-2 shadow-sm">
+            <div className="text-sm font-medium text-teal-800 bg-teal-50 px-4 py-3 rounded-xl border border-teal-100 flex items-center gap-2 shadow-sm">
                <ListTodo className="w-5 h-5 shrink-0"/>
                Barem 2025: Học sinh chọn ĐÚNG hoặc SAI cho từng mệnh đề độc lập.
             </div>
@@ -332,11 +333,11 @@ const InteractiveQuiz = ({ data, onPass, onEditCrop }: { data: any, onPass: () =
 
         {/* Lời giải (Chỉ hiện khi trả lời đúng) */}
         {isCorrect && data.sampleAnswer && (
-          <div className="mt-8 bg-amber-50/50 border border-amber-100 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm">
-            <div className="bg-amber-100/60 px-5 py-3 border-b border-amber-100 flex items-center gap-2 font-bold text-amber-800">
-              <Key className="w-5 h-5 text-amber-600"/> Lời giải chi tiết
+          <div className="mt-8 bg-emerald-50/50 border border-emerald-100 rounded-2xl overflow-hidden animate-in fade-in slide-in-from-top-4 duration-500 shadow-sm">
+            <div className="bg-emerald-100/60 px-5 py-3 border-b border-emerald-100 flex items-center gap-2 font-bold text-emerald-800">
+              <Key className="w-5 h-5 text-emerald-600"/> Lời giải chi tiết
             </div>
-            <div className="p-6 text-amber-900 leading-relaxed text-[15px] md:text-base">
+            <div className="p-6 text-emerald-900 leading-relaxed text-[15px] md:text-base">
               {renderQuizContent(data.sampleAnswer)}
             </div>
           </div>
@@ -344,8 +345,8 @@ const InteractiveQuiz = ({ data, onPass, onEditCrop }: { data: any, onPass: () =
 
         {/* Cảnh báo Đúng / Sai */}
         {isCorrect === true && !data.sampleAnswer && (
-          <div className="mt-8 p-4 bg-amber-100 text-amber-800 rounded-xl font-bold text-lg flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-500 border border-amber-200 w-full justify-center shadow-sm">
-            <CheckCircle2 className="w-6 h-6 text-amber-600" /> Xuất sắc! Bạn đã trả lời đúng.
+          <div className="mt-8 p-4 bg-emerald-100 text-emerald-800 rounded-xl font-bold text-lg flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-500 border border-emerald-200 w-full justify-center shadow-sm">
+            <CheckCircle2 className="w-6 h-6 text-emerald-600" /> Xuất sắc! Bạn đã trả lời đúng.
           </div>
         )}
         {isCorrect === false && (
@@ -366,7 +367,7 @@ const VisualQuizEditor = ({ quizzes, onUpdateQuiz, onTriggerCrop }: { quizzes: a
     <div className="flex flex-col gap-6 p-4 h-full overflow-y-auto bg-gray-100">
        {quizzes.length === 0 && (
          <div className="p-10 text-center text-gray-500 bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col items-center justify-center">
-            <ListTodo className="w-16 h-16 text-orange-200 mb-4" />
+            <ListTodo className="w-16 h-16 text-teal-200 mb-4" />
             <h3 className="text-xl font-bold text-gray-700 mb-2">Chưa có câu hỏi nào!</h3>
             <p>Vui lòng chuyển sang Tab <b>Nhập liệu AI (Dán Đề)</b> để tự động biên soạn từ ảnh.</p>
          </div>
@@ -385,8 +386,8 @@ const VisualQuizEditor = ({ quizzes, onUpdateQuiz, onTriggerCrop }: { quizzes: a
                </div>
              )}
              <div className="bg-gray-50 px-5 py-3 border-b border-gray-200 flex justify-between items-center">
-                <span className="font-bold text-orange-800 text-lg flex items-center gap-2"><div className="w-6 h-6 bg-orange-100 text-orange-700 rounded-full flex items-center justify-center text-sm">{idx + 1}</div> Câu hỏi {idx + 1}</span>
-                <select value={type} onChange={e => onUpdateQuiz(idx, { ...quiz, type: e.target.value })} className="text-sm border border-gray-300 px-3 py-1.5 rounded-lg bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-orange-500/20">
+                <span className="font-bold text-teal-800 text-lg flex items-center gap-2"><div className="w-6 h-6 bg-teal-100 text-teal-700 rounded-full flex items-center justify-center text-sm">{idx + 1}</div> Câu hỏi {idx + 1}</span>
+                <select value={type} onChange={e => onUpdateQuiz(idx, { ...quiz, type: e.target.value })} className="text-sm border border-gray-300 px-3 py-1.5 rounded-lg bg-white text-gray-700 font-medium focus:outline-none focus:ring-2 focus:ring-teal-500/20">
                    <option value="multiple_choice">Trắc nghiệm 4 lựa chọn</option>
                    <option value="true_false">Đúng / Sai</option>\n                   <option value="true_false_cluster">Đúng / Sai Cụm (4 Ý)</option>
                    <option value="short_answer">Trả lời ngắn / Điền khuyết</option>
@@ -399,7 +400,7 @@ const VisualQuizEditor = ({ quizzes, onUpdateQuiz, onTriggerCrop }: { quizzes: a
                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider">Nội dung đề bài (Hỗ trợ Markdown / LaTeX)</label>
                      <button onClick={() => onTriggerCrop(idx)} className="text-orange-600 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-colors border border-orange-100"><CropIcon className="w-3.5 h-3.5"/> Cắt & chèn ảnh</button>
                    </div>
-                   <textarea rows={3} value={quiz.question || ""} onChange={e => onUpdateQuiz(idx, { ...quiz, question: e.target.value })} placeholder="VD: Tìm x biết $2x = 4$" className="w-full border border-gray-200 rounded-xl p-3 text-[15px] focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all font-mono" />
+                   <textarea rows={3} value={quiz.question || ""} onChange={e => onUpdateQuiz(idx, { ...quiz, question: e.target.value })} placeholder="VD: Tìm x biết $2x = 4$" className="w-full border border-gray-200 rounded-xl p-3 text-[15px] focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none transition-all font-mono" />
                 </div>
                 
                 {type === 'multiple_choice' && (
@@ -407,14 +408,14 @@ const VisualQuizEditor = ({ quizzes, onUpdateQuiz, onTriggerCrop }: { quizzes: a
                      {[0,1,2,3].map(optIdx => (
                        <div key={optIdx} className="flex flex-col gap-1.5">
                           <label className="text-sm font-bold text-gray-600 flex items-center gap-2 cursor-pointer w-max">
-                             <input type="radio" name={`ans_${idx}`} checked={quiz.answerIndex === optIdx} onChange={() => onUpdateQuiz(idx, { ...quiz, answerIndex: optIdx })} className="w-4 h-4 text-orange-600 focus:ring-orange-500" />
-                             Đáp án {['A','B','C','D'][optIdx]} {quiz.answerIndex === optIdx && <span className="text-orange-600 ml-1">(Đúng)</span>}
+                             <input type="radio" name={`ans_${idx}`} checked={quiz.answerIndex === optIdx} onChange={() => onUpdateQuiz(idx, { ...quiz, answerIndex: optIdx })} className="w-4 h-4 text-teal-600 focus:ring-teal-500" />
+                             Đáp án {['A','B','C','D'][optIdx]} {quiz.answerIndex === optIdx && <span className="text-teal-600 ml-1">(Đúng)</span>}
                           </label>
                           <textarea rows={2} value={quiz.options?.[optIdx] || ""} onChange={e => {
                              const newOpts = [...(quiz.options || ["","","",""])];
                              newOpts[optIdx] = e.target.value;
                              onUpdateQuiz(idx, { ...quiz, options: newOpts });
-                          }} className={`w-full border rounded-xl p-3 text-[15px] outline-none transition-all font-mono ${quiz.answerIndex === optIdx ? 'border-orange-400 bg-orange-50/30' : 'border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10'}`} />
+                          }} className={`w-full border rounded-xl p-3 text-[15px] outline-none transition-all font-mono ${quiz.answerIndex === optIdx ? 'border-teal-400 bg-teal-50/30' : 'border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10'}`} />
                        </div>
                      ))}
                   </div>
@@ -430,7 +431,7 @@ const VisualQuizEditor = ({ quizzes, onUpdateQuiz, onTriggerCrop }: { quizzes: a
                      ]).map((stmt: any, sIdx: number) => (
                        <div key={sIdx} className="flex flex-col md:flex-row gap-3 items-start md:items-center bg-white p-3 rounded-xl border border-gray-200 shadow-sm">
                           <div className="flex items-center gap-2 w-full md:w-[130px] shrink-0">
-                             <label className="text-sm font-bold text-orange-700 w-6">{['a)','b)','c)','d)'][sIdx]}</label>
+                             <label className="text-sm font-bold text-teal-700 w-6">{['a)','b)','c)','d)'][sIdx]}</label>
                              <select value={stmt.isTrue ? "true" : "false"} onChange={e => {
                                 const newStmts = [...(quiz.statements || [])];
                                 newStmts[sIdx] = { ...newStmts[sIdx], isTrue: e.target.value === "true" };
@@ -444,7 +445,7 @@ const VisualQuizEditor = ({ quizzes, onUpdateQuiz, onTriggerCrop }: { quizzes: a
                              const newStmts = [...(quiz.statements || [])];
                              newStmts[sIdx] = { ...newStmts[sIdx], text: e.target.value };
                              onUpdateQuiz(idx, { ...quiz, statements: newStmts });
-                          }} className="w-full flex-1 border border-gray-200 rounded-lg p-2.5 text-[14px] focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 outline-none font-mono" placeholder="Nhập mệnh đề..." />
+                          }} className="w-full flex-1 border border-gray-200 rounded-lg p-2.5 text-[14px] focus:border-teal-500 focus:ring-2 focus:ring-teal-500/20 outline-none font-mono" placeholder="Nhập mệnh đề..." />
                        </div>
                      ))}
                   </div>
@@ -455,14 +456,14 @@ const VisualQuizEditor = ({ quizzes, onUpdateQuiz, onTriggerCrop }: { quizzes: a
                      {[0,1].map(optIdx => (
                        <div key={optIdx} className="flex flex-col gap-1.5">
                           <label className="text-sm font-bold text-gray-600 flex items-center gap-2 cursor-pointer w-max">
-                             <input type="radio" name={`ans_${idx}`} checked={quiz.answerIndex === optIdx} onChange={() => onUpdateQuiz(idx, { ...quiz, answerIndex: optIdx })} className="w-4 h-4 text-orange-600 focus:ring-orange-500" />
-                             Đáp án {['Đúng','Sai'][optIdx]} {quiz.answerIndex === optIdx && <span className="text-orange-600 ml-1">(Chuẩn)</span>}
+                             <input type="radio" name={`ans_${idx}`} checked={quiz.answerIndex === optIdx} onChange={() => onUpdateQuiz(idx, { ...quiz, answerIndex: optIdx })} className="w-4 h-4 text-teal-600 focus:ring-teal-500" />
+                             Đáp án {['Đúng','Sai'][optIdx]} {quiz.answerIndex === optIdx && <span className="text-teal-600 ml-1">(Chuẩn)</span>}
                           </label>
                           <textarea rows={2} value={quiz.options?.[optIdx] || ""} onChange={e => {
                              const newOpts = [...(quiz.options || ["",""])];
                              newOpts[optIdx] = e.target.value;
                              onUpdateQuiz(idx, { ...quiz, options: newOpts });
-                          }} className={`w-full border rounded-xl p-3 text-[15px] outline-none transition-all font-mono ${quiz.answerIndex === optIdx ? 'border-orange-400 bg-orange-50/30' : 'border-gray-200 focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10'}`} />
+                          }} className={`w-full border rounded-xl p-3 text-[15px] outline-none transition-all font-mono ${quiz.answerIndex === optIdx ? 'border-teal-400 bg-teal-50/30' : 'border-gray-200 focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10'}`} />
                        </div>
                      ))}
                   </div>
@@ -471,14 +472,14 @@ const VisualQuizEditor = ({ quizzes, onUpdateQuiz, onTriggerCrop }: { quizzes: a
                 {type === 'short_answer' && (
                   <div>
                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Đáp án đúng chính xác (Text/Số)</label>
-                     <input type="text" value={quiz.exactAnswer || ""} onChange={e => onUpdateQuiz(idx, { ...quiz, exactAnswer: e.target.value })} className="w-full border-2 border-gray-200 rounded-xl p-3 text-[15px] focus:border-orange-500 outline-none font-bold text-orange-700 bg-gray-50 focus:bg-white transition-all" placeholder="VD: 5, hoặc: Vô nghiệm" />
+                     <input type="text" value={quiz.exactAnswer || ""} onChange={e => onUpdateQuiz(idx, { ...quiz, exactAnswer: e.target.value })} className="w-full border-2 border-gray-200 rounded-xl p-3 text-[15px] focus:border-teal-500 outline-none font-bold text-teal-700 bg-gray-50 focus:bg-white transition-all" placeholder="VD: 5, hoặc: Vô nghiệm" />
                   </div>
                 )}
 
                 {type === 'essay' && (
                   <div>
                      <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2 block">Hướng dẫn giải / Đáp án mẫu (Dùng để AI tự động chấm bài sinh viên)</label>
-                     <textarea rows={4} value={quiz.sampleAnswer || ""} onChange={e => onUpdateQuiz(idx, { ...quiz, sampleAnswer: e.target.value })} className="w-full border border-gray-200 rounded-xl p-3 text-[15px] focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 outline-none transition-all font-mono" placeholder="Ghi chi tiết các bước giải, barem điểm..." />
+                     <textarea rows={4} value={quiz.sampleAnswer || ""} onChange={e => onUpdateQuiz(idx, { ...quiz, sampleAnswer: e.target.value })} className="w-full border border-gray-200 rounded-xl p-3 text-[15px] focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 outline-none transition-all font-mono" placeholder="Ghi chi tiết các bước giải, barem điểm..." />
                   </div>
                 )}
 
@@ -570,11 +571,11 @@ const getPrompt = (isPractice: boolean, isPresentation: boolean) => {
       return `Bạn là một chuyên gia giáo dục Vật lý xuất sắc hàng đầu thế giới. 
 Hãy phân tích nội dung các ảnh/tài liệu này và BÓC TÁCH TOÀN BỘ CÁC CÂU HỎI BÀI TẬP thành các khối mã \`\`\`quiz\`\`\` định dạng JSON.
 YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
-1. [CẢNH BÁO LỖI ĐỀ]: Trách nhiệm cao nhất của bạn là giải thử từng câu. Nếu phát hiện câu hỏi bị sai đề, thiếu dữ kiện, mâu thuẫn Vật lý, hoặc không có đáp án đúng, hãy IN ĐẬM VÀ TÔ MÀU ĐỎ cảnh báo ngay trước đoạn mã \`\`\`quiz\`\`\` của câu hỏi đó (VD: **<span style="color:red">⚠️ LỖI ĐỀ BÀI: Câu hỏi này thiếu điều kiện m ≠ 0...</span>**).
+1. [CẢNH BÁO LỖI ĐỀ]: Trách nhiệm cao nhất của bạn là giải thử từng câu. Nếu phát hiện câu hỏi bị sai đề, thiếu dữ kiện, mâu thuẫn toán học, hoặc không có đáp án đúng, hãy IN ĐẬM VÀ TÔ MÀU ĐỎ cảnh báo ngay trước đoạn mã \`\`\`quiz\`\`\` của câu hỏi đó (VD: **<span style="color:red">⚠️ LỖI ĐỀ BÀI: Câu hỏi này thiếu điều kiện m ≠ 0...</span>**).
 2. [KHÔNG BỎ SÓT BÀI TẬP]: Quét KỸ 100% tài liệu gốc. Tôi đưa lên bao nhiêu câu hỏi thì BẮT BUỘC bạn phải bóc tách bấy nhiêu câu. TUYỆT ĐỐI KHÔNG được qua loa hay bỏ sót bất kỳ câu nào, nếu vi phạm sẽ bị phạt nặng.
 3. [VỊ TRÍ HÌNH ẢNH/BẢNG BIỂU]: Nếu phát hiện câu hỏi trong tài liệu gốc có chứa hình vẽ, biểu đồ hoặc đồ thị, TUYỆT ĐỐI KHÔNG mô tả chi tiết làm lệch câu gốc. BẮT BUỘC phải chèn dòng chữ \`[CÓ HÌNH ẢNH KÈM THEO]\` vào ĐÚNG VỊ TRÍ mà hình ảnh đó xuất hiện trong câu hỏi gốc (ví dụ: ngay sau chữ "như hình vẽ bên:"). Tuyệt đối KHÔNG được tự ý vứt xuống cuối phần nội dung nếu nó nằm ở giữa câu.
 4. [KHÔNG VIẾT LÝ THUYẾT]: Tuyệt đối KHÔNG viết câu mở đầu, KHÔNG tóm tắt lý thuyết, KHÔNG giải thích. CHỈ ĐƯỢC PHÉP TRẢ VỀ CÁC ĐOẠN MÃ \`\`\`quiz\`\`\` (và các dòng cảnh báo lỗi đề nếu có).
-5. [CHUẨN HÓA Vật lý LATEX TỐI ƯU NHƯ MATHTYPE]:
+5. [CHUẨN HÓA VẬT LÝ LATEX TỐI ƯU NHƯ MATHTYPE]:
 - Bao bọc TẤT CẢ công thức bằng dấu $ (Ví dụ: $x^2 + y^2 = 25$). Tuyệt đối KHÔNG bao bọc chữ tiếng Việt bên trong dấu $ (Ví dụ SAI: $Ta có: x = 2$, ĐÚNG: Ta có $x = 2$).
 - CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình).
 
@@ -616,7 +617,7 @@ LOẠI 1: TRẮC NGHIỆM 4 LỰA CHỌN (1 ĐÁP ÁN ĐÚNG)
 \`\`\`
 
 GHI CHÚ TUYỆT ĐỐI QUAN TRỌNG VỀ JSON:
-- [BẮT BUỘC VỀ Vật lý]: Tất cả công thức Vật lý trong JSON BẮT BUỘC phải được bọc trong cặp dấu $...$$.
+- [BẮT BUỘC VỀ VẬT LÝ]: Tất cả công thức toán học trong JSON BẮT BUỘC phải được bọc trong cặp dấu $...$$.
 - TẤT CẢ các ký tự gạch chéo (\\) bên trong chuỗi JSON BẮT BUỘC PHẢI NHÂN ĐÔI thành (\\\\). Nếu không làm điều này, JSON sẽ BỊ LỖI và bóc tách sẽ hỏng.
 - ĐỪNG xuất ra bất kỳ giải thích chữ nào bên ngoài các khối \`\`\`quiz\`\`\`. Chỉ xuất các khối quiz.`;
   }
@@ -625,15 +626,15 @@ GHI CHÚ TUYỆT ĐỐI QUAN TRỌNG VỀ JSON:
       return `Bạn là một chuyên gia giáo dục Vật lý xuất sắc hàng đầu thế giới. 
 Hãy phân tích nội dung các ảnh tài liệu này và biên soạn lại thành một bài giảng Vật lý HOÀN CHỈNH, CHI TIẾT, DỄ HIỂU.
 YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
-1. Dạng Markdown. [CHUẨN HÓA Vật lý LATEX TỐI ƯU NHƯ MATHTYPE]:
+1. Dạng Markdown. [CHUẨN HÓA VẬT LÝ LATEX TỐI ƯU NHƯ MATHTYPE]:
 - Bao bọc TẤT CẢ công thức bằng dấu $ (Ví dụ: $x^2 + y^2 = 25$). Tuyệt đối KHÔNG bao bọc chữ tiếng Việt bên trong dấu $ (Ví dụ SAI: $Ta có: x = 2$, ĐÚNG: Ta có $x = 2$).
-- CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình). Các biểu thức Vật lý phải liền khối.
+- CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình). Các biểu thức toán học phải liền khối.
 
 - Phân số: Dạng \\frac{tử}{mẫu}. Góc: Dạng \\widehat{tên}. Hệ phương trình: Dùng \\begin{cases} ... \\end{cases}.
-2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG Vật lý]:
+2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG VẬT LÝ]:
 Bài giảng bắt buộc phải có 2 phần chính liên tiếp nhau:
 * PHẦN 1: LÝ THUYẾT CHI TIẾT. Hãy giải thích cặn kẽ Định nghĩa, Định lý, Công thức cốt lõi. Văn phong tự nhiên, dễ đọc. BẮT BUỘC trình bày theo cấu trúc phân mục đánh số rõ ràng (1. 2. 3. ...) để học sinh dễ theo dõi và ghi chép bài. Tuyệt đối không dùng dấu ngắt trang (---).
-* PHẦN 2: PHÂN DẠNG BÀI TẬP & PHƯƠNG PHÁP GIẢI. Hãy chia các bài tập thành các Dạng Vật lý riêng biệt. Giải thích rõ ràng phương pháp.
+* PHẦN 2: PHÂN DẠNG BÀI TẬP & PHƯƠNG PHÁP GIẢI. Hãy chia các bài tập thành các Dạng Toán riêng biệt. Giải thích rõ ràng phương pháp.
 3. [PHÂN BIỆT RẠCH RÒI BẰNG HEADING VÀ BLOCKQUOTE]:
 - TẤT CẢ Tiêu đề Phần, Tên Dạng Bài phải là Heading 2 (##) kèm Emoji (Ví dụ: "## 💡 DẠNG 1: TÌM ĐIỀU KIỆN XÁC ĐỊNH").
 - TẤT CẢ Phương pháp giải phải là Heading 3 (###).
@@ -644,26 +645,26 @@ Bài giảng bắt buộc phải có 2 phần chính liên tiếp nhau:
   const unifiedPrompt = `Bạn là một chuyên gia giáo dục Vật lý xuất sắc hàng đầu thế giới. 
 Hãy phân tích nội dung các ảnh tài liệu này và biên soạn lại thành một bài giảng Vật lý HOÀN CHỈNH, GỒM LÝ THUYẾT VÀ CÁC DẠNG BÀI TẬP, TRÌNH BÀY SIÊU ĐẸP, CỰC KỲ THU HÚT.
 YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
-1. Dạng Markdown. [CHUẨN HÓA Vật lý LATEX TỐI ƯU NHƯ MATHTYPE]:
+1. Dạng Markdown. [CHUẨN HÓA VẬT LÝ LATEX TỐI ƯU NHƯ MATHTYPE]:
 - Bao bọc TẤT CẢ công thức bằng dấu $ (Ví dụ: $x^2 + y^2 = 25$). Tuyệt đối KHÔNG bao bọc chữ tiếng Việt bên trong dấu $ (Ví dụ SAI: $Ta có: x = 2$, ĐÚNG: Ta có $x = 2$).
-- CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình). Các biểu thức Vật lý phải liền khối và chuẩn xác.
+- CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình). Các biểu thức toán học phải liền khối và chuẩn xác.
 
 - Phân số: Dạng \\frac{tử}{mẫu}. Góc: Dạng \\widehat{tên}. Hệ phương trình: Dùng \\begin{cases} ... \\end{cases}.
-2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG Vật lý]:
+2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG VẬT LÝ]:
 Bài giảng bắt buộc phải có 2 phần chính liên tiếp nhau:
 * PHẦN 1: TÓM TẮT LÝ THUYẾT TRỌNG TÂM. Hãy chắt lọc Định nghĩa, Định lý, Công thức cốt lõi. Bỏ qua diễn giải rườm rà. BẮT BUỘC trình bày theo cấu trúc phân mục đánh số rõ ràng (1. 2. 3. ...) để học sinh dễ theo dõi và ghi chép bài.
-* PHẦN 2: PHÂN DẠNG BÀI TẬP & PHƯƠNG PHÁP GIẢI. Hãy chia các bài tập thành các Dạng Vật lý riêng biệt. [KHÔNG BỎ SÓT KIẾN THỨC]: Quét kỹ 100% tài liệu, tôi đưa vào bao nhiêu dạng vật lý thì bắt buộc phải bóc tách bấy nhiêu dạng, tuyệt đối không được qua loa hay cắt xén bớt.
+* PHẦN 2: PHÂN DẠNG BÀI TẬP & PHƯƠNG PHÁP GIẢI. Hãy chia các bài tập thành các Dạng Toán riêng biệt. [KHÔNG BỎ SÓT KIẾN THỨC]: Quét kỹ 100% tài liệu, tôi đưa vào bao nhiêu dạng toán thì bắt buộc phải bóc tách bấy nhiêu dạng, tuyệt đối không được qua loa hay cắt xén bớt.
 3. [PHÂN BIỆT RẠCH RÒI BẰNG HEADING VÀ BLOCKQUOTE]:
 - TẤT CẢ Tiêu đề Phần, Tên Dạng Bài phải là Heading 2 (##) kèm Emoji (Ví dụ: "## 💡 DẠNG 1: TÌM ĐIỀU KIỆN XÁC ĐỊNH").
 - TẤT CẢ Phương pháp giải phải là Heading 3 (###) (Ví dụ: "### 💡 Phương pháp giải").
 - [QUY TẮC VÍ DỤ MẪU]: Trích lấy DUY NHẤT 1 bài tập ở mức độ CƠ BẢN làm Ví dụ mẫu. Tuyệt đối không đưa nhiều hơn 1 ví dụ. 
 - [RẤT QUAN TRỌNG]: Toàn bộ nội dung của Ví dụ mẫu (bao gồm tiêu đề \`> ### 📌 Ví dụ mẫu\`, đề bài và lời giải) BẮT BUỘC phải được bọc trong thẻ trích dẫn Blockquote (thêm \`> \` vào đầu mỗi dòng). Ở phần lời giải, phải ghi chữ "> Hướng dẫn giải:" ngay trước khi giải để hệ thống lên màu chuẩn mực.
-- [KIỂM TRA TÍNH CHÍNH XÁC & CẢNH BÁO LỖI]: Phải tự động giải lại toàn bộ bài tập/ví dụ. Nếu phát hiện đề bài sai, thiếu dữ kiện hoặc mâu thuẫn, hãy IN ĐẬM VÀ TÔ MÀU ĐỎ một dòng cảnh báo (VD: **<span style="color:red">⚠️ LỖI ĐỀ BÀI: Bài vật lý này thiếu điều kiện...</span>**) ngay trước ví dụ/bài tập đó, đồng thời tự động sửa lại số liệu cho đúng rồi mới giải.
+- [KIỂM TRA TÍNH CHÍNH XÁC & CẢNH BÁO LỖI]: Phải tự động giải lại toàn bộ bài tập/ví dụ. Nếu phát hiện đề bài sai, thiếu dữ kiện hoặc mâu thuẫn, hãy IN ĐẬM VÀ TÔ MÀU ĐỎ một dòng cảnh báo (VD: **<span style="color:red">⚠️ LỖI ĐỀ BÀI: Bài toán này thiếu điều kiện...</span>**) ngay trước ví dụ/bài tập đó, đồng thời tự động sửa lại số liệu cho đúng rồi mới giải.
 4. [PHÂN TRANG KHOA HỌC ĐỂ TRÌNH CHIẾU]: Sử dụng ĐÚNG 3 dấu gạch ngang \`---\` để ngắt trang (tạo slide mới).
 - MỖI MỘT ĐỊNH NGHĨA, ĐỊNH LÝ, HAY GHI CHÚ PHẢI NẰM TRÊN 1 SLIDE RIÊNG BIỆT (phải ngắt trang \`---\` ngay sau đó).
 - MỖI VÍ DỤ HOẶC BÀI TẬP BẮT BUỘC NẰM TRÊN 1 SLIDE MỚI. 
 - KHÔNG GỘP QUÁ NHIỀU NỘI DUNG VÀO 1 SLIDE VÌ ĐÂY LÀ ĐỂ CHIẾU LÊN TIVI (Slide càng ngắn gọn càng tốt).
-5. [QUY TẮC BẢNG BIẾN THIÊN & HÌNH VẼ]: Nếu bài vật lý có Hình vẽ, Bảng biến thiên... TUYỆT ĐỐI KHÔNG giải thích dài dòng bằng chữ. THAY VÀO ĐÓ, BẮT BUỘC chèn thẻ \`[IMAGE_PLACEHOLDER]\` vào đúng vị trí cần vẽ hình.
+5. [QUY TẮC BẢNG BIẾN THIÊN & HÌNH VẼ]: Nếu bài toán có Hình vẽ, Bảng biến thiên... TUYỆT ĐỐI KHÔNG giải thích dài dòng bằng chữ. THAY VÀO ĐÓ, BẮT BUỘC chèn thẻ \`[IMAGE_PLACEHOLDER]\` vào đúng vị trí cần vẽ hình.
 6. [TẠO CÂU HỎI TƯƠNG TÁC CHỐNG LƯỜI]: Ngay TRƯỚC mỗi lần bạn đặt dấu ngắt trang \`---\` , bạn HÃY TỰ NGHĨ RA HOẶC TRÍCH 1 CÂU HỎI TRẮC NGHIỆM từ tài liệu để kiểm tra học sinh. Học sinh phải làm đúng câu này thì mới được đọc trang tiếp theo.
 7. Mỗi câu hỏi trắc nghiệm PHẢI được xuất ra ĐÚNG DƯỚI DẠNG ĐOẠN MÃ NGÔN NGỮ "quiz" chứa chuỗi JSON chuẩn xác. Cấu trúc JSON có 2 loại:
 
@@ -688,7 +689,7 @@ LOẠI 4: CÂU TRẢ LỜI NGẮN (kết quả ngắn gọn: 1 số, 1 biểu th
 \`\`\`
 
 GHI CHÚ TUYỆT ĐỐI QUAN TRỌNG VỀ JSON:
-- [BẮT BUỘC VỀ Vật lý]: Tất cả các công thức Vật lý trong JSON BẮT BUỘC phải được bọc trong cặp dấu $...$$.
+- [BẮT BUỘC VỀ VẬT LÝ]: Tất cả các công thức toán học trong JSON BẮT BUỘC phải được bọc trong cặp dấu $...$$.
 - TẤT CẢ các ký tự gạch chéo (\\) bên trong chuỗi JSON BẮT BUỘC PHẢI NHÂN ĐÔI thành (\\\\). Nếu không làm điều này, hệ thống sẽ BỊ LỖI.`;
 
   return unifiedPrompt;
@@ -781,7 +782,7 @@ function EditorContent() {
   const [docList, setDocList] = useState<{id: string, title: string, url: string}[]>([]);
   const isDocumentModule = moduleType === 'document' || moduleTitle.toLowerCase().includes('tài liệu tham khảo');
   const isVideoModule = moduleType === 'solution_video' || moduleTitle.toLowerCase().includes('video');
-  const isPracticeModule = moduleType === 'practice' || moduleTitle.toLowerCase().includes('luyện tập');
+  const isPracticeModule = moduleType === 'practice' || moduleTitle.toLowerCase().includes('luyện tập') || moduleTitle.toLowerCase().includes('kiểm tra') || moduleTitle.toLowerCase().includes('đề') || moduleTitle.toLowerCase().includes('phân dạng');
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(false);
   const [videoUrl, setVideoUrl] = useState("");
   const [attachmentUrl, setAttachmentUrl] = useState("");
@@ -816,6 +817,7 @@ function EditorContent() {
   // Live Preview Pagination & Gamification State (REMOVED - Now continuous scroll)
   // Gemini Web Backup Modal
   const [isBackupModalOpen, setIsBackupModalOpen] = useState(false);
+  const [isPushToBankModalOpen, setIsPushToBankModalOpen] = useState(false);
   const [manualGeminiInput, setManualGeminiInput] = useState("");
 
   useEffect(() => {
@@ -860,7 +862,7 @@ function EditorContent() {
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const { data } = await supabase.from('courses').select('id, title').order('created_at', { ascending: false });
+      const { data } = await supabase.from('courses').select('id, title, grade, subject').order('created_at', { ascending: false });
       if (data) setCourses(data);
     };
     fetchCourses();
@@ -1054,11 +1056,11 @@ function EditorContent() {
           } catch(e) { return match; }
       });
 
-      // 2. Chữa các lỗi sai cú pháp LaTeX của AI để PhysicsType/Word nhận diện được
+      // 2. Chữa các lỗi sai cú pháp LaTeX của AI để MathType/Word nhận diện được
       content = content.replace(/\{\{begincases/g, '\\begin{cases}').replace(/endcases\}\}/g, '\\end{cases}');
 
       // 3. Parser Markdown cơ bản sang HTML để MS Word hiểu được In đậm, Tiêu đề và Kéo dòng
-      let html = content.replace(/\\\\/g, '\\'); // Đưa dấu chéo kép về dấu chéo đơn chuẩn LaTeX cho PhysicsType
+      let html = content.replace(/\\\\/g, '\\'); // Đưa dấu chéo kép về dấu chéo đơn chuẩn LaTeX cho MathType
       
       const spanBlocks: string[] = [];
       html = html.replace(/<span[^>]*>/gi, (match) => {
@@ -1162,9 +1164,9 @@ function EditorContent() {
       if (!keyRes.ok || !keyData.key) throw new Error(keyData.error || "Không thể cấp phát khóa AI.");
 
       const genAI = new GoogleGenerativeAI(keyData.key);
-      const model = genAI.getGenerativeModel({ model: "gemini-3.5-flash" });
+      const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
       
-      const isPractice = moduleTitle.toLowerCase().includes('luyện tập') || moduleTitle.toLowerCase().includes('kiểm tra') || moduleTitle.toLowerCase().includes('phân dạng');
+      const isPractice = isPracticeModule;
       const prompt = getPrompt(isPractice, activeTab === 'presentation');
 
       let finalPrompt = prompt;
@@ -1216,7 +1218,7 @@ function EditorContent() {
   };
 
   const handleCopyShortPrompt = () => {
-    const isPractice = moduleTitle.toLowerCase().includes('luyện tập') || moduleTitle.toLowerCase().includes('kiểm tra') || moduleTitle.toLowerCase().includes('phân dạng');
+    const isPractice = isPracticeModule;
     const prompt = getPrompt(isPractice, activeTab === 'presentation');
 
     navigator.clipboard.writeText(prompt);
@@ -1224,7 +1226,7 @@ function EditorContent() {
   };
 
   const handleCopyPrompt = () => {
-    const isPractice = moduleTitle.toLowerCase().includes('luyện tập') || moduleTitle.toLowerCase().includes('kiểm tra') || moduleTitle.toLowerCase().includes('phân dạng');
+    const isPractice = isPracticeModule;
     const prompt = getPrompt(isPractice, activeTab === 'presentation');
     const taskName = isPractice ? "bóc tách thành các câu hỏi trắc nghiệm/tự luận" : "soạn thành 1 bài giảng duy nhất";
 
@@ -1280,6 +1282,35 @@ function EditorContent() {
     }
     if (hasImage) e.preventDefault();
   };
+
+  // --- Hỗ trợ Dán Ảnh (Ctrl+V) Toàn cục ---
+  useEffect(() => {
+    const handleGlobalPaste = (e: ClipboardEvent) => {
+      if (isCropModalOpen) return; // Nếu đang mở crop modal, để modal tự lo
+      
+      const target = e.target as HTMLElement;
+      // Bỏ qua nếu người dùng đang nhập liệu vào ô text (tránh xung đột copy-paste văn bản)
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable) return;
+
+      if (!e.clipboardData) return;
+      const items = e.clipboardData.items;
+      let hasImage = false;
+      for (let i = 0; i < items.length; i++) {
+        if (items[i].type.indexOf('image') !== -1) {
+          const file = items[i].getAsFile();
+          if (file) { 
+             addToQueue(file); 
+             hasImage = true; 
+          }
+        }
+      }
+      if (hasImage) e.preventDefault();
+    };
+
+    document.addEventListener('paste', handleGlobalPaste);
+    return () => document.removeEventListener('paste', handleGlobalPaste);
+  }, [isCropModalOpen]);
+
 
   const handleQueueFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -1379,7 +1410,7 @@ function EditorContent() {
 
   const renderMarkdown = (content: string) => (
     <ReactMarkdown 
-      remarkPlugins={[remarkPhysics]} 
+      remarkPlugins={[remarkMath]} 
       rehypePlugins={[rehypeKatex, rehypeRaw]}
       components={{
         span: ({node, style, children, ...props}: any) => {
@@ -1488,7 +1519,7 @@ function EditorContent() {
   if (!lessonId) return (
     <div className="flex flex-col items-center justify-center h-full text-center p-4 bg-gradient-to-br from-indigo-50 to-purple-50 m-4 md:m-8 rounded-[2.5rem] border border-indigo-100/50 shadow-inner min-h-[80vh]">
       <div className="bg-white p-8 md:p-12 rounded-[2rem] shadow-2xl max-w-xl w-full border border-gray-100 relative overflow-hidden animate-in zoom-in-95 duration-500">
-        <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-orange-400 via-indigo-500 to-purple-500"></div>
+        <div className="absolute top-0 left-0 w-full h-3 bg-gradient-to-r from-teal-400 via-indigo-500 to-purple-500"></div>
         <div className="w-24 h-24 bg-indigo-50 rounded-full flex items-center justify-center mx-auto mb-8 shadow-inner border-4 border-white">
           <Sparkles className="w-12 h-12 text-indigo-600 animate-pulse" />
         </div>
@@ -1522,10 +1553,10 @@ function EditorContent() {
            <div className="flex justify-between items-center px-3 py-1.5 bg-gray-50/80 rounded-xl cursor-pointer hover:bg-gray-100 transition-colors" onClick={() => setIsHeaderExpanded(true)}>
              <div className="flex items-center gap-3">
                <button onClick={(e) => { e.stopPropagation(); if (selectedCourseId) { router.push(`/admin/courses/${selectedCourseId}/lessons`); } else { router.back(); } }} className="p-1.5 text-gray-500 hover:bg-white hover:text-indigo-600 rounded-lg transition-colors border border-transparent hover:border-gray-200 shadow-sm"><ArrowLeft className="w-4 h-4" /></button>
-               <span className="font-bold text-sm text-gray-700 flex items-center gap-2"><Edit2 className="w-4 h-4 text-indigo-500" /> <span className="hidden sm:inline">Cài đặt:</span> <span className="text-orange-700 truncate max-w-[200px] sm:max-w-xs">{title || 'Đang tải...'}</span> {moduleTitle && <><span className="text-gray-300">/</span><span className="text-orange-700 bg-orange-50 px-2.5 py-0.5 rounded-md text-xs border border-orange-200 uppercase tracking-wide shrink-0 shadow-sm">{moduleTitle}</span></>}</span>
+               <span className="font-bold text-sm text-gray-700 flex items-center gap-2"><Edit2 className="w-4 h-4 text-indigo-500" /> <span className="hidden sm:inline">Cài đặt:</span> <span className="text-teal-700 truncate max-w-[200px] sm:max-w-xs">{title || 'Đang tải...'}</span> {moduleTitle && <><span className="text-gray-300">/</span><span className="text-orange-700 bg-orange-50 px-2.5 py-0.5 rounded-md text-xs border border-orange-200 uppercase tracking-wide shrink-0 shadow-sm">{moduleTitle}</span></>}</span>
              </div>
              <div className="flex items-center gap-3">
-               <button onClick={(e) => { e.stopPropagation(); handleSaveToDB(); }} disabled={isSavingDB} className="bg-orange-600 text-white px-4 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-orange-700 flex items-center gap-1.5">
+               <button onClick={(e) => { e.stopPropagation(); handleSaveToDB(); }} disabled={isSavingDB} className="bg-teal-600 text-white px-4 py-1.5 rounded-md text-xs font-bold shadow-sm hover:bg-teal-700 flex items-center gap-1.5">
                   {isSavingDB ? <Loader2 className="w-3.5 h-3.5 animate-spin"/> : <Save className="w-3.5 h-3.5" />} Lưu
                </button>
                {lessonId && (
@@ -1561,14 +1592,14 @@ function EditorContent() {
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 flex items-center gap-2">Tên Bài Giảng {moduleTitle && <span className="text-orange-600 bg-orange-50 px-2 py-0.5 rounded border border-orange-100 normal-case tracking-normal">Mục: {moduleTitle}</span>}</label>
               <input 
                 type="text" value={title} onChange={(e) => setTitle(e.target.value)}
-                className="w-full text-xl font-bold text-gray-800 bg-transparent border-b border-gray-200 focus:border-orange-500 focus:outline-none pb-1 transition-colors"
+                className="w-full text-xl font-bold text-gray-800 bg-transparent border-b border-gray-200 focus:border-teal-500 focus:outline-none pb-1 transition-colors"
               />
             </div>
             <div className="flex-1 min-w-[150px]">
               <label className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-1 block">Thuộc Khóa học</label>
               <select 
                 value={selectedCourseId} onChange={e => { setSelectedCourseId(e.target.value); setSelectedChapterId(""); }}
-                className="w-full text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg p-2 focus:border-orange-500 focus:outline-none cursor-pointer"
+                className="w-full text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg p-2 focus:border-teal-500 focus:outline-none cursor-pointer"
               >
                 <option value="">-- Chọn --</option>
                 {courses.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
@@ -1579,7 +1610,7 @@ function EditorContent() {
               <select 
                 value={selectedChapterId} onChange={e => setSelectedChapterId(e.target.value)}
                 disabled={!selectedCourseId}
-                className="w-full text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg p-2 focus:border-orange-500 focus:outline-none disabled:opacity-50 cursor-pointer"
+                className="w-full text-sm font-medium text-gray-700 bg-gray-50 border border-gray-200 rounded-lg p-2 focus:border-teal-500 focus:outline-none disabled:opacity-50 cursor-pointer"
               >
                 <option value="">-- Chọn --</option>
                 {chapters.map(c => <option key={c.id} value={c.id}>{c.title}</option>)}
@@ -1590,7 +1621,7 @@ function EditorContent() {
           {!isPracticeModule && (
             <div className="flex gap-4 items-center">
               <div className="flex-1">
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 focus-within:border-orange-500 transition-colors shadow-sm">
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 focus-within:border-teal-500 transition-colors shadow-sm">
                   <Video className="w-4 h-4 text-rose-500 shrink-0" />
                   <input 
                     type="text" value={videoUrl} onChange={(e) => setVideoUrl(e.target.value)}
@@ -1600,7 +1631,7 @@ function EditorContent() {
                 </div>
               </div>
               <div className="flex-1">
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 focus-within:border-orange-500 transition-colors shadow-sm">
+                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 focus-within:border-teal-500 transition-colors shadow-sm">
                   <FileText className="w-4 h-4 text-blue-500 shrink-0" />
                   <input 
                     type="text" value={attachmentUrl} onChange={(e) => setAttachmentUrl(e.target.value)}
@@ -1613,10 +1644,10 @@ function EditorContent() {
           )}
           
           <div className="flex justify-between items-center pt-3 border-t border-gray-50">
-            <div className="text-xs text-gray-400 font-medium">Bản nháp được lưu tại: <span className="text-orange-600 font-bold">{title}</span></div>
+            <div className="text-xs text-gray-400 font-medium">Bản nháp được lưu tại: <span className="text-teal-600 font-bold">{title}</span></div>
             <div className="flex items-center gap-3">
 
-              <button onClick={handleSaveToDB} disabled={isSavingDB} className="bg-orange-600 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 hover:bg-orange-700 transition-colors shadow-[0_5px_15px_-5px_rgba(13,148,136,0.4)] hover:-translate-y-0.5 disabled:opacity-50">
+              <button onClick={handleSaveToDB} disabled={isSavingDB} className="bg-teal-600 text-white px-6 py-2.5 rounded-lg font-bold flex items-center gap-2 hover:bg-teal-700 transition-colors shadow-[0_5px_15px_-5px_rgba(13,148,136,0.4)] hover:-translate-y-0.5 disabled:opacity-50">
                 {isSavingDB ? <Loader2 className="w-4 h-4 animate-spin"/> : <Save className="w-4 h-4" />} Lưu
               </button>
               {lessonId && (
@@ -1709,10 +1740,11 @@ function EditorContent() {
               </button>
             <div className="flex gap-2">
               <input type="file" ref={fileInputRef} multiple onChange={handleQueueFileUpload} accept="image/*" className="hidden" />
-              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 text-xs font-medium bg-white border border-indigo-200 text-indigo-700 px-3 py-1.5 rounded-md hover:bg-indigo-50 transition-colors shadow-sm"><ImageIcon className="w-3.5 h-3.5" /> Nạp File (Ảnh/Word/PDF)</button>
+              <button onClick={() => fileInputRef.current?.click()} className="flex items-center gap-1.5 text-xs font-medium bg-white border border-indigo-200 text-indigo-700 px-3 py-1.5 rounded-md hover:bg-indigo-50 transition-colors shadow-sm"><ImageIcon className="w-3.5 h-3.5" /> Tải File / Dán Ảnh (Ctrl+V)</button>
               <button onClick={() => { if (lastAnalyzedImages.length > 0) setCropImageSrc(lastAnalyzedImages[0]); setIsCropModalOpen(true); }} className="flex items-center gap-1.5 text-xs font-medium bg-orange-50 border border-orange-200 text-orange-700 px-3 py-1.5 rounded-md hover:bg-orange-100 transition-colors shadow-sm"><CropIcon className="w-3.5 h-3.5" /> Cắt Ảnh & Chèn</button>
-              <button onClick={() => setIsBackupModalOpen(true)} className="flex items-center gap-1.5 text-xs font-medium bg-amber-50 border border-amber-200 text-amber-700 px-3 py-1.5 rounded-md hover:bg-amber-100 transition-colors shadow-sm" title="Sinh mẫu Prompt thủ công"><Bot className="w-3.5 h-3.5" /> Lấy Prompt Thủ Công</button>
+              <button onClick={() => setIsBackupModalOpen(true)} className="flex items-center gap-1.5 text-xs font-medium bg-emerald-50 border border-emerald-200 text-emerald-700 px-3 py-1.5 rounded-md hover:bg-emerald-100 transition-colors shadow-sm" title="Sinh mẫu Prompt thủ công"><Bot className="w-3.5 h-3.5" /> Lấy Prompt Thủ Công</button>
               <button onClick={() => setGlobalTriggerBankModal(prev => prev + 1)} className="flex items-center gap-1.5 text-xs font-bold bg-amber-100 border border-amber-300 text-amber-800 px-3 py-1.5 rounded-md hover:bg-amber-200 transition-colors shadow-sm"><Database className="w-3.5 h-3.5" /> Rút từ Ngân hàng</button>
+              <button onClick={() => setIsPushToBankModalOpen(true)} className="flex items-center gap-1.5 text-xs font-bold bg-fuchsia-100 border border-fuchsia-300 text-fuchsia-800 px-3 py-1.5 rounded-md hover:bg-fuchsia-200 transition-colors shadow-sm"><UploadCloud className="w-3.5 h-3.5" /> Đưa vào Ngân hàng</button>
               <div className="relative">
                 <button onClick={() => setIsExportMenuOpen(!isExportMenuOpen)} className="flex items-center gap-1.5 text-xs font-bold bg-blue-600 text-white px-4 py-1.5 rounded-md hover:bg-blue-700 transition-colors shadow-[0_4px_10px_-2px_rgba(37,99,235,0.4)]">
                   <Download className="w-3.5 h-3.5" /> Xuất Giáo Án (Word) <ChevronDown className="w-3.5 h-3.5" />
@@ -1796,7 +1828,7 @@ function EditorContent() {
                     />
                     {showRawPreview && (
                        <div className="w-1/2 h-full overflow-y-auto bg-gray-50/50 p-6 scroll-smooth">
-                          <div className="bg-white p-8 rounded-2xl shadow-md border-4 border-slate-700 aspect-video overflow-y-auto w-full max-w-none prose prose-lg prose-indigo whitespace-pre-wrap prose-h1:text-4xl prose-h1:font-black prose-h1:text-indigo-900 prose-h1:mb-10 prose-h1:text-center prose-h1:tracking-tight prose-h2:text-[1.5rem] prose-h2:font-black prose-h2:text-white prose-h2:bg-gradient-to-r prose-h2:from-indigo-600 prose-h2:via-blue-600 prose-h2:to-cyan-500 prose-h2:px-6 prose-h2:py-4 prose-h2:rounded-2xl prose-h2:mt-14 prose-h2:mb-8 prose-h2:uppercase prose-h2:tracking-wide prose-h2:shadow-[0_8px_30px_rgb(79,70,229,0.2)] prose-h2:border-l-8 prose-h2:border-l-yellow-400 prose-h2:block prose-h2:w-fit prose-h2:clear-both prose-h3:text-[1.2rem] prose-h3:font-bold prose-h3:text-white prose-h3:bg-gradient-to-r prose-h3:from-amber-500 prose-h3:to-orange-400 prose-h3:px-5 prose-h3:py-3 prose-h3:rounded-xl prose-h3:mt-10 prose-h3:mb-5 prose-h3:shadow-md prose-h3:block prose-h3:w-fit prose-h3:clear-both prose-strong:text-indigo-800 prose-strong:font-black prose-strong:bg-indigo-50/50 prose-strong:px-1.5 prose-strong:py-0.5 prose-strong:rounded-md">
+                          <div className="bg-white p-8 rounded-2xl shadow-md border-4 border-slate-700 aspect-video overflow-y-auto w-full max-w-none prose prose-lg prose-indigo whitespace-pre-wrap prose-h1:text-4xl prose-h1:font-black prose-h1:text-indigo-900 prose-h1:mb-10 prose-h1:text-center prose-h1:tracking-tight prose-h2:text-[1.5rem] prose-h2:font-black prose-h2:text-white prose-h2:bg-gradient-to-r prose-h2:from-indigo-600 prose-h2:via-blue-600 prose-h2:to-cyan-500 prose-h2:px-6 prose-h2:py-4 prose-h2:rounded-2xl prose-h2:mt-14 prose-h2:mb-8 prose-h2:uppercase prose-h2:tracking-wide prose-h2:shadow-[0_8px_30px_rgb(79,70,229,0.2)] prose-h2:border-l-8 prose-h2:border-l-yellow-400 prose-h2:block prose-h2:w-fit prose-h2:clear-both prose-h3:text-[1.2rem] prose-h3:font-bold prose-h3:text-white prose-h3:bg-gradient-to-r prose-h3:from-emerald-500 prose-h3:to-teal-400 prose-h3:px-5 prose-h3:py-3 prose-h3:rounded-xl prose-h3:mt-10 prose-h3:mb-5 prose-h3:shadow-md prose-h3:block prose-h3:w-fit prose-h3:clear-both prose-strong:text-indigo-800 prose-strong:font-black prose-strong:bg-indigo-50/50 prose-strong:px-1.5 prose-strong:py-0.5 prose-strong:rounded-md">
                               {renderMarkdown(markdownContent)}
                           </div>
                        </div>
@@ -1891,15 +1923,15 @@ function EditorContent() {
       {isBackupModalOpen && (
         <div className="fixed inset-0 bg-black/60 z-[80] flex items-center justify-center p-4 backdrop-blur-sm animate-in fade-in">
           <div className="bg-white rounded-2xl w-full max-w-2xl max-h-[95vh] flex flex-col shadow-2xl overflow-hidden relative border border-gray-100">
-            <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-amber-50/50 shrink-0">
-              <h2 className="text-lg font-bold text-amber-800 flex items-center gap-2"><Bot className="w-5 h-5" /> {moduleTitle.toLowerCase().includes('luyện tập') || moduleTitle.toLowerCase().includes('kiểm tra') || moduleTitle.toLowerCase().includes('phân dạng') ? 'Bóc tách đề bằng Gemini Web' : 'Tạo bài bằng Gemini Web'} (Thủ công)</h2>
+            <div className="flex justify-between items-center p-4 border-b border-gray-100 bg-emerald-50/50 shrink-0">
+              <h2 className="text-lg font-bold text-emerald-800 flex items-center gap-2"><Bot className="w-5 h-5" /> {isPracticeModule ? 'Bóc tách đề bằng Gemini Web' : 'Tạo bài bằng Gemini Web'} (Thủ công)</h2>
               <button onClick={() => setIsBackupModalOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X className="w-5 h-5 text-gray-500" /></button>
             </div>
             
             <div className="p-6 flex flex-col gap-6 overflow-y-auto min-h-0">
               <div className="bg-blue-50 border-l-4 border-blue-500 p-5 rounded-r-xl shadow-sm">
                 <p className="text-blue-900 text-[0.95rem] font-medium mb-3 leading-relaxed">
-                  <strong>Hướng dẫn {moduleTitle.toLowerCase().includes('luyện tập') || moduleTitle.toLowerCase().includes('kiểm tra') || moduleTitle.toLowerCase().includes('phân dạng') ? 'bóc tách đề' : 'soạn bài'} liền mạch:</strong>
+                  <strong>Hướng dẫn {isPracticeModule ? 'bóc tách đề' : 'soạn bài'} liền mạch:</strong>
                 </p>
                 <div className="flex flex-col gap-3">
                   <div className="bg-white p-3 rounded-lg border border-gray-200">
@@ -1917,7 +1949,7 @@ function EditorContent() {
                       <Copy className="w-4 h-4" /> Copy lệnh Tải Ảnh (Chỉ nhận, chưa xử lý)
                     </button>
                     <p className="text-xs text-gray-500 mb-2"><strong>Bước 2:</strong> Khi tải xong toàn bộ, dùng lệnh này để ép máy xử lý 1 lần liền mạch.</p>
-                    <button onClick={handleCopyPrompt} className="flex items-center justify-center gap-2 w-full py-2 bg-amber-50 border border-amber-500 text-amber-700 hover:bg-amber-100 font-bold rounded-lg transition-all text-sm">
+                    <button onClick={handleCopyPrompt} className="flex items-center justify-center gap-2 w-full py-2 bg-emerald-50 border border-emerald-500 text-emerald-700 hover:bg-emerald-100 font-bold rounded-lg transition-all text-sm">
                       <Copy className="w-4 h-4" /> Copy lệnh Bắt Đầu Xử Lý (Kèm cấu trúc)
                     </button>
                   </div>
@@ -1925,26 +1957,42 @@ function EditorContent() {
               </div>
 
               <div>
-                <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2"><Code2 className="w-4 h-4 text-amber-500"/> Dán mã JSON/Markdown từ Gemini vào đây...</label>
+                <label className="block text-sm font-bold text-gray-700 mb-2 flex items-center gap-2"><Code2 className="w-4 h-4 text-emerald-500"/> Dán mã JSON/Markdown từ Gemini vào đây...</label>
                 <textarea 
                   value={manualGeminiInput}
                   onChange={(e) => setManualGeminiInput(e.target.value)}
-                  className="w-full h-56 p-4 border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-amber-500 outline-none resize-none font-mono text-sm text-gray-700 bg-gray-50 shadow-inner"
+                  className="w-full h-56 p-4 border-2 border-gray-200 rounded-xl focus:ring-0 focus:border-emerald-500 outline-none resize-none font-mono text-sm text-gray-700 bg-gray-50 shadow-inner"
                   placeholder="Dán toàn bộ nội dung do Gemini sinh ra vào đây..."
                 ></textarea>
               </div>
             </div>
 
             <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end gap-3">
-              <button onClick={() => handleInsertManualMarkdown(false)} disabled={!manualGeminiInput.trim()} className="px-6 py-3 bg-white border-2 border-amber-500 hover:bg-amber-50 disabled:border-gray-300 disabled:text-gray-400 text-amber-600 font-bold rounded-xl flex items-center gap-2 transition-all">
+              <button onClick={() => handleInsertManualMarkdown(false)} disabled={!manualGeminiInput.trim()} className="px-6 py-3 bg-white border-2 border-emerald-500 hover:bg-emerald-50 disabled:border-gray-300 disabled:text-gray-400 text-emerald-600 font-bold rounded-xl flex items-center gap-2 transition-all">
                 <Code2 className="w-5 h-5" /> Chèn & Xóa trắng để Dán đợt tiếp theo
               </button>
-              <button onClick={() => handleInsertManualMarkdown(true)} disabled={!manualGeminiInput.trim()} className="px-8 py-3 bg-amber-600 hover:bg-amber-700 disabled:bg-gray-300 disabled:text-gray-500 text-white font-bold rounded-xl flex items-center gap-2 shadow-md transition-all hover:-translate-y-0.5">
+              <button onClick={() => handleInsertManualMarkdown(true)} disabled={!manualGeminiInput.trim()} className="px-8 py-3 bg-emerald-600 hover:bg-emerald-700 disabled:bg-gray-300 disabled:text-gray-500 text-white font-bold rounded-xl flex items-center gap-2 shadow-md transition-all hover:-translate-y-0.5">
                 Nhận diện & Hoàn tất đóng
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* PUSH TO BANK MODAL */}
+      {isPushToBankModalOpen && (
+        <PushToBankModal 
+          isOpen={isPushToBankModalOpen} 
+          onClose={() => setIsPushToBankModalOpen(false)} 
+          blocks={activeTab === 'elearning' ? elearningBlocks : presentationBlocks} 
+          courseContext={{ 
+            grade: courses.find(c => c.id === selectedCourseId)?.grade || "",
+            subject: courses.find(c => c.id === selectedCourseId)?.subject || "",
+            topic: chapters.find(c => c.id === selectedChapterId)?.title || "", 
+            lesson: title,
+            courseName: courses.find(c => c.id === selectedCourseId)?.title || ""
+          }} 
+        />
       )}
     </div>
   );
@@ -1952,9 +2000,10 @@ function EditorContent() {
 
 export default function AIEditorPage() {
   return (
-    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-orange-600" /></div>}>
+    <Suspense fallback={<div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-teal-600" /></div>}>
       <EditorContent />
     </Suspense>
   );
 }
+
 
