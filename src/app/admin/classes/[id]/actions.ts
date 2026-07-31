@@ -82,6 +82,14 @@ export async function updateStudentProfile(profileId: string, updates: any) {
   return { success: true };
 }
 
+export async function updateEnrollmentDate(enrollmentId: string, date: string) {
+  const { error } = await supabaseAdmin.from('enrollments').update({ enrolled_at: date }).eq('id', enrollmentId);
+  if (error) {
+    return { success: false, error: error.message };
+  }
+  return { success: true };
+}
+
 export async function searchStudents(searchTerm: string) {
   const { data, error } = await supabaseAdmin
     .from('profiles')

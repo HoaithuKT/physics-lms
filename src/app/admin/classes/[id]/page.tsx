@@ -5,7 +5,10 @@ import { createClient } from "@/utils/supabase/client";
 import { ArrowLeft, Users, UserPlus, Upload, Trash2, Loader2, Search, X, FileSpreadsheet, Download, Plus, Edit2, CheckSquare, DollarSign } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
-import { getEnrollments, addEnrollment, removeEnrollment, updateStudentProfile, searchStudents, createAndEnrollNewStudent } from "./actions";
+import {
+  getEnrollments, addEnrollment, removeEnrollment, searchStudents,
+  createAndEnrollNewStudent, updateStudentProfile, updateEnrollmentDate
+} from "./actions";
 import AttendanceTab from "./AttendanceTab";
 import TuitionTab from "./TuitionTab";
 import ScoresTab from "./ScoresTab";
@@ -121,23 +124,38 @@ export default function ClassDetailsPage() {
     else setEnrollments(enrollments.filter(e => e.id !== enrollmentId));
   };
 
-  const handleEditClick = (student: any) => {
-    setEditingStudent(student);
+  const handleEditClick = (enrollment: any) => {
+    setEditingStudent(enrollment);
+    const student = enrollment.profiles || {};
     setEditForm({
       full_name: student.full_name || "",
       student_phone: student.student_phone || "",
       school: student.school || "",
       parent_name: student.parent_name || "",
       parent_phone: student.parent_phone || "",
-      enrollment_date: student.enrollment_date ? new Date(student.enrollment_date).toISOString().split('T')[0] : ""
+      enrollment_date: enrollment.enrolled_at ? new Date(enrollment.enrolled_at).toISOString().split('T')[0] : ""
     });
     setIsEditModalOpen(true);
   };
 
   const handleSaveEdit = async () => {
     if (!editingStudent) return;
+    
     setSavingEdit(true);
-    const result = await updateStudentProfile(editingStudent.id, editForm);
+    const profileUpdates = {
+      full_name: editForm.full_name,
+      student_phone: editForm.student_phone,
+      school: editForm.school,
+      parent_name: editForm.parent_name,
+      parent_phone: editForm.parent_phone,
+    };
+    
+    const result = await updateStudentProfile(editingStudent.profiles.id, profileUpdates);
+    
+    if (result.success && editForm.enrollment_date) {
+      await updateEnrollmentDate(editingStudent.id, new Date(editForm.enrollment_date).toISOString());
+    }
+
     setSavingEdit(false);
     
     if (result.success) {
@@ -301,7 +319,7 @@ export default function ClassDetailsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="flex items-center justify-end gap-1">
-                        <button onClick={() => handleEditClick(en.profiles)} className="p-2 hover:bg-orange-50 text-orange-600 rounded-lg transition-colors" title="Sửa thông tin">
+                        <button onClick={() => handleEditClick(en)} className="p-2 hover:bg-orange-50 text-orange-600 rounded-lg transition-colors" title="Sửa thông tin">
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button onClick={() => handleRemoveStudent(en.id, en.profiles?.full_name)} className="p-2 hover:bg-rose-50 text-rose-500 rounded-lg transition-colors" title="Xóa khỏi lớp">
