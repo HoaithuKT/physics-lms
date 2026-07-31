@@ -5,6 +5,28 @@ import { Loader2, DollarSign, CalendarDays, Download, CreditCard, Send, Edit, Sa
 import { toPng, toBlob } from "html-to-image";
 import { getTuitionFees, updateTuitionFee, rolloverDebt } from "./tuitionActions";
 
+const Base64Image = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
+  const [base64, setBase64] = useState<string>('');
+  useEffect(() => {
+    let isMounted = true;
+    fetch(src)
+      .then(r => r.blob())
+      .then(b => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (isMounted) setBase64(reader.result as string);
+        };
+        reader.readAsDataURL(b);
+      }).catch(e => {
+        console.error(e);
+        if (isMounted) setBase64(src); // fallback
+      });
+    return () => { isMounted = false; };
+  }, [src]);
+  if (!base64) return <div className={className} />;
+  return <img src={base64} alt={alt} className={className} crossOrigin="anonymous" />;
+};
+
 export default function TuitionTab({ classId, classInfo, enrollments }: { classId: string, classInfo: any, enrollments: any[] }) {
   const currentDate = new Date();
   const [month, setMonth] = useState(currentDate.getMonth() + 1);
@@ -563,7 +585,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                    {/* Logo Image */}
                    <div className="flex flex-col pb-3 mb-4 relative w-full items-center">
                       <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-rose-500 to-transparent rounded-full opacity-70"></div>
-                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" loading="eager" className="h-32 object-contain mb-2" />
+                      <Base64Image src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
                    </div>
                    
                    {/* Title & Info - Separated clearly */}
@@ -749,7 +771,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                    
                    <div className="shrink-0 bg-white border border-gray-200 rounded-2xl p-3 shadow-sm w-48 flex items-center justify-center flex-col">
                      <div className="text-rose-600 font-bold text-sm mb-2 uppercase">VietQR</div>
-                     <img src="https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" loading="eager" crossOrigin="anonymous" className="w-full h-full object-contain rounded-xl" />
+                     <Base64Image src="https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" className="w-full h-full object-contain rounded-xl" />
                    </div>
                 </div>
              </div>
@@ -774,7 +796,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                     <div className="flex flex-col items-center mb-6 relative z-10 w-full">
                        <div className="flex flex-col pb-3 mb-4 w-full items-center relative">
                           <div className="absolute bottom-0 w-3/4 h-[2px] bg-gradient-to-r from-transparent via-rose-500 to-transparent rounded-full opacity-70"></div>
-                          <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" loading="eager" className="h-24 object-contain mb-2" />
+                          <Base64Image src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-24 object-contain mb-2" />
                        </div>
                        <div className="text-center w-full">
                          <h1 className="text-2xl sm:text-3xl font-black text-rose-600 uppercase tracking-wider mb-2 drop-shadow-sm whitespace-nowrap">
@@ -821,8 +843,8 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                        <h3 className="text-lg font-black text-rose-800 uppercase tracking-widest mb-3">Thông Tin Chuyển Khoản</h3>
                        <div className="shrink-0 bg-white border border-gray-200 rounded-xl p-2 shadow-sm w-36 mb-4 flex items-center justify-center flex-col">
                          <div className="text-rose-600 font-bold text-[10px] mb-1 uppercase">VietQR</div>
-                         <img src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" loading="eager" crossOrigin="anonymous" className="w-full object-contain rounded-lg" />
-                         <img src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" loading="eager" crossOrigin="anonymous" className="w-full object-contain rounded-lg hidden" />
+                         <Base64Image src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" className="w-full object-contain rounded-lg" />
+                         <Base64Image src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" className="w-full object-contain rounded-lg hidden" />
                        </div>
                        <div className="space-y-1 text-sm font-bold text-gray-700 text-center mb-3">
                          <p>Ngân hàng: <span className="text-rose-700">BIDV</span></p>

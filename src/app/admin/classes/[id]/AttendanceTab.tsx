@@ -5,6 +5,28 @@ import { Trash2, Save, Loader2, Calendar, Check, AlertCircle, ImageIcon, Downloa
 import { getSessions, createSession, deleteSession, getAttendance, saveBulkAttendance } from "./attendanceActions";
 import { toPng } from "html-to-image";
 
+const Base64Image = ({ src, alt, className }: { src: string, alt: string, className?: string }) => {
+  const [base64, setBase64] = useState<string>('');
+  useEffect(() => {
+    let isMounted = true;
+    fetch(src)
+      .then(r => r.blob())
+      .then(b => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          if (isMounted) setBase64(reader.result as string);
+        };
+        reader.readAsDataURL(b);
+      }).catch(e => {
+        console.error(e);
+        if (isMounted) setBase64(src); // fallback
+      });
+    return () => { isMounted = false; };
+  }, [src]);
+  if (!base64) return <div className={className} />;
+  return <img src={base64} alt={alt} className={className} crossOrigin="anonymous" />;
+};
+
 export default function AttendanceTab({ classId, enrollments, className }: { classId: string, enrollments: any[], className?: string }) {
   const printRef = useRef<HTMLDivElement>(null);
   const [sessions, setSessions] = useState<any[]>([]);
@@ -343,7 +365,7 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                    {/* Logo Image */}
                    <div className="flex flex-col pb-4 mb-6 relative w-full items-center">
                       <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-rose-500 to-transparent rounded-full opacity-70"></div>
-                      <img src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" loading="eager" className="h-32 object-contain mb-2" />
+                      <Base64Image src="/logo-physics-hub.jpg" alt="Physics Hub with Thu" className="h-32 object-contain mb-2" />
                    </div>
                    
                    {/* Title & Info */}
