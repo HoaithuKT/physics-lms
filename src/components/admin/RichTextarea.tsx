@@ -1,37 +1,46 @@
 "use client";
 
 import React, { useRef, useState, useEffect } from "react";
-import { Type, Palette, AlignLeft, AlignCenter, AlignRight, AlignJustify, Frame, Bold, Italic, Underline as UnderlineIcon, Smile, Eraser, ChevronDown, Image as ImageIcon, Loader2 } from "lucide-react";
+import { Type, Palette, AlignLeft, AlignCenter, AlignRight, AlignJustify, Frame, Bold, Italic, Underline as UnderlineIcon, Smile, Eraser, ChevronDown, Image as ImageIcon, Loader2, Heading } from "lucide-react";
 import TextareaAutosize from 'react-textarea-autosize';
 
 interface RichTextareaProps extends Omit<React.ComponentProps<typeof TextareaAutosize>, 'onChange' | 'value'> {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   onValueChange?: (value: string) => void;
+  collapsibleToolbar?: boolean;
+  defaultToolbarExpanded?: boolean;
 }
 
-const wrapMultiLineSelection = (selectedText: string, wrapFn: (line: string) => string) => {
+const wrapMultiLineSelection = (selectedText: string, wrapFn: (line: string) => string, stylePropToClean?: string) => {
   return selectedText.split('\n').map(line => {
     if (line.trim() === '') return line;
     
+    let processedLine = line;
+    if (stylePropToClean) {
+        const regex = new RegExp(`${stylePropToClean}\\s*:\\s*[^;"]+;?`, 'gi');
+        processedLine = processedLine.replace(regex, '');
+    }
+
     // Match common Markdown block prefixes to keep them OUTSIDE the wrapping tag
     // This prevents breaking Markdown parsing (e.g., blockquotes, lists, headings)
     const prefixRegex = /^(\s*(?:(?:>\s*)+|#+\s+|[-*+]\s+|\d+\.\s+))(.*)$/;
-    const match = line.match(prefixRegex);
+    const match = processedLine.match(prefixRegex);
     
     if (match) {
         return match[1] + wrapFn(match[2]);
     }
-    return wrapFn(line);
+    return wrapFn(processedLine);
   }).join('\n');
 };
 
-export default function RichTextarea({ value, onChange, onValueChange, className = "", ...props }: RichTextareaProps) {
+export default function RichTextarea({ value, onChange, onValueChange, className = "", collapsibleToolbar = false, defaultToolbarExpanded = false, ...props }: RichTextareaProps) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [fontSize, setFontSize] = useState<string>("30");
   const [textColor, setTextColor] = useState<string>("#ef4444"); // Default red
   const [lineHeight, setLineHeight] = useState<string>("1.5");
   const [isClient, setIsClient] = useState(false);
+  const [isToolbarExpanded, setIsToolbarExpanded] = useState(defaultToolbarExpanded);
   
   const [showIconMenu, setShowIconMenu] = useState(false);
   const iconMenuRef = useRef<HTMLDivElement>(null);
@@ -70,7 +79,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
     const afterText = value.substring(end);
 
     const sizePx = fontSize ? `${fontSize}px` : '40px';
-    const wrappedText = wrapMultiLineSelection(selectedText, l => `<span style="font-size: ${sizePx}">${l}</span>`);
+    const wrappedText = wrapMultiLineSelection(selectedText, l => `<span style="font-size: ${sizePx}">${l}</span>`, 'font-size');
     const newValue = beforeText + wrappedText + afterText;
 
     if (onValueChange) {
@@ -80,6 +89,41 @@ export default function RichTextarea({ value, onChange, onValueChange, className
       onChange(event);
     }
 
+    setTimeout(() => {
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        textareaRef.current.setSelectionRange(start, start + wrappedText.length);
+      }
+    }, 0);
+  };
+
+  const handleApplyHeading = (level: number | '') => {
+    if (!level) return;
+    if (!textareaRef.current) return;
+    
+    const ta = textareaRef.current;
+    const start = ta.selectionStart;
+    const end = ta.selectionEnd;
+    const val = ta.value;
+
+    const selectedText = val.substring(start, end);
+    const beforeText = val.substring(0, start);
+    const afterText = val.substring(end);
+
+    const prefix = '#'.repeat(level as number) + ' ';
+    const wrappedText = selectedText.split('\n').map(l => {
+        if (l.trim() === '') return l;
+        return prefix + l.replace(/^#+\s*/, '');
+    }).join('\n');
+    
+    const newValue = beforeText + wrappedText + afterText;
+    if (onValueChange) {
+      onValueChange(newValue);
+    } else {
+      const event = { target: { value: newValue } } as React.ChangeEvent<HTMLTextAreaElement>;
+      onChange(event);
+    }
+    
     setTimeout(() => {
       if (textareaRef.current) {
         textareaRef.current.focus();
@@ -105,7 +149,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
     const beforeText = value.substring(0, start);
     const afterText = value.substring(end);
 
-    const wrappedText = wrapMultiLineSelection(selectedText, l => `<span style="color: ${textColor}">${l}</span>`);
+    const wrappedText = wrapMultiLineSelection(selectedText, l => `<span style="color: ${textColor}">${l}</span>`, 'color');
     const newValue = beforeText + wrappedText + afterText;
 
     if (onValueChange) {
@@ -140,7 +184,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
     const beforeText = value.substring(0, start);
     const afterText = value.substring(end);
 
-    const wrappedText = wrapMultiLineSelection(selectedText, l => `<span style="line-height: ${lineHeight}">${l}</span>`);
+    const wrappedText = wrapMultiLineSelection(selectedText, l => `<span style="line-height: ${lineHeight}">${l}</span>`, 'line-height');
     const newValue = beforeText + wrappedText + afterText;
 
     if (onValueChange) {
@@ -175,7 +219,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
     const beforeText = value.substring(0, start);
     const afterText = value.substring(end);
 
-    const wrappedText = wrapMultiLineSelection(selectedText, l => `<span style="text-align: ${align}; display: block">${l}</span>`);
+    const wrappedText = wrapMultiLineSelection(selectedText, l => `<span style="text-align: ${align}; display: block">${l}</span>`, 'text-align');
     const newValue = beforeText + wrappedText + afterText;
 
     if (onValueChange) {
@@ -493,23 +537,43 @@ export default function RichTextarea({ value, onChange, onValueChange, className
   const innerClass = className.replace(/border-[a-zA-Z0-9-]+|rounded-[a-zA-Z0-9-]+|focus:[a-zA-Z0-9-]+|ring[a-zA-Z0-9-:]*/g, '').trim();
 
   return (
-    <div className={`relative flex flex-col border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all overflow-hidden bg-white ${className.includes('mt-') ? className.match(/mt-[0-9]+/)?.[0] : ''}`}>
-      {/* Textarea */}
-      <TextareaAutosize
-        ref={textareaRef}
-        value={value}
-        onChange={onChange}
-        onKeyDown={handleKeyDown}
-        onPaste={handlePaste}
-        minRows={props.rows || 3}
-        maxRows={30}
-        className={`w-full p-4 border-none focus:ring-0 outline-none font-mono text-[15px] bg-transparent ${innerClass}`}
-        {...props}
-      />
-      
+    <div className={`relative flex flex-col border border-gray-300 rounded-lg focus-within:border-indigo-500 focus-within:ring-2 focus-within:ring-indigo-500/20 transition-all bg-white ${className.includes('mt-') ? className.match(/mt-[0-9]+/)?.[0] : ''}`}>
       {/* Toolbar */}
-      <div className="flex flex-wrap items-center gap-4 px-3 py-2 bg-slate-50 border-t border-gray-200">
+      {collapsibleToolbar && (
+         <div className="bg-slate-50 border-b border-gray-200 px-3 py-1 sticky top-0 z-40 flex justify-end">
+            <button 
+              type="button" 
+              onClick={() => setIsToolbarExpanded(!isToolbarExpanded)}
+              className="text-xs font-bold text-indigo-600 hover:text-indigo-800 transition-colors flex items-center gap-1 bg-indigo-50 px-2 py-1 rounded"
+            >
+              {isToolbarExpanded ? '▲ Thu gọn công cụ' : '▼ Hiển thị công cụ định dạng'}
+            </button>
+         </div>
+      )}
+      {(!collapsibleToolbar || isToolbarExpanded) && (
+      <div className="flex flex-wrap items-center gap-4 px-3 py-2 bg-slate-50 border-b border-gray-200 sticky top-0 z-40 shadow-sm">
         
+        {/* Heading Group */}
+        <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded px-2 py-1 shadow-sm">
+            <Heading className="w-4 h-4 text-gray-500" />
+            <select
+              onChange={e => {
+                  handleApplyHeading(e.target.value ? parseInt(e.target.value) : '');
+                  e.target.value = "";
+              }}
+              className="border-none focus:ring-0 text-xs font-bold p-0 text-gray-700 bg-transparent h-5 cursor-pointer outline-none pl-1"
+            >
+              <option value="">Tiêu đề</option>
+              <option value="1">H1 (Tên Bài)</option>
+              <option value="2">H2 (Chương)</option>
+              <option value="3">H3 (Mục La Mã)</option>
+              <option value="4">H4 (Mục a, b..)</option>
+              <option value="5">H5 (Ý nhỏ)</option>
+            </select>
+          </div>
+        </div>
+
         {/* Font Size Group */}
         <div className="flex items-center gap-2">
           <div className="flex items-center gap-1.5 bg-white border border-gray-300 rounded px-2 py-1 shadow-sm">
@@ -575,7 +639,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
             <select
               value={lineHeight}
               onChange={e => setLineHeight(e.target.value)}
-              className="border-none focus:ring-0 text-sm font-bold p-0 text-orange-700 bg-transparent h-5 cursor-pointer outline-none pl-1"
+              className="border-none focus:ring-0 text-sm font-bold p-0 text-teal-700 bg-transparent h-5 cursor-pointer outline-none pl-1"
             >
               <option value="1.0">1.0</option>
               <option value="1.15">1.15</option>
@@ -588,7 +652,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
           <button 
             type="button"
             onClick={handleApplyLineSpacing}
-            className="bg-orange-50 hover:bg-orange-100 text-orange-700 px-3 py-1.5 rounded text-xs font-bold transition-colors border border-orange-200"
+            className="bg-teal-50 hover:bg-teal-100 text-teal-700 px-3 py-1.5 rounded text-xs font-bold transition-colors border border-teal-200"
           >
             Đổi giãn dòng
           </button>
@@ -728,6 +792,22 @@ export default function RichTextarea({ value, onChange, onValueChange, className
         </div>
 
       </div>
-    </div>
+      )}
+    
+      {/* Textarea */}
+      <TextareaAutosize
+        ref={textareaRef}
+        value={value}
+        onChange={onChange}
+        onKeyDown={handleKeyDown}
+        onPaste={handlePaste}
+        minRows={props.rows || 3}
+        maxRows={30}
+        className={`w-full p-4 border-none focus:ring-0 outline-none font-mono text-[15px] bg-transparent ${innerClass}`}
+        {...props}
+      />
+      
+      </div>
   );
 }
+

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { toPng } from "html-to-image";
+import { captureElement, downloadOrShare } from "@/utils/imageExport";
 import { Loader2, ImageIcon } from "lucide-react";
 
 export default function ScoresTab({ classId, classInfo, enrollments }: { classId: string, classInfo: any, enrollments: any[] }) {
@@ -19,19 +19,12 @@ export default function ScoresTab({ classId, classInfo, enrollments }: { classId
     if (!printRef.current) return;
     setExportingImage(true); 
     try {
-      const dataUrl = await toPng(printRef.current, {
-        cacheBust: true,
-        backgroundColor: "#ffffff",
-        pixelRatio: 2,
-        skipFonts: true
-      });
-      const link = document.createElement("a");
-      link.download = `Bao_cao_diem_${classInfo?.name || 'Lop'}_${new Date().getTime()}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (err) {
-      console.error(err);
-      alert("Đã xảy ra lỗi khi xuất ảnh! Vui lòng thử lại.");
+      const dataUrl = await captureElement(printRef.current);
+      const fileName = `Bao_cao_diem_${classInfo?.name || 'Lop'}_${new Date().getTime()}.png`;
+      await downloadOrShare(dataUrl, fileName);
+    } catch (err: any) {
+      console.error('Export image error:', err);
+      alert(`Đã xảy ra lỗi khi xuất ảnh! Chi tiết: ${err.message || 'Unknown error'}`);
     }
     setExportingImage(false);
   };
@@ -55,7 +48,7 @@ export default function ScoresTab({ classId, classInfo, enrollments }: { classId
               type="text" 
               value={testName}
               onChange={e => setTestName(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500"
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-teal-500"
             />
           </div>
           <div>
@@ -67,7 +60,7 @@ export default function ScoresTab({ classId, classInfo, enrollments }: { classId
               max="10"
               value={passingScore}
               onChange={e => setPassingScore(parseFloat(e.target.value) || 0)}
-              className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-orange-500 w-24"
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:outline-none focus:border-teal-500 w-24"
             />
           </div>
         </div>
@@ -86,11 +79,11 @@ export default function ScoresTab({ classId, classInfo, enrollments }: { classId
       {/* Exportable Area */}
       <div ref={printRef} className="bg-white p-4">
         {/* Header with Logo */}
-        <div className="flex items-center justify-between border-b-2 border-orange-600 pb-4 mb-4">
+        <div className="flex items-center justify-between border-b-2 border-teal-600 pb-4 mb-4">
           <div className="flex items-center gap-4">
             <img src="/logo.jpg" alt="Logo" className="h-16 object-contain rounded-lg" />
             <div>
-              <h3 className="text-xl font-black text-orange-700 uppercase">{classInfo?.name}</h3>
+              <h3 className="text-xl font-black text-teal-700 uppercase">{classInfo?.name}</h3>
               <p className="text-gray-600 font-medium">Báo cáo điểm: <span className="text-gray-800 font-bold">{testName}</span></p>
             </div>
           </div>
@@ -124,7 +117,7 @@ export default function ScoresTab({ classId, classInfo, enrollments }: { classId
                     min="0" max="10"
                     value={scores[studentId] || ''}
                     onChange={e => handleScoreChange(studentId, e.target.value)}
-                    className="w-full text-center py-1 bg-transparent border-b border-dashed border-gray-300 focus:outline-none focus:border-orange-500 font-bold text-gray-800"
+                    className="w-full text-center py-1 bg-transparent border-b border-dashed border-gray-300 focus:outline-none focus:border-teal-500 font-bold text-gray-800"
                     data-html2canvas-ignore="false"
                   />
                 </td>
@@ -148,3 +141,4 @@ export default function ScoresTab({ classId, classInfo, enrollments }: { classId
     </div>
   );
 }
+

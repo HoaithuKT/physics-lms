@@ -5,7 +5,7 @@ import { Loader2, Search, Filter, RefreshCw, Download, Image as ImageIcon, Troph
 import Link from "next/link";
 import { fetchOnlineExamResultsAdmin } from "./actions";
 import * as XLSX from "xlsx";
-import { toPng } from "html-to-image";
+import { captureElement, downloadOrShare } from "@/utils/imageExport";
 
 export default function OnlineExamResultsPage() {
   const [results, setResults] = useState<any[]>([]);
@@ -97,11 +97,9 @@ export default function OnlineExamResultsPage() {
     if (!leaderboardRef.current) return;
     setIsExportingImage(true);
     try {
-      const dataUrl = await toPng(leaderboardRef.current, { cacheBust: true, backgroundColor: 'transparent', pixelRatio: 2 });
-      const link = document.createElement('a');
-      link.href = dataUrl;
-      link.download = `BangVang_${new Date().getTime()}.png`;
-      link.click();
+      const dataUrl = await captureElement(leaderboardRef.current);
+      const fileName = `BangVang_${new Date().getTime()}.png`;
+      await downloadOrShare(dataUrl, fileName);
     } catch (err) {
       alert("Có lỗi khi xuất ảnh: " + err);
     }
@@ -121,11 +119,9 @@ export default function OnlineExamResultsPage() {
         return;
       }
       try {
-        const dataUrl = await toPng(certificateRef.current, { cacheBust: true, backgroundColor: 'transparent', pixelRatio: 2 });
-        const link = document.createElement('a');
-        link.href = dataUrl;
-        link.download = `PhieuDiem_${student.profiles?.full_name}_${new Date().getTime()}.png`;
-        link.click();
+        const dataUrl = await captureElement(certificateRef.current);
+        const fileName = `PhieuDiem_${student.profiles?.full_name}_${new Date().getTime()}.png`;
+        await downloadOrShare(dataUrl, fileName);
       } catch (err) {
         alert("Có lỗi khi xuất ảnh: " + err);
       }
@@ -150,7 +146,7 @@ export default function OnlineExamResultsPage() {
           </button>
           <button 
             onClick={exportToExcel}
-            className="bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100 hover:shadow-amber-100/50 px-4 py-2 rounded-xl shadow-sm flex items-center gap-2 font-bold transition-all"
+            className="bg-emerald-50 border border-emerald-200 text-emerald-700 hover:bg-emerald-100 hover:shadow-emerald-100/50 px-4 py-2 rounded-xl shadow-sm flex items-center gap-2 font-bold transition-all"
           >
             <Download className="w-4 h-4" /> Xuất Excel
           </button>
@@ -270,7 +266,7 @@ export default function OnlineExamResultsPage() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       <div className={`inline-flex items-center justify-center min-w-[3rem] px-3 py-1.5 rounded-xl font-black text-lg ${
-                        r.score >= 8 ? 'bg-amber-100 text-amber-700' :
+                        r.score >= 8 ? 'bg-emerald-100 text-emerald-700' :
                         r.score >= 5 ? 'bg-amber-100 text-amber-700' :
                         'bg-rose-100 text-rose-700'
                       }`}>
@@ -279,7 +275,7 @@ export default function OnlineExamResultsPage() {
                     </td>
                     <td className="px-6 py-4 text-center">
                       {r.status === 'GRADED' ? (
-                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-amber-50 text-amber-600 border border-amber-200/50">
+                        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-600 border border-emerald-200/50">
                           <CheckCircle2 className="w-3.5 h-3.5" /> Đã chấm
                         </span>
                       ) : r.status === 'SUBMITTED' ? (
@@ -375,10 +371,10 @@ export default function OnlineExamResultsPage() {
                     <p className="text-indigo-300 text-sm font-medium">Lớp: {student.profiles?.class_name || '-'}</p>
                   </div>
                   <div className="text-right">
-                    <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-amber-300 to-amber-500">
+                    <div className="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-br from-emerald-300 to-emerald-500">
                       {student.score}
                     </div>
-                    <p className="text-amber-500/80 text-xs font-black uppercase tracking-wider mt-1">ĐIỂM</p>
+                    <p className="text-emerald-500/80 text-xs font-black uppercase tracking-wider mt-1">ĐIỂM</p>
                   </div>
                 </div>
               ))}
@@ -389,7 +385,7 @@ export default function OnlineExamResultsPage() {
           </div>
           
           <div className="mt-10 text-center relative z-10">
-            <p className="text-indigo-400/60 font-bold uppercase tracking-widest text-sm">Hệ Thống Đào Tạo Physics LMS • {new Date().getFullYear()}</p>
+            <p className="text-indigo-400/60 font-bold uppercase tracking-widest text-sm">Hệ Thống Đào Tạo Math LMS • {new Date().getFullYear()}</p>
           </div>
         </div>
       </div>
@@ -433,8 +429,8 @@ export default function OnlineExamResultsPage() {
                 <div>
                   <p className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2">Thành tích Đạt được</p>
                   <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-amber-100 rounded-full flex items-center justify-center">
-                      <CheckCircle2 className="w-6 h-6 text-amber-600" />
+                    <div className="w-12 h-12 bg-emerald-100 rounded-full flex items-center justify-center">
+                      <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                     </div>
                     <span className="text-lg font-bold text-slate-700">Hoàn thành Tốt</span>
                   </div>
@@ -466,3 +462,4 @@ export default function OnlineExamResultsPage() {
     </div>
   );
 }
+

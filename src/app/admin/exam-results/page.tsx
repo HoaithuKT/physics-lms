@@ -7,7 +7,7 @@ import { fetchExamResultsAdmin } from "./actions";
 import ReviewModal from './ReviewModal';
 import RemedialModal from './RemedialModal';
 import * as XLSX from 'xlsx';
-import { toPng } from 'html-to-image';
+import { captureElement, downloadOrShare } from "@/utils/imageExport";
 import ReportCardTemplate from './ReportCardTemplate';
 
 export default function ExamResultsPage() {
@@ -59,14 +59,12 @@ export default function ExamResultsPage() {
     
     setIsExportingImage(true);
     try {
-      const dataUrl = await toPng(reportCardRef.current, { cacheBust: true, pixelRatio: 2 });
-      const link = document.createElement('a');
-      link.download = `BangVang_${new Date().getTime()}.png`;
-      link.href = dataUrl;
-      link.click();
-    } catch (err) {
-      console.error(err);
-      alert("Lỗi khi xuất ảnh!");
+      const dataUrl = await captureElement(reportCardRef.current);
+      const fileName = `BangVang_${new Date().getTime()}.png`;
+      await downloadOrShare(dataUrl, fileName);
+    } catch (err: any) {
+      console.error('Export image error:', err);
+      alert(`Đã xảy ra lỗi khi xuất ảnh! Chi tiết: ${err.message || 'Unknown error'}`);
     } finally {
       setIsExportingImage(false);
     }
@@ -254,7 +252,7 @@ export default function ExamResultsPage() {
               placeholder="Tìm kiếm học sinh hoặc tên bài học..."
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 transition-all"
+              className="w-full pl-10 pr-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 transition-all"
             />
           </div>
           
@@ -265,7 +263,7 @@ export default function ExamResultsPage() {
             <select
               value={selectedClassId}
               onChange={e => setSelectedClassId(e.target.value)}
-              className="w-full md:w-48 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer"
+              className="w-full md:w-48 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 cursor-pointer"
             >
               <option value="all">Tất cả các lớp</option>
               {classes.map(cls => (
@@ -275,7 +273,7 @@ export default function ExamResultsPage() {
                         <select
               value={selectedLessonId}
               onChange={e => setSelectedLessonId(e.target.value)}
-              className="w-full md:w-64 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer"
+              className="w-full md:w-64 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 cursor-pointer"
             >
               <option value="all">Tất cả bài học</option>
               {filteredLessons.map(ls => (
@@ -286,7 +284,7 @@ export default function ExamResultsPage() {
               <select
                 value={selectedModuleId}
                 onChange={e => setSelectedModuleId(e.target.value)}
-                className="w-full md:w-64 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 cursor-pointer"
+                className="w-full md:w-64 px-4 py-2.5 bg-white border border-zinc-200 rounded-xl text-sm font-bold text-zinc-700 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500 cursor-pointer"
               >
                 <option value="all">Tất cả phần luyện tập</option>
                 {modules
@@ -301,14 +299,14 @@ export default function ExamResultsPage() {
             
             <button
               onClick={handleExportExcel}
-              className="px-4 py-2.5 bg-amber-50 text-amber-700 hover:bg-amber-100 border border-amber-200 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors ml-2"
+              className="px-4 py-2.5 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 border border-emerald-200 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors ml-2"
             >
               <Download className="w-4 h-4" /> Xuất Excel
             </button>
             <button
               onClick={handleExportImage}
               disabled={isExportingImage}
-              className="px-4 py-2.5 bg-orange-50 text-orange-700 hover:bg-orange-100 border border-orange-200 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
+              className="px-4 py-2.5 bg-teal-50 text-teal-700 hover:bg-teal-100 border border-teal-200 rounded-xl text-sm font-bold flex items-center gap-2 transition-colors disabled:opacity-50"
             >
               {isExportingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <ImageIcon className="w-4 h-4" />} 
               {isExportingImage ? 'Đang tạo...' : 'Xuất Bảng Vàng'}
@@ -338,7 +336,7 @@ export default function ExamResultsPage() {
               {loading ? (
                 <tr>
                   <td colSpan={8} className="px-6 py-12 text-center text-zinc-500">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-orange-600 mb-2" />
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-teal-600 mb-2" />
                     Đang tải dữ liệu...
                   </td>
                 </tr>
@@ -399,7 +397,7 @@ export default function ExamResultsPage() {
                           <Edit3 className="w-4 h-4" /> Đang làm
                         </span>
                       ) : row.passed ? (
-                        <span className="inline-flex items-center gap-1 bg-amber-100 text-amber-700 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
+                        <span className="inline-flex items-center gap-1 bg-emerald-100 text-emerald-700 px-3 py-1.5 rounded-full text-xs font-bold shadow-sm">
                           <CheckCircle2 className="w-4 h-4" /> Đạt
                         </span>
                       ) : (
@@ -459,3 +457,4 @@ export default function ExamResultsPage() {
     </div>
   );
 }
+
