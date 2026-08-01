@@ -532,7 +532,28 @@ const parseMarkdownToBlocks = (content: string): Block[] => {
           if (txt) res.push({ id: Math.random().toString(36).substring(7), type: 'md', content: txt });
       }
       try {
-          const data = JSON.parse(match[1].replace(/\n$/, ''));
+          let rawJson = match[1].replace(/\n$/, '');
+          // Tiền xử lý phục hồi lỗi LaTeX escape: AI quên escape nên JSON parse \n thành kí tự xuống dòng
+          rawJson = rawJson
+              .replace(/\\n(?=eq|otin|abla|atural)/g, '\\\\n')
+              .replace(/\\r(?=ightarrow|ho|angle)/g, '\\\\r')
+              .replace(/\\t(?=imes|heta|riangle|ext)/g, '\\\\t')
+              .replace(/\\b(?=egin)/g, '\\\\b')
+              .replace(/\\f(?=rac|orall)/g, '\\\\f')
+              .replace(/\\e(?=nd)/g, '\\\\e');
+
+          let data;
+          try {
+             data = JSON.parse(rawJson);
+          } catch(e1) {
+             // Thử vá lỗi JSON bị AI cắt cụt do vượt max token
+             let patchedJson = rawJson.trim();
+             if (patchedJson.endsWith(',')) patchedJson = patchedJson.slice(0, -1);
+             if (patchedJson.endsWith('"')) patchedJson += '}]';
+             else if (patchedJson.endsWith('}')) patchedJson += ']';
+             else if (!patchedJson.endsWith(']')) patchedJson += '}]';
+             data = JSON.parse(patchedJson);
+          }
           if (Array.isArray(data)) {
               data.forEach(item => {
                   if (item.question) {
@@ -568,14 +589,14 @@ const serializeBlocksToMarkdown = (blocks: Block[]): string => {
 
 const getPrompt = (isPractice: boolean, isPresentation: boolean) => {
   if (isPractice) {
-      return `Bạn là một chuyên gia giáo dục Vật lý xuất sắc hàng đầu thế giới. 
+      return `Bạn là một chuyên gia giáo dục Toán học xuất sắc hàng đầu thế giới. 
 Hãy phân tích nội dung các ảnh/tài liệu này và BÓC TÁCH TOÀN BỘ CÁC CÂU HỎI BÀI TẬP thành các khối mã \`\`\`quiz\`\`\` định dạng JSON.
 YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
 1. [CẢNH BÁO LỖI ĐỀ]: Trách nhiệm cao nhất của bạn là giải thử từng câu. Nếu phát hiện câu hỏi bị sai đề, thiếu dữ kiện, mâu thuẫn toán học, hoặc không có đáp án đúng, hãy IN ĐẬM VÀ TÔ MÀU ĐỎ cảnh báo ngay trước đoạn mã \`\`\`quiz\`\`\` của câu hỏi đó (VD: **<span style="color:red">⚠️ LỖI ĐỀ BÀI: Câu hỏi này thiếu điều kiện m ≠ 0...</span>**).
 2. [KHÔNG BỎ SÓT BÀI TẬP]: Quét KỸ 100% tài liệu gốc. Tôi đưa lên bao nhiêu câu hỏi thì BẮT BUỘC bạn phải bóc tách bấy nhiêu câu. TUYỆT ĐỐI KHÔNG được qua loa hay bỏ sót bất kỳ câu nào, nếu vi phạm sẽ bị phạt nặng.
 3. [VỊ TRÍ HÌNH ẢNH/BẢNG BIỂU]: Nếu phát hiện câu hỏi trong tài liệu gốc có chứa hình vẽ, biểu đồ hoặc đồ thị, TUYỆT ĐỐI KHÔNG mô tả chi tiết làm lệch câu gốc. BẮT BUỘC phải chèn dòng chữ \`[CÓ HÌNH ẢNH KÈM THEO]\` vào ĐÚNG VỊ TRÍ mà hình ảnh đó xuất hiện trong câu hỏi gốc (ví dụ: ngay sau chữ "như hình vẽ bên:"). Tuyệt đối KHÔNG được tự ý vứt xuống cuối phần nội dung nếu nó nằm ở giữa câu.
 4. [KHÔNG VIẾT LÝ THUYẾT]: Tuyệt đối KHÔNG viết câu mở đầu, KHÔNG tóm tắt lý thuyết, KHÔNG giải thích. CHỈ ĐƯỢC PHÉP TRẢ VỀ CÁC ĐOẠN MÃ \`\`\`quiz\`\`\` (và các dòng cảnh báo lỗi đề nếu có).
-5. [CHUẨN HÓA VẬT LÝ LATEX TỐI ƯU NHƯ MATHTYPE]:
+5. [CHUẨN HÓA TOÁN HỌC LATEX TỐI ƯU NHƯ MATHTYPE]:
 - Bao bọc TẤT CẢ công thức bằng dấu $ (Ví dụ: $x^2 + y^2 = 25$). Tuyệt đối KHÔNG bao bọc chữ tiếng Việt bên trong dấu $ (Ví dụ SAI: $Ta có: x = 2$, ĐÚNG: Ta có $x = 2$).
 - CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình).
 
@@ -617,21 +638,22 @@ LOẠI 1: TRẮC NGHIỆM 4 LỰA CHỌN (1 ĐÁP ÁN ĐÚNG)
 \`\`\`
 
 GHI CHÚ TUYỆT ĐỐI QUAN TRỌNG VỀ JSON:
-- [BẮT BUỘC VỀ VẬT LÝ]: Tất cả công thức toán học trong JSON BẮT BUỘC phải được bọc trong cặp dấu $...$$.
-- TẤT CẢ các ký tự gạch chéo (\\) bên trong chuỗi JSON BẮT BUỘC PHẢI NHÂN ĐÔI thành (\\\\). Nếu không làm điều này, JSON sẽ BỊ LỖI và bóc tách sẽ hỏng.
-- ĐỪNG xuất ra bất kỳ giải thích chữ nào bên ngoài các khối \`\`\`quiz\`\`\`. Chỉ xuất các khối quiz.`;
+- [BẮT BUỘC VỀ TOÁN HỌC]: Tất cả công thức toán học trong JSON BẮT BUỘC phải được bọc trong cặp dấu $...$.
+- [BẮT BUỘC ESCAPE LATEX]: TẤT CẢ các ký tự gạch chéo (\\) bên trong chuỗi JSON BẮT BUỘC PHẢI NHÂN ĐÔI thành (\\\\). Ví dụ: \\\\neq, \\\\Rightarrow, \\\\begin{cases}. Kí hiệu xuống dòng của hệ phương trình cũng phải viết là \\\\\\\\. Nếu không, file JSON SẼ BỊ HỎNG HOÀN TOÀN và BẠN SẼ BỊ PHẠT!
+- [KHÔNG ĐƯỢC CẮT CỤT DỮ LIỆU]: BẠN BẮT BUỘC PHẢI TRẢ VỀ CHUỖI JSON HOÀN CHỈNH, ĐÓNG ĐẦY ĐỦ NGOẶC \`}\` HOẶC \`]\` Ở CUỐI! TUYỆT ĐỐI KHÔNG TRẢ VỀ DỮ LIỆU BỊ CẮT CỤT GIỮA CHỪNG!
+- ĐỪNG xuất ra bất kỳ giải thích chữ nào bên ngoài các khối ```quiz```. Chỉ xuất các khối quiz.`;
   }
 
   if (!isPresentation) {
-      return `Bạn là một chuyên gia giáo dục Vật lý xuất sắc hàng đầu thế giới. 
-Hãy phân tích nội dung các ảnh tài liệu này và biên soạn lại thành một bài giảng Vật lý HOÀN CHỈNH, CHI TIẾT, DỄ HIỂU.
+      return `Bạn là một chuyên gia giáo dục Toán học xuất sắc hàng đầu thế giới. 
+Hãy phân tích nội dung các ảnh tài liệu này và biên soạn lại thành một bài giảng Toán học HOÀN CHỈNH, CHI TIẾT, DỄ HIỂU.
 YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
-1. Dạng Markdown. [CHUẨN HÓA VẬT LÝ LATEX TỐI ƯU NHƯ MATHTYPE]:
+1. Dạng Markdown. [CHUẨN HÓA TOÁN HỌC LATEX TỐI ƯU NHƯ MATHTYPE]:
 - Bao bọc TẤT CẢ công thức bằng dấu $ (Ví dụ: $x^2 + y^2 = 25$). Tuyệt đối KHÔNG bao bọc chữ tiếng Việt bên trong dấu $ (Ví dụ SAI: $Ta có: x = 2$, ĐÚNG: Ta có $x = 2$).
 - CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình). Các biểu thức toán học phải liền khối.
 
 - Phân số: Dạng \\frac{tử}{mẫu}. Góc: Dạng \\widehat{tên}. Hệ phương trình: Dùng \\begin{cases} ... \\end{cases}.
-2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG VẬT LÝ]:
+2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG TOÁN HỌC]:
 Bài giảng bắt buộc phải có 2 phần chính liên tiếp nhau:
 * PHẦN 1: LÝ THUYẾT CHI TIẾT. Hãy giải thích cặn kẽ Định nghĩa, Định lý, Công thức cốt lõi. Văn phong tự nhiên, dễ đọc. BẮT BUỘC trình bày theo cấu trúc phân mục đánh số rõ ràng (1. 2. 3. ...) để học sinh dễ theo dõi và ghi chép bài. Tuyệt đối không dùng dấu ngắt trang (---).
 * PHẦN 2: PHÂN DẠNG BÀI TẬP & PHƯƠNG PHÁP GIẢI. Hãy chia các bài tập thành các Dạng Toán riêng biệt. Giải thích rõ ràng phương pháp.
@@ -642,15 +664,15 @@ Bài giảng bắt buộc phải có 2 phần chính liên tiếp nhau:
 4. [TẠO CÂU HỎI TƯƠNG TÁC CHỐNG LƯỜI]: Thỉnh thoảng hãy chèn một câu hỏi quiz ở dạng đoạn mã "quiz" chứa chuỗi JSON (như multiple_choice, true_false, short_answer) để học sinh tự làm.`;
   }
 
-  const unifiedPrompt = `Bạn là một chuyên gia giáo dục Vật lý xuất sắc hàng đầu thế giới. 
-Hãy phân tích nội dung các ảnh tài liệu này và biên soạn lại thành một bài giảng Vật lý HOÀN CHỈNH, GỒM LÝ THUYẾT VÀ CÁC DẠNG BÀI TẬP, TRÌNH BÀY SIÊU ĐẸP, CỰC KỲ THU HÚT.
+  const unifiedPrompt = `Bạn là một chuyên gia giáo dục Toán học xuất sắc hàng đầu thế giới. 
+Hãy phân tích nội dung các ảnh tài liệu này và biên soạn lại thành một bài giảng Toán học HOÀN CHỈNH, GỒM LÝ THUYẾT VÀ CÁC DẠNG BÀI TẬP, TRÌNH BÀY SIÊU ĐẸP, CỰC KỲ THU HÚT.
 YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
-1. Dạng Markdown. [CHUẨN HÓA VẬT LÝ LATEX TỐI ƯU NHƯ MATHTYPE]:
+1. Dạng Markdown. [CHUẨN HÓA TOÁN HỌC LATEX TỐI ƯU NHƯ MATHTYPE]:
 - Bao bọc TẤT CẢ công thức bằng dấu $ (Ví dụ: $x^2 + y^2 = 25$). Tuyệt đối KHÔNG bao bọc chữ tiếng Việt bên trong dấu $ (Ví dụ SAI: $Ta có: x = 2$, ĐÚNG: Ta có $x = 2$).
 - CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình). Các biểu thức toán học phải liền khối và chuẩn xác.
 
 - Phân số: Dạng \\frac{tử}{mẫu}. Góc: Dạng \\widehat{tên}. Hệ phương trình: Dùng \\begin{cases} ... \\end{cases}.
-2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG VẬT LÝ]:
+2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG TOÁN HỌC]:
 Bài giảng bắt buộc phải có 2 phần chính liên tiếp nhau:
 * PHẦN 1: TÓM TẮT LÝ THUYẾT TRỌNG TÂM. Hãy chắt lọc Định nghĩa, Định lý, Công thức cốt lõi. Bỏ qua diễn giải rườm rà. BẮT BUỘC trình bày theo cấu trúc phân mục đánh số rõ ràng (1. 2. 3. ...) để học sinh dễ theo dõi và ghi chép bài.
 * PHẦN 2: PHÂN DẠNG BÀI TẬP & PHƯƠNG PHÁP GIẢI. Hãy chia các bài tập thành các Dạng Toán riêng biệt. [KHÔNG BỎ SÓT KIẾN THỨC]: Quét kỹ 100% tài liệu, tôi đưa vào bao nhiêu dạng toán thì bắt buộc phải bóc tách bấy nhiêu dạng, tuyệt đối không được qua loa hay cắt xén bớt.
@@ -689,7 +711,7 @@ LOẠI 4: CÂU TRẢ LỜI NGẮN (kết quả ngắn gọn: 1 số, 1 biểu th
 \`\`\`
 
 GHI CHÚ TUYỆT ĐỐI QUAN TRỌNG VỀ JSON:
-- [BẮT BUỘC VỀ VẬT LÝ]: Tất cả các công thức toán học trong JSON BẮT BUỘC phải được bọc trong cặp dấu $...$$.
+- [BẮT BUỘC VỀ TOÁN HỌC]: Tất cả các công thức toán học trong JSON BẮT BUỘC phải được bọc trong cặp dấu $...$$.
 - TẤT CẢ các ký tự gạch chéo (\\) bên trong chuỗi JSON BẮT BUỘC PHẢI NHÂN ĐÔI thành (\\\\). Nếu không làm điều này, hệ thống sẽ BỊ LỖI.`;
 
   return unifiedPrompt;
@@ -748,6 +770,28 @@ function EditorContent() {
     if (!isFixedBySelection) {
        setMarkdownContent(fixLatexText(markdownContent));
     }
+  };
+
+  const applyFormatting = (prefix: string, suffix: string) => {
+    if (!textareaRef.current) return;
+    const textarea = textareaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    if (start === end) {
+      alert("Vui lòng bôi đen đoạn chữ muốn định dạng trước!");
+      return;
+    }
+
+    const text = markdownContent;
+    const selectedText = text.substring(start, end);
+    const newText = text.substring(0, start) + prefix + selectedText + suffix + text.substring(end);
+    
+    setMarkdownContent(newText);
+    
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + prefix.length, end + prefix.length);
+    }, 0);
   };
 
   const handleRawKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -1701,7 +1745,8 @@ function EditorContent() {
              </div>
           ) : (
           <React.Fragment>
-
+          {isHeaderExpanded && (
+            <React.Fragment>
           <div className="flex bg-slate-100 p-1 gap-1 border-b border-slate-200">
              <button onClick={() => setActiveTab('elearning')} className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-md font-bold text-sm transition-all shadow-sm ${activeTab === 'elearning' ? 'bg-white text-indigo-700 border border-slate-200' : 'text-slate-500 hover:bg-slate-200 hover:text-slate-700'}`}>
                 📱 Chế độ App (E-learning)
@@ -1787,47 +1832,64 @@ function EditorContent() {
                 </div>
               </div>
             )}
+            </React.Fragment>
+          )}
           <div className="flex-1 flex flex-col relative min-h-[75vh]">
             {editorMode === 'raw' ? (
               <div className="flex flex-col flex-1 relative min-h-0">
-                 {/* Thanh công cụ phụ cho RAW */}
-                 <div className="bg-gray-100 border-b border-gray-200 px-3 py-2 flex items-center justify-between shrink-0">
-                    <div className="flex items-center gap-3">
-                       <button onClick={() => setShowRawPreview(!showRawPreview)} className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-md transition-colors ${showRawPreview ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'}`}>
-                          <Eye className="w-4 h-4"/> {showRawPreview ? 'Ẩn Xem Trước' : 'Bật Xem Trước (Split View)'}
-                       </button>
-                       {showRawPreview && (
-                           <button onMouseDown={handleFixRawLatex} className="flex items-center gap-1.5 text-xs font-bold bg-purple-100 text-purple-700 px-3 py-1.5 rounded-md hover:bg-purple-200 transition-colors shadow-sm">
-                              🪄 Sửa lỗi LaTeX tự động
-                           </button>
-                       )}
-                    </div>
+                 
+                 <div className="sticky top-0 z-40 flex flex-col shadow-sm">
+                   {/* Thanh công cụ phụ cho RAW */}
+                   <div className="bg-gray-100 border-b border-gray-200 px-3 py-2 flex items-center justify-between shrink-0">
+                      <div className="flex items-center gap-3">
+                         <button onClick={() => setShowRawPreview(!showRawPreview)} className={`flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-md transition-colors ${showRawPreview ? 'bg-indigo-600 text-white shadow-sm' : 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50'}`}>
+                            <Eye className="w-4 h-4"/> {showRawPreview ? 'Ẩn Xem Trước' : 'Bật Xem Trước (Split View)'}
+                         </button>
+                         {showRawPreview && (
+                             <button onMouseDown={handleFixRawLatex} className="flex items-center gap-1.5 text-xs font-bold bg-purple-100 text-purple-700 px-3 py-1.5 rounded-md hover:bg-purple-200 transition-colors shadow-sm">
+                                🪄 Sửa lỗi LaTeX tự động
+                             </button>
+                         )}
+                      </div>
+                   </div>
+
+                   {/* Cảnh báo Bảng/Ảnh */}
+                   {(() => {
+                      const hasImageOrTable = /(?:\[IMAGE_PLACEHOLDER\]|\[.*?CHÚ Ý.*?\]|\[.*?HÌNH VẼ.*?\]|\|.*\|.*\n\s*\|[-\s:]+\|)/i.test(markdownContent);
+                      if (!hasImageOrTable) return null;
+                      return (
+                          <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3 shrink-0 flex items-center justify-between">
+                              <span className="text-[13px] font-medium text-yellow-800 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-yellow-600"/> Có Bảng / Yêu cầu chèn ảnh! Đặt con trỏ đúng vị trí và nhấn:</span>
+                              <button onClick={() => {
+                                  setTargetCropBlockId(null);
+                                  if (lastAnalyzedImages.length > 0) setCropImageSrc(lastAnalyzedImages[0]);
+                                  setIsCropModalOpen(true);
+                              }} className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 shrink-0 animate-pulse"><CropIcon className="w-3.5 h-3.5"/> Cắt & Chèn Ảnh Tại Con Trỏ</button>
+                          </div>
+                      );
+                   })()}
+
+                   <div className="bg-indigo-50 border-b border-indigo-100 px-3 py-2 flex items-center gap-2 shrink-0 flex-wrap">
+                      <span className="text-xs font-bold text-indigo-800 uppercase mr-1">Bôi đen chữ rồi ấn:</span>
+                      <button onClick={() => applyFormatting('**', '**')} className="w-8 h-8 flex items-center justify-center bg-white border border-slate-300 rounded shadow-sm hover:bg-slate-100 text-slate-800 font-black text-sm" title="In đậm (Bold)">B</button>
+                      <button onClick={() => applyFormatting('<span style="color:red">', '</span>')} className="w-8 h-8 flex items-center justify-center bg-white border border-red-200 rounded shadow-sm hover:bg-red-50 text-red-600 font-black text-sm" title="Chữ Đỏ">A</button>
+                      <button onClick={() => applyFormatting('<span style="color:blue">', '</span>')} className="w-8 h-8 flex items-center justify-center bg-white border border-blue-200 rounded shadow-sm hover:bg-blue-50 text-blue-600 font-black text-sm" title="Chữ Xanh Dương">A</button>
+                      <button onClick={() => applyFormatting('<span style="color:green">', '</span>')} className="w-8 h-8 flex items-center justify-center bg-white border border-green-200 rounded shadow-sm hover:bg-green-50 text-green-600 font-black text-sm" title="Chữ Xanh Lá">A</button>
+                      <div className="w-px h-5 bg-indigo-200 mx-1"></div>
+                      <button onClick={() => applyFormatting('## ', '')} className="h-8 px-3 flex items-center justify-center bg-white border border-slate-300 rounded shadow-sm hover:bg-slate-100 text-slate-700 font-bold text-xs" title="Tiêu đề to">H2</button>
+                      <button onClick={() => applyFormatting('### ', '')} className="h-8 px-3 flex items-center justify-center bg-white border border-slate-300 rounded shadow-sm hover:bg-slate-100 text-slate-700 font-bold text-xs" title="Tiêu đề vừa">H3</button>
+                   </div>
                  </div>
 
-                 {/* Cảnh báo Bảng/Ảnh */}
-                 {(() => {
-                    const hasImageOrTable = /(?:\[IMAGE_PLACEHOLDER\]|\[.*?CHÚ Ý.*?\]|\[.*?HÌNH VẼ.*?\]|\|.*\|.*\n\s*\|[-\s:]+\|)/i.test(markdownContent);
-                    if (!hasImageOrTable) return null;
-                    return (
-                        <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3 shrink-0 flex items-center justify-between">
-                            <span className="text-[13px] font-medium text-yellow-800 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-yellow-600"/> Có Bảng / Yêu cầu chèn ảnh! Đặt con trỏ đúng vị trí và nhấn:</span>
-                            <button onClick={() => {
-                                setTargetCropBlockId(null);
-                                if (lastAnalyzedImages.length > 0) setCropImageSrc(lastAnalyzedImages[0]);
-                                setIsCropModalOpen(true);
-                            }} className="bg-yellow-600 hover:bg-yellow-700 text-white px-3 py-1.5 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 shrink-0 animate-pulse"><CropIcon className="w-3.5 h-3.5"/> Cắt & Chèn Ảnh Tại Con Trỏ</button>
-                        </div>
-                    );
-                 })()}
-
-                 <div className="flex-1 flex flex-row overflow-hidden">
+                 <div className="flex-1 flex flex-row overflow-hidden relative min-h-[65vh]">
                     <textarea 
                       ref={textareaRef} value={markdownContent} onChange={(e) => setMarkdownContent(e.target.value)} onPaste={handlePaste} onKeyDown={handleRawKeyDown}
                       placeholder="Bắt đầu gõ hoặc Ấn Ctrl + V để dán bài tập vào đây."
-                      className={`h-full p-4 resize-none outline-none text-gray-700 font-mono text-[14px] leading-relaxed scroll-smooth ${showRawPreview ? 'w-1/2 border-r border-gray-200 bg-white' : 'w-full bg-white'}`}
+                      className={`h-full w-full p-4 resize-none outline-none text-gray-700 font-mono text-[14px] leading-relaxed scroll-smooth ${showRawPreview ? 'w-1/2 border-r border-gray-200 bg-white' : 'bg-white'}`}
                     />
                     {showRawPreview && (
                        <div className="w-1/2 h-full overflow-y-auto bg-gray-50/50 p-6 scroll-smooth">
+
                           <div className="bg-white p-8 rounded-2xl shadow-md border-4 border-slate-700 aspect-video overflow-y-auto w-full max-w-none prose prose-lg prose-indigo whitespace-pre-wrap prose-h1:text-4xl prose-h1:font-black prose-h1:text-indigo-900 prose-h1:mb-10 prose-h1:text-center prose-h1:tracking-tight prose-h2:text-[1.5rem] prose-h2:font-black prose-h2:text-white prose-h2:bg-gradient-to-r prose-h2:from-indigo-600 prose-h2:via-blue-600 prose-h2:to-cyan-500 prose-h2:px-6 prose-h2:py-4 prose-h2:rounded-2xl prose-h2:mt-14 prose-h2:mb-8 prose-h2:uppercase prose-h2:tracking-wide prose-h2:shadow-[0_8px_30px_rgb(79,70,229,0.2)] prose-h2:border-l-8 prose-h2:border-l-yellow-400 prose-h2:block prose-h2:w-fit prose-h2:clear-both prose-h3:text-[1.2rem] prose-h3:font-bold prose-h3:text-white prose-h3:bg-gradient-to-r prose-h3:from-emerald-500 prose-h3:to-teal-400 prose-h3:px-5 prose-h3:py-3 prose-h3:rounded-xl prose-h3:mt-10 prose-h3:mb-5 prose-h3:shadow-md prose-h3:block prose-h3:w-fit prose-h3:clear-both prose-strong:text-indigo-800 prose-strong:font-black prose-strong:bg-indigo-50/50 prose-strong:px-1.5 prose-strong:py-0.5 prose-strong:rounded-md">
                               {renderMarkdown(markdownContent)}
                           </div>
