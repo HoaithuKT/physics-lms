@@ -301,32 +301,22 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
       {/* GIAO DIỆN BÁO CÁO ẨN ĐỂ XUẤT ẢNH */}
       <div style={{ position: 'absolute', left: '-9999px', top: 0, zIndex: -50 }}>
         <div ref={printRef} className="w-[850px] bg-white p-0 font-sans border-0 relative">
-          <div className="bg-emerald-500 rounded-[2rem] p-3 shadow-xl">
-             <div className="bg-emerald-50 rounded-[1.5rem] p-8 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
+          <div className="bg-rose-400 rounded-[2rem] p-3 shadow-xl">
+             <div className="bg-rose-50 rounded-[1.5rem] p-8 border-4 border-white shadow-inner flex flex-col h-full relative overflow-hidden">
                 {/* Decoration */}
-                <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
-                <div className="absolute bottom-0 left-0 w-64 h-64 bg-teal-100 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
+                <div className="absolute top-0 right-0 w-64 h-64 bg-rose-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 translate-x-1/2 -translate-y-1/2"></div>
+                <div className="absolute bottom-0 left-0 w-64 h-64 bg-red-200/50 rounded-full mix-blend-multiply filter blur-3xl opacity-50 -translate-x-1/2 translate-y-1/2"></div>
                 
                 {/* Header Top: Logo & Title */}
                 <div className="flex flex-col items-center mb-8 relative z-10 w-full">
-                   {/* Logo Text */}
-                   <div className="flex flex-col pb-4 mb-6 relative w-full items-center">
-                      <div className="absolute bottom-0 w-2/3 h-[3px] bg-gradient-to-r from-transparent via-emerald-500 to-transparent rounded-full opacity-70"></div>
-                      <h2 className="text-4xl font-black text-emerald-800 tracking-tight uppercase flex items-center gap-3">
-                        <span className="text-emerald-400">✦</span>
-                        <span>
-                          <span className="text-red-600 text-5xl leading-none font-serif">T</span>OÁN
-                          <span className="text-red-600 text-5xl leading-none font-serif ml-1">T</span>HẦY
-                          <span className="text-red-600 text-5xl leading-none font-serif ml-1">P</span>HÚC
-                        </span>
-                        <span className="text-emerald-400">✦</span>
-                      </h2>
-                      <div className="text-xs text-emerald-700 tracking-[0.3em] font-bold mt-2 text-center whitespace-nowrap">NƠI KHƠI NGUỒN ĐAM MÊ</div>
+                   {/* Logo Image */}
+                   <div className="flex justify-center mb-6 w-full">
+                      <img src="/images/logo-physics-hub.jpg" alt="PHYSICS HUB" className="h-40 object-contain drop-shadow-md" />
                    </div>
                    
                    {/* Title & Info */}
                    <div className="text-center">
-                     <h1 className="text-5xl font-black text-teal-700 uppercase tracking-widest mb-4 drop-shadow-sm">
+                     <h1 className="text-5xl font-black text-rose-700 uppercase tracking-widest mb-4 drop-shadow-sm">
                        THÔNG BÁO ĐIỂM DANH
                      </h1>
                      <div className="flex items-center justify-center gap-4 text-xl font-bold text-gray-700 mb-4">
@@ -336,14 +326,14 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                            : new Date(sessions.find(s => s.id === selectedSessionId)?.session_date || Date.now()).toLocaleDateString('vi-VN')
                        }
                      </div>
-                     <div className="inline-block bg-emerald-100 text-emerald-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase shadow-sm border border-emerald-200">
+                     <div className="inline-block bg-rose-100 text-rose-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase shadow-sm border border-rose-200">
                        Lớp: {className || 'Chưa cập nhật'}
                      </div>
                    </div>
                 </div>
 
                 {/* Summary Table */}
-                <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 mb-6 overflow-hidden relative z-10">
+                <div className="bg-white rounded-2xl shadow-sm border border-rose-100 mb-6 overflow-hidden relative z-10">
                   <table className="w-full text-center">
                     <thead>
                       <tr className="bg-gray-50/50">
@@ -356,7 +346,7 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                     <tbody className="divide-x divide-gray-100 border-t border-gray-100">
                       <tr>
                         <td className="py-4 text-3xl font-black text-gray-800">{enrollments.length}</td>
-                        <td className="py-4 text-3xl font-black text-teal-600">{enrollments.filter(en => attendance[en.profiles.id]?.status === 'PRESENT').length}</td>
+                        <td className="py-4 text-3xl font-black text-green-600">{enrollments.filter(en => attendance[en.profiles.id]?.status === 'PRESENT').length}</td>
                         <td className="py-4 text-3xl font-black text-orange-500">{enrollments.filter(en => attendance[en.profiles.id]?.status === 'EXCUSED_ABSENCE').length}</td>
                         <td className="py-4 text-3xl font-black text-rose-600">{enrollments.filter(en => attendance[en.profiles.id]?.status === 'UNEXCUSED_ABSENCE').length}</td>
                       </tr>
@@ -365,7 +355,7 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                 </div>
 
                 {/* Student List */}
-                <div className="bg-white rounded-2xl shadow-sm border border-emerald-100 overflow-hidden relative z-10 mb-6">
+                <div className="bg-white rounded-2xl shadow-sm border border-rose-100 overflow-hidden relative z-10 mb-6">
                   <table className="w-full text-left">
                     <thead>
                       <tr className="bg-gray-50/80 border-b border-gray-100">
@@ -377,7 +367,7 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                     <tbody className="divide-y divide-gray-100">
                       {enrollments.filter(en => ['LATE', 'EXCUSED_ABSENCE', 'UNEXCUSED_ABSENCE'].includes(attendance[en.profiles.id]?.status)).length === 0 ? (
                         <tr>
-                          <td colSpan={3} className="py-10 text-center text-emerald-600 font-bold text-lg bg-emerald-50/30">
+                          <td colSpan={3} className="py-10 text-center text-green-600 font-bold text-lg bg-green-50/30">
                             🎉 Tuyệt vời! Buổi học hôm nay tất cả học sinh đều đi học đầy đủ và đúng giờ!
                           </td>
                         </tr>
