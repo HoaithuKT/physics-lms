@@ -511,7 +511,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                 <div className="flex flex-col items-center mb-6 relative z-10 w-full">
                    {/* Logo Image */}
                    <div className="flex justify-center mb-6 w-full">
-                      <img src="/images/logo-physics-hub.jpg" alt="PHYSICS HUB" className="h-40 object-contain drop-shadow-md" />
+                      <img src="/logo.png" alt="PHYSICS HUB" className="h-40 object-contain drop-shadow-md" />
                    </div>
                    
                    {/* Title & Info - Separated clearly */}
@@ -581,9 +581,9 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                    <div className="flex-1 pr-6">
                      <h3 className="text-2xl font-black text-blue-800 uppercase tracking-widest mb-6">Thông Tin Chuyển Khoản</h3>
                      <div className="space-y-4 text-xl font-bold text-gray-700">
-                       <p>Ngân hàng: <span className="text-blue-700">MBBank</span></p>
-                       <p>Số tài khoản: <span className="text-blue-700 tracking-widest text-2xl">0793898911</span></p>
-                       <p>Chủ TK: <span className="text-blue-700 uppercase">TRỊNH NGỌC PHÚC</span></p>
+                       <p>Ngân hàng: <span className="text-blue-700">BIDV</span></p>
+                       <p>Số tài khoản: <span className="text-blue-700 tracking-widest text-2xl">8860010112</span></p>
+                       <p>Chủ TK: <span className="text-blue-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
                      </div>
                      <div className="mt-6 bg-orange-100 text-orange-800 px-5 py-3 rounded-xl font-bold border border-orange-200 text-sm shadow-sm inline-block">
                        ⚠️ PH chuyển khoản nhớ <b>CHỤP BILL</b> gửi lại để tránh nhầm lẫn nhé ạ.
@@ -592,7 +592,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                    
                    <div className="shrink-0 bg-white border border-gray-200 rounded-2xl p-3 shadow-sm w-48 flex items-center justify-center flex-col">
                      <div className="text-rose-600 font-bold text-sm mb-2 uppercase">VietQR</div>
-                     <img src="https://img.vietqr.io/image/MB-0793898911-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" crossOrigin="anonymous" className="w-full h-full object-contain rounded-xl" />
+                     <img src="https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" crossOrigin="anonymous" className="w-full h-full object-contain rounded-xl" />
                    </div>
                 </div>
 
@@ -614,7 +614,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                 <div className="flex flex-col items-center mb-6 relative z-10 w-full">
                    {/* Logo Image */}
                    <div className="flex justify-center mb-6 w-full">
-                      <img src="/images/logo-physics-hub.jpg" alt="PHYSICS HUB" className="h-40 object-contain drop-shadow-md" />
+                      <img src="/logo.png" alt="PHYSICS HUB" className="h-40 object-contain drop-shadow-md" />
                    </div>
                    <div className="text-center mt-2">
                      <h1 className="text-3xl font-black text-gray-800 uppercase tracking-wider mb-4 whitespace-nowrap">
@@ -686,9 +686,9 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                    <div className="flex-1 pr-6">
                      <h3 className="text-2xl font-black text-blue-800 uppercase tracking-widest mb-6">Thông Tin Chuyển Khoản</h3>
                      <div className="space-y-4 text-xl font-bold text-gray-700">
-                       <p>Ngân hàng: <span className="text-blue-700">MBBank</span></p>
-                       <p>Số tài khoản: <span className="text-blue-700 tracking-widest text-2xl">0793898911</span></p>
-                       <p>Chủ TK: <span className="text-blue-700 uppercase">TRỊNH NGỌC PHÚC</span></p>
+                       <p>Ngân hàng: <span className="text-blue-700">BIDV</span></p>
+                       <p>Số tài khoản: <span className="text-blue-700 tracking-widest text-2xl">8860010112</span></p>
+                       <p>Chủ TK: <span className="text-blue-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
                      </div>
                      <div className="mt-6 bg-orange-100 text-orange-800 px-5 py-3 rounded-xl font-bold border border-orange-200 text-sm shadow-sm inline-block">
                        ⚠️ PH chuyển khoản nhớ <b>CHỤP BILL</b> gửi lại để tránh nhầm lẫn nhé ạ.
@@ -697,7 +697,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                    
                    <div className="shrink-0 bg-white border border-gray-200 rounded-2xl p-3 shadow-sm w-48 flex items-center justify-center flex-col">
                      <div className="text-rose-600 font-bold text-sm mb-2 uppercase">VietQR</div>
-                     <img src="https://img.vietqr.io/image/MB-0793898911-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" crossOrigin="anonymous" className="w-full h-full object-contain rounded-xl" />
+                     <img src="https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=0&addInfo=Hoc%20phi" alt="QR Code" crossOrigin="anonymous" className="w-full h-full object-contain rounded-xl" />
                    </div>
                 </div>
              </div>
@@ -722,7 +722,7 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                     <div className="flex flex-col items-center mb-6 relative z-10 w-full">
                        {/* Logo Image */}
                        <div className="flex justify-center mb-6 w-full">
-                          <img src="/images/logo-physics-hub.jpg" alt="PHYSICS HUB" className="h-32 object-contain drop-shadow-md" />
+                          <img src="/logo.png" alt="PHYSICS HUB" className="h-32 object-contain drop-shadow-md" />
                        </div>
                        <div className="text-center w-full">
                          <h1 className="text-2xl sm:text-3xl font-black text-orange-600 uppercase tracking-wider mb-2 drop-shadow-sm whitespace-nowrap">
@@ -768,15 +768,15 @@ export default function TuitionTab({ classId, classInfo, enrollments }: { classI
                        <h3 className="text-lg font-black text-blue-800 uppercase tracking-widest mb-3">Thông Tin Chuyển Khoản</h3>
                        <div className="shrink-0 bg-white border border-gray-200 rounded-xl p-2 shadow-sm w-36 mb-4 flex items-center justify-center flex-col">
                          <div className="text-rose-600 font-bold text-[10px] mb-1 uppercase">VietQR</div>
-                         <img src={`https://img.vietqr.io/image/MB-0793898911-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" crossOrigin="anonymous" className="w-full object-contain rounded-lg" />
+                         <img src={`https://img.vietqr.io/image/BIDV-8860010112-compact2.png?amount=${totalDue}&addInfo=Hoc%20phi%20${en.profiles.full_name.replace(/ /g, '%20')}`} alt="QR Code" crossOrigin="anonymous" className="w-full object-contain rounded-lg" />
                        </div>
                        <div className="space-y-1 text-sm font-bold text-gray-700 text-center mb-3">
-                         <p>Ngân hàng: <span className="text-blue-700">MBBank</span></p>
-                         <p>Số tài khoản: <span className="text-blue-700 tracking-widest text-lg">0793898911</span></p>
-                         <p>Chủ TK: <span className="text-blue-700 uppercase">TRỊNH NGỌC PHÚC</span></p>
+                         <p>Ngân hàng: <span className="text-blue-700">BIDV</span></p>
+                         <p>Số tài khoản: <span className="text-blue-700 tracking-widest text-lg">8860010112</span></p>
+                         <p>Chủ TK: <span className="text-blue-700 uppercase">TRẦN THỊ HOÀI THU</span></p>
                        </div>
                        <div className="bg-orange-100 text-orange-800 px-3 py-2 rounded-lg font-bold border border-orange-200 text-[11px] shadow-sm text-center">
-                         ⚠️ Nhớ <b>CHỤP BILL</b> gửi lại để thầy tránh nhầm lẫn nhé.
+                         ⚠️ Nhớ <b>CHỤP BILL</b> gửi lại để cô tránh nhầm lẫn nhé.
                        </div>
                     </div>
                  </div>
