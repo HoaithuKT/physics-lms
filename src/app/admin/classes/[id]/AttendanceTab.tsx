@@ -338,7 +338,7 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                        THÔNG BÁO ĐIỂM DANH
                      </h1>
                      <div className="flex items-center justify-center gap-4 text-xl font-bold text-gray-700 mb-4">
-                       Ngày: {currentSessionDate.toLocaleDateString('vi-VN')}
+                       Ngày: {new Date(currentSessionDate).toLocaleDateString('vi-VN')}
                      </div>
                      <div className="inline-block bg-rose-100 text-rose-800 px-8 py-2.5 rounded-2xl font-black text-2xl uppercase shadow-sm border border-rose-200">
                        Lớp: {className || 'Chưa cập nhật'}
