@@ -329,7 +329,7 @@ export default function AttendanceTab({ classId, enrollments, className }: { cla
                 <div className="flex flex-col items-center mb-8 relative z-10 w-full">
                    {/* Logo Image */}
                    <div className="flex justify-center mb-6 w-full">
-                      <img src="/images/logo-physics-hub.jpg" alt="PHYSICS HUB" className="h-40 object-contain drop-shadow-md" />
+                      <img src="/logo.png" alt="PHYSICS HUB" className="h-40 object-contain drop-shadow-md" />
                    </div>
                    
                    {/* Title & Info */}
