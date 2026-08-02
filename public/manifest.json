@@ -1,11 +1,11 @@
 {
-  "name": "LMS Toán Thầy Phúc",
-  "short_name": "Toán Thầy Phúc",
-  "description": "Nền tảng Quản lý Học tập môn Toán",
+  "name": "LMS Lí Cô Thu",
+  "short_name": "Lí Cô Thu",
+  "description": "Hệ thống Quản lý Học tập môn Vật lí",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0f6f60",
+  "theme_color": "#f97316",
   "icons": [
     {
       "src": "/icon.svg",
