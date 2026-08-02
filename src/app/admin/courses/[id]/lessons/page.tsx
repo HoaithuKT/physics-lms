@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { Plus, Edit2, Trash2, BookOpen, Layers, ArrowLeft, Loader2, ChevronDown, ChevronRight, FileEdit, Sparkles, Video, Pencil, FileText, Target } from "lucide-react";
+import { Plus, Edit2, Trash2, BookOpen, Layers, ArrowLeft, Loader2, ChevronDown, ChevronRight, FileEdit, Sparkles, Video, Pencil, FileText, Target, ArrowUp, ArrowDown } from "lucide-react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 
@@ -85,7 +85,7 @@ export default function CourseStructurePage() {
     );
   };
 
-  const openChapterModal = (chapter: any = null) => {
+  const openChapterModal = (chapter?: any) => {
     if (chapter) {
       setEditingChapterId(chapter.id);
       setChapterTitle(chapter.title);
@@ -96,7 +96,53 @@ export default function CourseStructurePage() {
     setIsChapterModalOpen(true);
   };
 
-  const openLessonModal = (chapterId: string, lesson: any = null) => {
+  const handleSaveChapter = async () => {
+    if (!chapterTitle) return alert("Vui lòng nhập tên chương!");
+    setIsSavingChapter(true);
+    
+    if (editingChapterId) {
+      const { error } = await supabase.from('chapters').update({ title: chapterTitle }).eq('id', editingChapterId);
+      setIsSavingChapter(false);
+      if (error) alert("Lỗi sửa chương: " + error.message);
+      else { setIsChapterModalOpen(false); loadStructure(); }
+    } else {
+      const { error } = await supabase.from('chapters').insert([{
+        course_id: courseId,
+        title: chapterTitle,
+        order_index: chapters.length + 1
+      }]);
+
+      setIsSavingChapter(false);
+      if (error) {
+        alert("Lỗi tạo chương: " + error.message);
+      } else {
+        setIsChapterModalOpen(false);
+        setChapterTitle("");
+        loadStructure();
+      }
+    }
+  };
+
+  const handleMoveChapter = async (index: number, direction: 'up' | 'down', e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (direction === 'up' && index > 0) {
+      const current = chapters[index];
+      const prev = chapters[index - 1];
+      const tempOrder = current.order_index;
+      await supabase.from('chapters').update({ order_index: prev.order_index }).eq('id', current.id);
+      await supabase.from('chapters').update({ order_index: tempOrder }).eq('id', prev.id);
+      loadStructure();
+    } else if (direction === 'down' && index < chapters.length - 1) {
+      const current = chapters[index];
+      const next = chapters[index + 1];
+      const tempOrder = current.order_index;
+      await supabase.from('chapters').update({ order_index: next.order_index }).eq('id', current.id);
+      await supabase.from('chapters').update({ order_index: tempOrder }).eq('id', next.id);
+      loadStructure();
+    }
+  };
+
+  const openLessonModal = (chapterId: string, lesson?: any) => {
     setActiveChapterId(chapterId);
     if (lesson) {
       setEditingLessonId(lesson.id);
@@ -108,44 +154,15 @@ export default function CourseStructurePage() {
     setIsLessonModalOpen(true);
   };
 
-  const handleSaveChapter = async () => {
-    if (!chapterTitle) return alert("Vui lòng nhập tên chương!");
-    setIsSavingChapter(true);
-    
-    let error;
-    if (editingChapterId) {
-      const res = await supabase.from('chapters').update({ title: chapterTitle }).eq('id', editingChapterId);
-      error = res.error;
-    } else {
-      const res = await supabase.from('chapters').insert([{
-        course_id: courseId,
-        title: chapterTitle,
-        order_index: chapters.length + 1
-      }]);
-      error = res.error;
-    }
-
-    setIsSavingChapter(false);
-    if (error) {
-      alert("Lỗi lưu chương: " + error.message);
-    } else {
-      setIsChapterModalOpen(false);
-      setChapterTitle("");
-      setEditingChapterId(null);
-      loadStructure();
-    }
-  };
-
   const handleSaveLesson = async () => {
     if (!lessonTitle) return alert("Vui lòng nhập tên bài học!");
     setIsSavingLesson(true);
     
-    let error;
     if (editingLessonId) {
-      const res = await supabase.from('lessons').update({ title: lessonTitle }).eq('id', editingLessonId);
-      error = res.error;
+      const { error } = await supabase.from('lessons').update({ title: lessonTitle }).eq('id', editingLessonId);
       setIsSavingLesson(false);
-      if (error) return alert("Lỗi cập nhật bài học: " + error.message);
+      if (error) alert("Lỗi sửa bài học: " + error.message);
+      else { setIsLessonModalOpen(false); loadStructure(); }
     } else {
       const chapterLessons = lessons.filter(l => l.chapter_id === activeChapterId);
       
@@ -171,12 +188,31 @@ export default function CourseStructurePage() {
         ];
         await supabase.from('lesson_modules').insert(predefinedModules);
       }
-    }
 
-    setIsSavingLesson(false);
-    setIsLessonModalOpen(false);
-    setEditingLessonId(null);
-    loadStructure();
+      setIsSavingLesson(false);
+      setIsLessonModalOpen(false);
+      loadStructure();
+    }
+  };
+
+  const handleMoveLesson = async (chapterId: string, index: number, direction: 'up' | 'down', e: React.MouseEvent) => {
+    e.stopPropagation();
+    const chapterLessons = lessons.filter(l => l.chapter_id === chapterId);
+    if (direction === 'up' && index > 0) {
+      const current = chapterLessons[index];
+      const prev = chapterLessons[index - 1];
+      const tempOrder = current.order_index;
+      await supabase.from('lessons').update({ order_index: prev.order_index }).eq('id', current.id);
+      await supabase.from('lessons').update({ order_index: tempOrder }).eq('id', prev.id);
+      loadStructure();
+    } else if (direction === 'down' && index < chapterLessons.length - 1) {
+      const current = chapterLessons[index];
+      const next = chapterLessons[index + 1];
+      const tempOrder = current.order_index;
+      await supabase.from('lessons').update({ order_index: next.order_index }).eq('id', current.id);
+      await supabase.from('lessons').update({ order_index: tempOrder }).eq('id', next.id);
+      loadStructure();
+    }
   };
 
   const handleGenerateDefaultModules = async (lessonId: string) => {
@@ -264,25 +300,25 @@ export default function CourseStructurePage() {
   };
 
   if (loading) {
-    return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-orange-600" /></div>;
+    return <div className="flex justify-center items-center h-64"><Loader2 className="w-8 h-8 animate-spin text-teal-600" /></div>;
   }
 
   return (
     <div className="max-w-4xl mx-auto pb-20">
       <div className="mb-6">
-        <Link href="/admin/courses" className="text-orange-600 text-sm font-medium flex items-center gap-1 hover:underline mb-3">
+        <Link href="/admin/courses" className="text-teal-600 text-sm font-medium flex items-center gap-1 hover:underline mb-3">
           <ArrowLeft className="w-4 h-4" /> Quay lại danh sách Khóa học
         </Link>
         <div className="flex justify-between items-end">
           <div>
             <h1 className="text-2xl font-bold text-gray-800">Cấu trúc Khóa học</h1>
             <p className="text-gray-500 mt-1 flex items-center gap-2">
-              <BookOpen className="w-4 h-4 text-orange-600" /> {course?.title || 'Đang tải...'}
+              <BookOpen className="w-4 h-4 text-teal-600" /> {course?.title || 'Đang tải...'}
             </p>
           </div>
           <button 
             onClick={() => openChapterModal()}
-            className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm"
+            className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-lg font-medium flex items-center gap-2 transition-colors shadow-sm"
           >
             <Plus className="w-5 h-5" /> Thêm Chương mới
           </button>
@@ -310,25 +346,15 @@ export default function CourseStructurePage() {
                   <div className="flex items-center gap-3">
                     {isExpanded ? <ChevronDown className="w-5 h-5 text-gray-500" /> : <ChevronRight className="w-5 h-5 text-gray-500" />}
                     <h3 className="font-bold text-gray-800 text-lg">{chapter.title}</h3>
-                    <span className="bg-orange-100 text-orange-700 text-xs font-bold px-2 py-0.5 rounded-full">
+                    <span className="bg-teal-100 text-teal-700 text-xs font-bold px-2 py-0.5 rounded-full">
                       {chapterLessons.length} bài
                     </span>
                   </div>
                   <div className="flex items-center gap-1">
-                    <button 
-                      onClick={(e) => { e.stopPropagation(); openChapterModal(chapter); }} 
-                      className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
-                      title="Sửa chương"
-                    >
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button 
-                      onClick={(e) => handleDeleteChapter(chapter.id, e)} 
-                      className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors"
-                      title="Xóa chương"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+                    <button onClick={(e) => handleMoveChapter(chapters.indexOf(chapter), 'up', e)} disabled={chapters.indexOf(chapter) === 0} className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-30" title="Di chuyển lên"><ArrowUp className="w-4 h-4" /></button>
+                    <button onClick={(e) => handleMoveChapter(chapters.indexOf(chapter), 'down', e)} disabled={chapters.indexOf(chapter) === chapters.length - 1} className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors disabled:opacity-30" title="Di chuyển xuống"><ArrowDown className="w-4 h-4" /></button>
+                    <button onClick={(e) => { e.stopPropagation(); openChapterModal(chapter); }} className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-lg transition-colors" title="Đổi tên chương"><Edit2 className="w-4 h-4" /></button>
+                    <button onClick={(e) => handleDeleteChapter(chapter.id, e)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors" title="Xóa chương"><Trash2 className="w-4 h-4" /></button>
                   </div>
                 </div>
 
@@ -345,7 +371,7 @@ export default function CourseStructurePage() {
                           const lessonModules = modules.filter(m => m.lesson_id === lesson.id).sort((a, b) => a.order_index - b.order_index);
 
                           return (
-                            <div key={lesson.id} className="border border-gray-100 rounded-lg overflow-hidden bg-white hover:border-orange-200 transition-all">
+                            <div key={lesson.id} className="border border-gray-100 rounded-lg overflow-hidden bg-white hover:border-teal-200 transition-all">
                               <div 
                                 className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-50 group"
                                 onClick={() => toggleLesson(lesson.id)}
@@ -355,18 +381,10 @@ export default function CourseStructurePage() {
                                   <span className="font-semibold text-gray-800">{lesson.title}</span>
                                 </div>
                                 <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <button 
-                                    onClick={(e) => { e.stopPropagation(); openLessonModal(chapter.id, lesson); }}
-                                    className="p-1.5 text-indigo-500 hover:bg-indigo-50 rounded-md transition-colors" title="Sửa bài"
-                                  >
-                                    <Edit2 className="w-4 h-4" />
-                                  </button>
-                                  <button 
-                                    onClick={(e) => handleDeleteLesson(lesson.id, e)}
-                                    className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Xóa bài"
-                                  >
-                                    <Trash2 className="w-4 h-4" />
-                                  </button>
+                                  <button onClick={(e) => handleMoveLesson(chapter.id, chapterLessons.indexOf(lesson), 'up', e)} disabled={chapterLessons.indexOf(lesson) === 0} className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors disabled:opacity-30" title="Lên"><ArrowUp className="w-4 h-4" /></button>
+                                  <button onClick={(e) => handleMoveLesson(chapter.id, chapterLessons.indexOf(lesson), 'down', e)} disabled={chapterLessons.indexOf(lesson) === chapterLessons.length - 1} className="p-1.5 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-md transition-colors disabled:opacity-30" title="Xuống"><ArrowDown className="w-4 h-4" /></button>
+                                  <button onClick={(e) => { e.stopPropagation(); openLessonModal(chapter.id, lesson); }} className="p-1.5 text-gray-400 hover:text-teal-600 hover:bg-teal-50 rounded-md transition-colors" title="Đổi tên"><Edit2 className="w-4 h-4" /></button>
+                                  <button onClick={(e) => handleDeleteLesson(lesson.id, e)} className="p-1.5 text-red-500 hover:bg-red-50 rounded-md transition-colors" title="Xóa bài"><Trash2 className="w-4 h-4" /></button>
                                 </div>
                               </div>
                               
@@ -377,13 +395,13 @@ export default function CourseStructurePage() {
                                       <span className="text-xs text-gray-500 italic">Bài học này chưa có mục nào (dữ liệu cũ).</span>
                                       <button 
                                         onClick={() => handleGenerateDefaultModules(lesson.id)}
-                                        className="text-xs font-bold text-orange-600 hover:text-orange-700 bg-orange-50 hover:bg-orange-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
+                                        className="text-xs font-bold text-teal-600 hover:text-teal-700 bg-teal-50 hover:bg-teal-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1"
                                       >
                                         <Sparkles className="w-3.5 h-3.5" /> Khởi tạo 4 mục cơ bản
                                       </button>
                                     </div>
                                   ) : (
-                                    <ul className="space-y-1 pl-6 border-l-2 border-orange-100 ml-4 py-1">
+                                    <ul className="space-y-1 pl-6 border-l-2 border-teal-100 ml-4 py-1">
                                       {lessonModules.filter(m => m.type !== 'practice').map(mod => {
                                         let icon = <></>;
                                         if (mod.type === 'theory') icon = <BookOpen className="w-3.5 h-3.5 text-blue-500" />;
@@ -405,7 +423,7 @@ export default function CourseStructurePage() {
                                                 </button>
                                                 <Link 
                                                   href={`/admin/lessons/editor?lessonId=${lesson.id}&moduleId=${mod.id}`}
-                                                  className="px-3 py-1.5 text-xs font-bold bg-orange-50 text-orange-700 hover:bg-orange-100 rounded-md transition-colors flex items-center gap-1 border border-orange-100"
+                                                  className="px-3 py-1.5 text-xs font-bold bg-teal-50 text-teal-700 hover:bg-teal-100 rounded-md transition-colors flex items-center gap-1 border border-teal-100"
                                                 >
                                                   <Edit2 className="w-3.5 h-3.5" /> Soạn bài
                                                 </Link>
@@ -483,7 +501,7 @@ export default function CourseStructurePage() {
                     <div className="mt-4 border-t border-gray-100 pt-3">
                       <button 
                         onClick={() => openLessonModal(chapter.id)}
-                        className="text-sm font-medium text-orange-600 hover:text-orange-700 flex items-center gap-1.5 p-2 hover:bg-orange-50 w-max rounded-lg transition-colors"
+                        className="text-sm font-medium text-teal-600 hover:text-teal-700 flex items-center gap-1.5 p-2 hover:bg-teal-50 w-max rounded-lg transition-colors"
                       >
                         <Plus className="w-4 h-4" /> Thêm Bài học mới
                       </button>
@@ -500,7 +518,7 @@ export default function CourseStructurePage() {
       {isChapterModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-xl animate-in zoom-in-95 duration-200">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">{editingChapterId ? 'Sửa Chương' : 'Tạo Chương mới'}</h2>
+            <h2 className="text-lg font-bold text-gray-800 mb-4">{editingChapterId ? 'Đổi tên Chương' : 'Tạo Chương mới'}</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Tên chương (Chuyên đề)</label>
@@ -508,7 +526,7 @@ export default function CourseStructurePage() {
                   type="text" 
                   value={chapterTitle} onChange={e => setChapterTitle(e.target.value)}
                   placeholder="VD: Chương 1: Căn bậc hai, Căn bậc ba" 
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500" 
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500" 
                 />
               </div>
             </div>
@@ -518,7 +536,7 @@ export default function CourseStructurePage() {
               </button>
               <button 
                 onClick={handleSaveChapter} disabled={isSavingChapter}
-                className="px-5 py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700 transition-colors flex items-center gap-2"
+                className="px-5 py-2 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition-colors flex items-center gap-2"
               >
                 {isSavingChapter ? <Loader2 className="w-4 h-4 animate-spin"/> : (editingChapterId ? 'Lưu thay đổi' : 'Tạo mới')}
               </button>
@@ -531,7 +549,7 @@ export default function CourseStructurePage() {
       {isLessonModalOpen && (
         <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-xl w-full max-w-md p-6 shadow-xl animate-in zoom-in-95 duration-200">
-            <h2 className="text-lg font-bold text-gray-800 mb-4">{editingLessonId ? 'Sửa Bài học' : 'Thêm Bài học mới'}</h2>
+            <h2 className="text-lg font-bold text-gray-800 mb-4">{editingLessonId ? 'Đổi tên Bài học' : 'Thêm Bài học mới'}</h2>
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-2">Tên Bài học</label>
@@ -539,7 +557,7 @@ export default function CourseStructurePage() {
                   type="text" 
                   value={lessonTitle} onChange={e => setLessonTitle(e.target.value)}
                   placeholder="VD: Bài 1: Sự đồng biến và nghịch biến của hàm số" 
-                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500" 
+                  className="w-full px-4 py-2.5 rounded-lg border border-gray-200 focus:outline-none focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500" 
                 />
               </div>
             </div>
