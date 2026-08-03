@@ -4,10 +4,15 @@ import React from 'react';
 import 'katex/dist/katex.min.css';
 import { InlinePhysics, BlockPhysics } from 'react-katex';
 
+import { fixLatexExt } from '@/utils/latexFix';
+
 export const PhysicsRenderer = ({ htmlContent }: { htmlContent: string }) => {
   if (!htmlContent) return null;
 
   const renderMixedContent = (text: string) => {
+    // Sửa lỗi JSON parse tạo ra các ký tự lạ cho LaTeX
+    text = fixLatexExt(text);
+
     // Chẻ chuỗi theo khối LaTeX $$...$$ hoặc $...$
     const parts = text.split(/(\$\$[\s\S]*?\$\$|\$[\s\S]*?\$)/g);
     
