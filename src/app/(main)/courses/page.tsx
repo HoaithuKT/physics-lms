@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import ReactMarkdown from 'react-markdown';
+import { unifiedMarkdownComponents as customMarkdownComponents } from '@/components/CustomMarkdownComponents';
 import remarkPhysics from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import 'katex/dist/katex.min.css';

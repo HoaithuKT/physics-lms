@@ -769,13 +769,7 @@ export default function AzotaExamUI({
                        )}
                     </div>
                     <div className="flex-1 min-w-0 prose prose-sm sm:prose-base prose-slate max-w-none prose-p:my-0 font-bold text-slate-800">
-                       <ReactMarkdown components={appMarkdownComponents} 
-                          remarkPlugins={[remarkMath, remarkBreaks]} 
-                          rehypePlugins={[rehypeKatex]}
-                          urlTransform={(url) => url}
-                          components={{
-                             img: ({node, ...props}) => <img {...props} className="block max-h-[400px] w-auto max-w-full rounded-lg shadow-sm my-4 border border-slate-200" style={{ objectFit: 'contain' }} />
-                          }}
+                       <ReactMarkdown components={{ ...appMarkdownComponents, img: ({node, ...props}) => <img {...props} className="block max-h-[400px] w-auto max-w-full rounded-lg shadow-sm my-4 border border-slate-200" style={{ objectFit: 'contain' }} /> }}
                        >{cleanQuestion}</ReactMarkdown>
                        
                        {/* Hỗ trợ hiển thị ảnh fallback nếu MD chưa có */}
