@@ -4,7 +4,6 @@ import Link from "next/link";
 
 import React, { useState, useEffect, useRef, Suspense, useMemo, useCallback } from "react";
 import ReactMarkdown from 'react-markdown';
-import { unifiedMarkdownComponents as customMarkdownComponents } from '@/components/CustomMarkdownComponents';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
@@ -124,7 +123,38 @@ const InteractiveQuiz = ({ data, onPass, onEditCrop }: { data: any, onPass: () =
         <ReactMarkdown
           remarkPlugins={[remarkMath, remarkBreaks]}
           rehypePlugins={[rehypeKatex, rehypeRaw]}
-          components={customMarkdownComponents}
+          components={{
+        table: ({node, style, children, ...props}: any) => (
+            <div className="overflow-x-auto my-6 not-prose">
+                <table className="w-full text-left border-collapse border-2 border-slate-400 text-base" style={style} {...props}>
+                    {children}
+                </table>
+            </div>
+        ),
+        thead: ({node, style, children, ...props}: any) => <thead className="bg-slate-100 font-bold" style={style} {...props}>{children}</thead>,
+        tbody: ({node, style, children, ...props}: any) => <tbody className="bg-white" style={style} {...props}>{children}</tbody>,
+        tr: ({node, style, children, ...props}: any) => <tr className="hover:bg-slate-50 transition-colors" style={style} {...props}>{children}</tr>,
+        th: ({node, style, children, ...props}: any) => <th className="px-4 py-2 border-2 border-slate-400 text-slate-800 font-bold" style={style} {...props}>{children}</th>,
+        td: ({node, style, children, ...props}: any) => <td className="px-4 py-2 border-2 border-slate-400 text-slate-700 align-top" style={style} {...props}>{children}</td>,
+             span: ({node, style, children, ...props}: any) => {
+                 let parsedStyle: any = {};
+                 if (typeof style === 'string') {
+                     style.split(';').forEach((rule: string) => {
+                         const [key, val] = rule.split(':');
+                         if (key && val) {
+                             const camelKey = key.trim().replace(/-([a-z])/g, (g: any) => g[1].toUpperCase());
+                             parsedStyle[camelKey] = val.trim();
+                         }
+                     });
+                 } else if (style) {
+                     parsedStyle = style;
+                 }
+                 return <span style={parsedStyle} {...props}>{children}</span>;
+             },
+             img({node, ...props}) {
+               return <img {...props} className="max-h-64 object-contain rounded-lg shadow-sm border border-slate-200 mx-auto my-4" />
+             }
+          }}
         >
           {content}
         </ReactMarkdown>
@@ -1438,7 +1468,81 @@ function EditorContent() {
     <ReactMarkdown 
       remarkPlugins={[remarkMath]} 
       rehypePlugins={[rehypeKatex, rehypeRaw]}
-      components={customMarkdownComponents} />
+      components={{
+        span: ({node, style, children, ...props}: any) => {
+            let parsedStyle: any = {};
+            if (typeof style === 'string') {
+                style.split(';').forEach((rule: string) => {
+                    const [key, val] = rule.split(':');
+                    if (key && val) {
+                        const camelKey = key.trim().replace(/-([a-z])/g, (g: any) => g[1].toUpperCase());
+                        parsedStyle[camelKey] = val.trim();
+                    }
+                });
+            } else if (style) {
+                parsedStyle = style;
+            }
+            return <span style={parsedStyle} {...props}>{children}</span>;
+        },
+        strong: ({node, children, ...props}) => {
+           const text = String(children);
+           if (text.toLowerCase().includes("hướng dẫn giải") || text.toLowerCase().includes("phương pháp giải") || text.toLowerCase().includes("lời giải")) {
+              return (
+                 <span className="block mt-10 mb-4 not-prose w-full">
+                    <span className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-3 rounded-t-2xl font-black flex items-center gap-3 w-max max-w-full shadow-md">
+                       <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center shrink-0 shadow-inner text-lg">💡</span>
+                       {text.toUpperCase()}
+                    </span>
+                    <span className="bg-white border-l-4 border-orange-400 p-4 rounded-b-2xl rounded-tr-2xl shadow-sm border border-slate-100 flex items-center gap-2 mb-2 w-full">
+                       <span className="text-orange-600 font-bold text-sm uppercase flex items-center gap-2">
+                          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                          Các bước chi tiết bên dưới
+                       </span>
+                    </span>
+                 </span>
+              );
+           }
+           if (text.toLowerCase().startsWith("bước")) {
+              return (
+                 <span className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-400 text-white px-3 py-1 rounded-lg font-black shadow-sm mt-3 mb-1 mr-2">
+                   <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
+                   {children}
+                 </span>
+              );
+           }
+           return <strong {...props} className="text-slate-900 font-bold">{children}</strong>;
+        },
+        blockquote({ node, children, ...props }) {
+          const contentStr = String(children);
+          if (contentStr.includes('💡') || contentStr.toLowerCase().includes('định lý') || contentStr.toLowerCase().includes('định nghĩa')) {
+            return (
+              <blockquote className="bg-yellow-50 border-l-4 border-yellow-500 px-6 py-5 rounded-r-2xl my-6 not-prose shadow-sm relative transition-all hover:shadow-md" {...props}>
+                <div className="font-semibold text-yellow-900 text-[1.1em]">{children}</div>
+              </blockquote>
+            );
+          }
+          if (contentStr.includes('📌') || contentStr.toLowerCase().includes('ví dụ')) {
+            return (
+              <blockquote className="bg-sky-50 border-l-4 border-sky-500 px-6 py-5 rounded-r-2xl my-6 not-prose shadow-sm transition-all hover:shadow-md" {...props}>
+                <div className="font-semibold text-sky-900 text-[1.1em]">{children}</div>
+              </blockquote>
+            );
+          }
+          return <blockquote className="border-l-4 border-gray-300 pl-4 italic text-gray-500 my-4" {...props}>{children}</blockquote>
+        },
+        code(props) {
+          const {children, className, node, ...rest} = props
+          const match = /language-(\w+)/.exec(className || '')
+          if (!match?.length) return <code className="bg-gray-100 text-pink-600 px-1.5 py-0.5 rounded-md font-mono text-sm" {...rest}>{children}</code>;
+          
+          if (match[1] === 'quiz' || match[1] === 'json') {
+            try {
+              const data = JSON.parse(String(children).replace(/\n$/, ''));
+              if (Array.isArray(data)) {
+                 return (
+                    <div className="space-y-6">
+                       {data.map((q, idx) => (
+                           <InteractiveQuiz key={idx} data={q} onPass={() => {}} />
                        ))}
                     </div>
                  );
