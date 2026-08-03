@@ -3,7 +3,7 @@
 import React from "react";
 import { AlertTriangle, CropIcon, PlusCircle, Trash2, ArrowUp, ArrowDown, ListTodo, Type, Image as ImageIcon, MonitorPlay, Database, ChevronUp, ChevronDown, ChevronRight, CheckCircle2 } from "lucide-react";
 import ReactMarkdown from 'react-markdown';
-import remarkPhysics from 'remark-math';
+import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
@@ -18,62 +18,7 @@ export interface Block {
   content: any;
 }
 
-const customMarkdownComponents: any = {
-   span: ({node, style, children, ...props}: any) => {
-       let parsedStyle: any = {};
-       if (typeof style === 'string') {
-           style.split(';').forEach((rule: string) => {
-               const [key, val] = rule.split(':');
-               if (key && val) {
-                   const camelKey = key.trim().replace(/-([a-z])/g, (g: any) => g[1].toUpperCase());
-                   parsedStyle[camelKey] = val.trim();
-               }
-           });
-       } else if (style) {
-           parsedStyle = style;
-       }
-       return <span style={parsedStyle} {...props}>{children}</span>;
-   },
-   strong: ({node, children, ...props}: any) => {
-      const text = String(children);
-      if (text.toLowerCase().includes("hướng dẫn giải") || text.toLowerCase().includes("phương pháp giải") || text.toLowerCase().includes("lời giải")) {
-         return (
-            <span className="block mt-10 mb-4 not-prose w-full">
-               <span className="bg-gradient-to-r from-orange-500 to-amber-500 text-white px-6 py-3 rounded-t-2xl font-black flex items-center gap-3 w-max max-w-full shadow-md">
-                  <span className="w-8 h-8 bg-white rounded-full flex items-center justify-center shrink-0 shadow-inner text-lg">💡</span>
-                  {text.toUpperCase()}
-               </span>
-               <span className="bg-white border-l-4 border-orange-400 p-4 rounded-b-2xl rounded-tr-2xl shadow-sm border border-slate-100 flex items-center gap-2 mb-2 w-full">
-                  <span className="text-orange-600 font-bold text-sm uppercase flex items-center gap-2">
-                     <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
-                     Các bước chi tiết bên dưới
-                  </span>
-               </span>
-            </span>
-         );
-      }
-      if (text.toLowerCase().startsWith("bước")) {
-         return (
-            <span className="inline-flex items-center gap-2 bg-gradient-to-r from-pink-500 to-rose-400 text-white px-3 py-1 rounded-lg font-black shadow-sm mt-3 mb-1 mr-2">
-              <span className="w-2 h-2 bg-white rounded-full animate-pulse"></span>
-              {children}
-            </span>
-         );
-      }
-      return <strong {...props} className="text-slate-900 font-bold">{children}</strong>;
-   },
-   li: ({node, children, ...props}: any) => (
-       <li className="flex items-start gap-3 mb-3 relative group" {...props}>
-          <span className="w-5 h-5 mt-1 shrink-0 bg-indigo-100 text-indigo-600 rounded-full flex items-center justify-center shadow-sm border border-indigo-200">
-             <CheckCircle2 className="w-3 h-3" />
-          </span>
-          <div className="flex-1 min-w-0">{children}</div>
-       </li>
-   ),
-   p: ({node, children, ...props}: any) => {
-       return <p className="mb-6 text-[1.1rem] leading-[1.8] text-gray-700" {...props}>{children}</p>;
-   }
-};
+import { unifiedMarkdownComponents as customMarkdownComponents } from "@/components/CustomMarkdownComponents";
 
 export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, globalSourceImage, globalTriggerBankModal }: { blocks: Block[], onChangeBlocks: (b: Block[]) => void, onTriggerCrop: (meta: any, targetBlockId: string) => void, globalSourceImage?: string, globalTriggerBankModal?: number }) {
 
@@ -82,6 +27,14 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
   const [focusMode, setFocusMode] = React.useState(true);
   const [isBankModalOpen, setIsBankModalOpen] = React.useState(false);
   const [insertIndex, setInsertIndex] = React.useState(-1);
+  const [selectedBlocks, setSelectedBlocks] = React.useState<Set<string>>(new Set());
+  const [activeBlockId, setActiveBlockId] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    if (blocks.length > 0 && !activeBlockId) setActiveBlockId(blocks[0].id);
+    if (blocks.length > 0 && activeBlockId && !blocks.find(b => b.id === activeBlockId)) setActiveBlockId(blocks[0].id);
+  }, [blocks, activeBlockId]);
+
 
   React.useEffect(() => {
      if (globalTriggerBankModal && globalTriggerBankModal > 0) {
@@ -282,34 +235,145 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
     return (
       <div className="prose prose-sm max-w-full break-words prose-p:my-0 leading-relaxed text-inherit overflow-hidden prose-strong:text-[#0e6263]
          prose-h2:text-[1.25rem] prose-h2:font-extrabold prose-h2:text-[#00529b] prose-h2:mt-6 prose-h2:mb-3 prose-h2:bg-[#e6f0fa] prose-h2:px-3 prose-h2:py-2 prose-h2:rounded-xl prose-h2:border-l-4 prose-h2:border-[#00529b] prose-h2:block prose-h2:w-fit prose-h2:clear-both
-         prose-h3:text-[1.05rem] prose-h3:font-bold prose-h3:text-[#10b981] prose-h3:mt-5 prose-h3:mb-2 prose-h3:bg-amber-50 prose-h3:px-3 prose-h3:py-1.5 prose-h3:rounded-lg prose-h3:border-l-4 prose-h3:border-amber-500 prose-h3:block prose-h3:w-fit prose-h3:clear-both
+         prose-h3:text-[1.05rem] prose-h3:font-bold prose-h3:text-[#10b981] prose-h3:mt-5 prose-h3:mb-2 prose-h3:bg-emerald-50 prose-h3:px-3 prose-h3:py-1.5 prose-h3:rounded-lg prose-h3:border-l-4 prose-h3:border-emerald-500 prose-h3:block prose-h3:w-fit prose-h3:clear-both
          [&_code]:whitespace-pre-wrap [&_pre]:whitespace-pre-wrap [&_pre]:max-w-full [&_pre]:overflow-x-auto">
-        <ReactMarkdown components={customMarkdownComponents} remarkPlugins={[remarkPhysics, remarkBreaks]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{formattedText}</ReactMarkdown>
+        <ReactMarkdown components={customMarkdownComponents} remarkPlugins={[remarkMath, remarkBreaks]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{formattedText}</ReactMarkdown>
       </div>
     );
   };
 
+  // Phân loại các khối theo dạng câu hỏi cho sidebar bản đồ
+  const multipleChoiceBlocks = blocks.map((b, i) => ({b, i})).filter(x => x.b.type === 'quiz' && x.b.content?.type === 'multiple_choice');
+  const tfBlocks = blocks.map((b, i) => ({b, i})).filter(x => x.b.type === 'quiz' && x.b.content?.type === 'true_false_cluster');
+  const shortAnswerBlocks = blocks.map((b, i) => ({b, i})).filter(x => x.b.type === 'quiz' && ['short_answer', 'essay'].includes(x.b.content?.type));
+  const theoryBlocks = blocks.map((b, i) => ({b, i})).filter(x => x.b.type === 'md');
+
   return (
-    <div className="flex flex-col gap-6 p-4 h-full overflow-y-auto bg-gray-100">
-       <div className="flex items-center justify-between mb-[-0.5rem]">
-         <label className="flex items-center gap-2 text-[15px] font-bold text-indigo-700 cursor-pointer bg-indigo-50 px-4 py-2 rounded-lg border border-indigo-100 w-max shadow-sm transition-colors hover:bg-indigo-100">
-            <input type="checkbox" checked={focusMode} onChange={e => setFocusMode(e.target.checked)} className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500" />
-            🎯 Chế độ Tập trung (Tự động thu gọn các khối khác khi làm việc)
-         </label>
+    <div className="flex flex-col md:flex-row h-full overflow-hidden bg-gray-100 relative">
+       {/* SIDEBAR BẢN ĐỒ CÂU HỎI (20%) */}
+       <div className="w-full md:w-[20%] md:min-w-[280px] border-r border-gray-200 bg-white overflow-y-auto flex flex-col shadow-sm z-10" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+          <div className="p-3 border-b border-gray-100 bg-indigo-50/50 flex items-center justify-between sticky top-0 z-20">
+             <h3 className="font-black text-indigo-900 flex items-center gap-2 text-sm uppercase tracking-wider"><ListTodo className="w-4 h-4"/> Bản đồ</h3>
+          </div>
+          <div className="p-4 flex flex-col gap-6">
+
+             {theoryBlocks.length > 0 && (
+                <div>
+                   <div className="text-[11px] font-bold text-gray-500 uppercase tracking-widest mb-3">Lý Thuyết / Văn Bản</div>
+                   <div className="flex flex-col gap-1.5">
+                      {theoryBlocks.map((item, idx) => (
+                         <button key={item.b.id} onClick={() => setActiveBlockId(item.b.id)} className={`text-left px-3 py-2 rounded-lg text-xs font-semibold truncate transition-colors ${activeBlockId === item.b.id ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-50 text-gray-600 hover:bg-indigo-50 hover:text-indigo-600'}`}>
+                            {idx + 1}. Khối Văn bản
+                         </button>
+                      ))}
+                   </div>
+                </div>
+             )}
+
+             {multipleChoiceBlocks.length > 0 && (
+                <div>
+                   <div className="text-[11px] font-bold text-teal-600 uppercase tracking-widest mb-3">Phần 1. Trắc nghiệm</div>
+                   <div className="grid grid-cols-5 gap-1.5">
+                      {multipleChoiceBlocks.map((item, idx) => (
+                         <button key={item.b.id} onClick={() => setActiveBlockId(item.b.id)} className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[13px] transition-all ${activeBlockId === item.b.id ? 'bg-teal-500 text-white shadow-md transform scale-110' : 'bg-gray-100 text-gray-600 hover:bg-teal-50 hover:text-teal-600'}`}>{idx + 1}</button>
+                      ))}
+                   </div>
+                </div>
+             )}
+
+             {tfBlocks.length > 0 && (
+                <div>
+                   <div className="text-[11px] font-bold text-orange-600 uppercase tracking-widest mb-3">Phần 2. Đúng/Sai</div>
+                   <div className="grid grid-cols-5 gap-1.5">
+                      {tfBlocks.map((item, idx) => (
+                         <button key={item.b.id} onClick={() => setActiveBlockId(item.b.id)} className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[13px] transition-all ${activeBlockId === item.b.id ? 'bg-orange-500 text-white shadow-md transform scale-110' : 'bg-gray-100 text-gray-600 hover:bg-orange-50 hover:text-orange-600'}`}>{idx + 1}</button>
+                      ))}
+                   </div>
+                </div>
+             )}
+
+             {shortAnswerBlocks.length > 0 && (
+                <div>
+                   <div className="text-[11px] font-bold text-purple-600 uppercase tracking-widest mb-3">Phần 3. Trả lời ngắn</div>
+                   <div className="grid grid-cols-5 gap-1.5">
+                      {shortAnswerBlocks.map((item, idx) => (
+                         <button key={item.b.id} onClick={() => setActiveBlockId(item.b.id)} className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-[13px] transition-all ${activeBlockId === item.b.id ? 'bg-purple-500 text-white shadow-md transform scale-110' : 'bg-gray-100 text-gray-600 hover:bg-purple-50 hover:text-purple-600'}`}>{idx + 1}</button>
+                      ))}
+                   </div>
+                </div>
+             )}
+
+          </div>
+       </div>
+
+       {/* MAIN EDITOR (80%) */}
+       <div className="flex-1 flex flex-col p-4 md:p-6 overflow-y-auto" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+       <div className="flex items-center justify-between mb-[-0.5rem] flex-wrap gap-3">
+
+         {selectedBlocks.size > 0 && (
+            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-gray-200 shadow-sm animate-in fade-in slide-in-from-top-2">
+               <span className="text-sm font-bold text-gray-600 mr-2">Đã chọn {selectedBlocks.size} khối:</span>
+               <select 
+                  onChange={(e) => {
+                     const newType = e.target.value;
+                     if (!newType) return;
+                     const newBlocks = blocks.map(b => {
+                        if (selectedBlocks.has(b.id) && b.type === 'quiz') {
+                           let newContent = { ...b.content, type: newType };
+                           if (newType === 'true_false_cluster' && (!b.content.options || typeof b.content.options[0] === 'string')) {
+                              newContent.options = [
+                                 { id: 'a', content: '', isTrue: true },
+                                 { id: 'b', content: '', isTrue: false },
+                                 { id: 'c', content: '', isTrue: true },
+                                 { id: 'd', content: '', isTrue: false },
+                              ];
+                           }
+                           return { ...b, content: newContent };
+                        }
+                        return b;
+                     });
+                     onChangeBlocks(newBlocks);
+                     e.target.value = ""; // reset
+                  }}
+                  className="border border-indigo-200 rounded-md px-3 py-1.5 text-sm bg-indigo-50 font-bold text-indigo-700 outline-none cursor-pointer focus:ring-2 focus:ring-indigo-500/30"
+               >
+                  <option value="">-- Đổi dạng câu hỏi --</option>
+                  <option value="multiple_choice">Trắc nghiệm 4 lựa chọn</option>
+                  <option value="true_false_cluster">Đúng/Sai 4 Ý (Barem 2025)</option>
+                  <option value="short_answer">Trả lời ngắn / Điền khuyết</option>
+                  <option value="essay">Tự luận / Trình bày chi tiết</option>
+               </select>
+               <button onClick={() => setSelectedBlocks(new Set())} className="ml-2 text-xs font-bold text-gray-400 hover:text-gray-600 underline">Bỏ chọn</button>
+            </div>
+         )}
        </div>
 
        {blocks.length === 0 && (
           <div className="text-center py-10 flex flex-col items-center gap-4">
-             <button onClick={() => addBlock(-1, 'md')} className="bg-orange-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-orange-700 shadow-sm transition-colors">+ Thêm nội dung đầu tiên</button>
+             <button onClick={() => addBlock(-1, 'md')} className="bg-teal-600 text-white px-4 py-2 rounded-lg font-bold hover:bg-teal-700 shadow-sm transition-colors">+ Thêm nội dung đầu tiên (Hoặc ấn Ctrl+V dán ảnh)</button>
              <button onClick={() => { setInsertIndex(-1); setIsBankModalOpen(true); }} className="flex items-center gap-2 font-bold text-orange-600 bg-orange-50 hover:bg-orange-100 px-4 py-2 rounded-lg border border-orange-200 transition-colors shadow-sm"><Database className="w-4 h-4"/> Hoặc Rút Đề từ Ngân hàng</button>
           </div>
        )}
 
-       {blocks.map((block, idx) => (
-          <div key={block.id} onClickCapture={() => handleFocusBlock(block.id)} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden shrink-0 transition-all">
-              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center">
+       {blocks.filter(b => b.id === activeBlockId).map((block) => {
+             const idx = blocks.findIndex(b => b.id === block.id);
+             return (
+          <div key={block.id} onClickCapture={() => handleFocusBlock(block.id)} className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-visible shrink-0 transition-all relative">
+              <div className="bg-gray-50 border-b border-gray-200 px-4 py-3 flex justify-between items-center rounded-t-xl z-20 relative">
                   <div className="flex items-center gap-2 font-bold text-gray-700 text-[15px]">
-                     {block.type === 'md' ? <><Type className="w-4 h-4 text-indigo-500"/> Khối Lý Thuyết / Văn Bản</> : <><ListTodo className="w-4 h-4 text-orange-500"/> Khối Trắc Nghiệm Tương Tác</>}
+                     <input 
+                        type="checkbox" 
+                        checked={selectedBlocks.has(block.id)}
+                        onChange={(e) => {
+                           const newSet = new Set(selectedBlocks);
+                           if (e.target.checked) newSet.add(block.id);
+                           else newSet.delete(block.id);
+                           setSelectedBlocks(newSet);
+                        }}
+                        className="w-4 h-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500 mr-2 cursor-pointer"
+                        onClick={e => e.stopPropagation()}
+                     />
+                     {block.type === 'md' ? <><Type className="w-4 h-4 text-indigo-500"/> Khối Lý Thuyết / Văn Bản</> : <><ListTodo className="w-4 h-4 text-teal-500"/> Khối Trắc Nghiệm Tương Tác</>}
                   </div>
                   <div className="flex gap-1.5">
                       <button onClick={() => moveBlock(idx, -1)} disabled={idx === 0} className="p-1.5 hover:bg-gray-200 rounded-md text-gray-500 disabled:opacity-30"><ArrowUp className="w-4 h-4"/></button>
@@ -428,7 +492,7 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
                        )}
 
                        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
-                          <label className="font-bold text-orange-800 text-[15px]">Nội dung câu hỏi</label>
+                          <label className="font-bold text-teal-800 text-[15px]">Nội dung câu hỏi</label>
                           <select 
                              value={block.content.type || 'multiple_choice'} 
                              onChange={e => {
@@ -445,7 +509,7 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
                                }
                                updateBlockContent(idx, newContent);
                              }} 
-                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white font-medium text-gray-700 outline-none focus:ring-2 focus:ring-orange-500/20"
+                             className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white font-medium text-gray-700 outline-none focus:ring-2 focus:ring-teal-500/20"
                           >
                              <option value="multiple_choice">Trắc nghiệm 4 lựa chọn</option>
                              <option value="true_false_cluster">Đúng/Sai 4 Ý (Barem 2025)</option>
@@ -455,21 +519,21 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
                           </select>
                        </div>
                        
-                       <RichTextarea rows={3} value={block.content.question || ""} onChange={e => updateBlockContent(idx, { ...block.content, question: e.target.value })} className="w-full border border-gray-200 rounded-xl p-4 outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-mono text-[15px] transition-all" placeholder="Nhập câu hỏi... (Markdown hỗ trợ)" />
+                       <RichTextarea rows={3} value={block.content.question || ""} onChange={e => updateBlockContent(idx, { ...block.content, question: e.target.value })} className="w-full border border-gray-200 rounded-xl p-4 outline-none focus:border-teal-500 focus:ring-4 focus:ring-teal-500/10 font-mono text-[15px] transition-all" placeholder="Nhập câu hỏi... (Markdown hỗ trợ)" />
 
                        {(block.content.type === 'multiple_choice' || !block.content.type) && (
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                              {[0,1,2,3].map(optIdx => (
                                <div key={optIdx} className="flex flex-col gap-1">
                                   <label className="text-xs font-bold text-gray-600 flex items-center gap-2">
-                                     <input type="radio" name={`q_${block.id}`} checked={block.content.answerIndex === optIdx} onChange={() => updateBlockContent(idx, { ...block.content, answerIndex: optIdx })} className="text-orange-600" />
+                                     <input type="radio" name={`q_${block.id}`} checked={block.content.answerIndex === optIdx} onChange={() => updateBlockContent(idx, { ...block.content, answerIndex: optIdx })} className="text-teal-600" />
                                      Đáp án {['A','B','C','D'][optIdx]}
                                   </label>
-                                  <RichTextarea rows={2} value={block.content.options?.[optIdx] || ""} onChange={e => {
+                                  <RichTextarea collapsibleToolbar={true} rows={2} value={block.content.options?.[optIdx] || ""} onChange={e => {
                                      const newOpts = [...(block.content.options || ["","","",""])];
                                      newOpts[optIdx] = e.target.value;
                                      updateBlockContent(idx, { ...block.content, options: newOpts });
-                                  }} className="border rounded p-2 text-sm outline-none focus:border-orange-500" />
+                                  }} className="border rounded p-2 text-sm outline-none focus:border-teal-500" />
                                </div>
                              ))}
                           </div>
@@ -480,14 +544,14 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
                              {[0,1].map(optIdx => (
                                <div key={optIdx} className="flex flex-col gap-1">
                                   <label className="text-xs font-bold text-gray-600 flex items-center gap-2">
-                                     <input type="radio" name={`q_${block.id}`} checked={block.content.answerIndex === optIdx} onChange={() => updateBlockContent(idx, { ...block.content, answerIndex: optIdx })} className="text-orange-600" />
+                                     <input type="radio" name={`q_${block.id}`} checked={block.content.answerIndex === optIdx} onChange={() => updateBlockContent(idx, { ...block.content, answerIndex: optIdx })} className="text-teal-600" />
                                      Đáp án {['Đúng','Sai'][optIdx]}
                                   </label>
-                                  <RichTextarea rows={2} value={block.content.options?.[optIdx] || ""} onChange={e => {
+                                  <RichTextarea collapsibleToolbar={true} rows={2} value={block.content.options?.[optIdx] || ""} onChange={e => {
                                      const newOpts = [...(block.content.options || ["",""])];
                                      newOpts[optIdx] = e.target.value;
                                      updateBlockContent(idx, { ...block.content, options: newOpts });
-                                  }} className="border rounded p-2 text-sm outline-none focus:border-orange-500" />
+                                  }} className="border rounded p-2 text-sm outline-none focus:border-teal-500" />
                                </div>
                              ))}
                           </div>
@@ -495,7 +559,7 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
 
                        {block.content.type === 'true_false_cluster' && (
                           <div className="flex flex-col gap-4 mt-2">
-                             <div className="text-xs font-bold text-orange-700 bg-orange-50 px-3 py-2 rounded-lg border border-orange-100">
+                             <div className="text-xs font-bold text-teal-700 bg-teal-50 px-3 py-2 rounded-lg border border-teal-100">
                                 Cấu trúc Barem 2025: Một câu hỏi chung và 4 mệnh đề (A, B, C, D). Học sinh chọn Đ/S cho từng mệnh đề độc lập. Điểm được tính theo bậc (0.1đ, 0.25đ, 0.5đ, 1.0đ).
                              </div>
                              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -515,6 +579,7 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
                                         </button>
                                      </div>
                                      <RichTextarea 
+                                        collapsibleToolbar={true}
                                         rows={2} 
                                         value={opt.content || ""} 
                                         onChange={e => {
@@ -522,7 +587,7 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
                                            newOpts[optIdx] = { ...opt, content: e.target.value };
                                            updateBlockContent(idx, { ...block.content, options: newOpts });
                                         }} 
-                                        className="w-full border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/10 transition-all" 
+                                        className="w-full border border-gray-200 rounded-lg p-2.5 text-sm outline-none focus:border-teal-500 focus:ring-2 focus:ring-teal-500/10 transition-all" 
                                         placeholder="Nhập nội dung mệnh đề..."
                                      />
                                   </div>
@@ -534,13 +599,13 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
                        {block.content.type === 'short_answer' && (
                           <div>
                              <label className="text-xs font-bold text-gray-600 mb-1 block">Đáp án đúng chính xác (Text/Số)</label>
-                             <input type="text" value={block.content.exactAnswer || ""} onChange={e => updateBlockContent(idx, { ...block.content, exactAnswer: e.target.value })} className="w-full border p-2 rounded outline-none focus:border-orange-500 font-bold" />
+                             <input type="text" value={block.content.exactAnswer || ""} onChange={e => updateBlockContent(idx, { ...block.content, exactAnswer: e.target.value })} className="w-full border p-2 rounded outline-none focus:border-teal-500 font-bold" />
                           </div>
                        )}
 
                        <div className="mt-4 pt-4 border-t border-gray-100">
                           <label className="text-xs font-bold text-gray-600 mb-2 block text-indigo-700">✍️ Hướng dẫn giải / Lời giải chi tiết</label>
-                          <RichTextarea rows={4} value={block.content.answer || block.content.sampleAnswer || block.content.explanation || ""} onChange={e => updateBlockContent(idx, { ...block.content, answer: e.target.value, sampleAnswer: e.target.value })} className="w-full border p-2 rounded outline-none focus:border-orange-500" />
+                          <RichTextarea rows={4} value={block.content.answer || block.content.sampleAnswer || block.content.explanation || ""} onChange={e => updateBlockContent(idx, { ...block.content, answer: e.target.value, sampleAnswer: e.target.value })} className="w-full border p-2 rounded outline-none focus:border-teal-500" />
                        </div>
                     </div>
                  )}
@@ -596,8 +661,8 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
                                  )}
 
                                  {(block.content.answer || block.content.sampleAnswer || block.content.explanation) && (
-                                    <div className="mt-4 p-4 bg-amber-50/50 border border-amber-200 rounded-xl">
-                                       <div className="text-sm font-bold text-amber-800 mb-2 border-b border-amber-200/50 pb-2 flex items-center gap-2">
+                                    <div className="mt-4 p-4 bg-emerald-50/50 border border-emerald-200 rounded-xl">
+                                       <div className="text-sm font-bold text-emerald-800 mb-2 border-b border-emerald-200/50 pb-2 flex items-center gap-2">
                                           <span className="text-lg">💡</span> Hướng dẫn giải:
                                        </div>
                                        <div className="text-[15px] text-gray-800">
@@ -615,11 +680,12 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
               
               <div className="bg-gray-50 border-t border-gray-100 p-2 flex justify-center gap-3 flex-wrap">
                  <button onClick={() => addBlock(idx, 'md')} className="flex items-center gap-1 text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 px-3 py-1.5 rounded-md"><PlusCircle className="w-3.5 h-3.5"/> Thêm Khối Lý thuyết xuống dưới</button>
-                 <button onClick={() => addBlock(idx, 'quiz')} className="flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-800 bg-orange-50 px-3 py-1.5 rounded-md"><PlusCircle className="w-3.5 h-3.5"/> Thêm Khối Trắc nghiệm xuống dưới</button>
+                 <button onClick={() => addBlock(idx, 'quiz')} className="flex items-center gap-1 text-xs font-bold text-teal-600 hover:text-teal-800 bg-teal-50 px-3 py-1.5 rounded-md"><PlusCircle className="w-3.5 h-3.5"/> Thêm Khối Trắc nghiệm xuống dưới</button>
                  <button onClick={() => { setInsertIndex(idx); setIsBankModalOpen(true); }} className="flex items-center gap-1 text-xs font-bold text-orange-600 hover:text-orange-800 bg-orange-50 px-3 py-1.5 rounded-md border border-orange-100 shadow-sm"><Database className="w-3.5 h-3.5"/> Rút từ Ngân hàng</button>
               </div>
            </div>
-        ))}
+             );
+          })}
 
         <QuestionBankModal 
            isOpen={isBankModalOpen} 
@@ -627,6 +693,7 @@ export default function BlockEditor({ blocks, onChangeBlocks, onTriggerCrop, glo
            onInsert={handleInsertFromBank} 
            usedQuestionIds={blocks.map(b => b.type === 'quiz' && b.content.sourceQuestionId).filter(Boolean) as string[]}
         />
+     </div>
      </div>
    );
  }
