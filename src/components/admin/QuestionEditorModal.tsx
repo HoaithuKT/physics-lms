@@ -19,6 +19,10 @@ interface QuestionData {
   answer_b: string;
   answer_c: string;
   answer_d: string;
+  option_a?: string;
+  option_b?: string;
+  option_c?: string;
+  option_d?: string;
   correct_answer: string;
   explanation: string;
   image_url?: string;
@@ -80,7 +84,7 @@ export default function QuestionEditorModal({ isOpen, onClose, question, onSave 
 
   const handleQuickAddCategory = async () => {
     if (!formData?.grade || !formData?.subject || !formData?.topic || !formData?.math_form) {
-      return alert("Vui lòng nhập đủ Lớp, Phân môn, Chuyên đề và Dạng vật lý để tạo Danh mục!");
+      return alert("Vui lòng nhập đủ Lớp, Phân môn, Chuyên đề và Dạng toán để tạo Danh mục!");
     }
     setIsAddingCategory(true);
     try {
@@ -92,7 +96,7 @@ export default function QuestionEditorModal({ isOpen, onClose, question, onSave 
         math_form: formData.math_form.trim()
       }]);
       if (error) throw error;
-      alert("Đã thêm Dạng vật lý vào Danh mục thành công!");
+      alert("Đã thêm Dạng toán vào Danh mục thành công!");
       fetchCategories();
     } catch(e: any) {
       alert("Lỗi: " + e.message);
@@ -346,7 +350,7 @@ export default function QuestionEditorModal({ isOpen, onClose, question, onSave 
                 <input value={formData.math_form} onChange={e => handleChange('math_form', e.target.value)} className={`w-full border rounded p-2 text-sm outline-none focus:border-indigo-500 ${isCategoryWarning ? 'border-yellow-400 bg-yellow-50/50' : ''}`} />
                 {isCategoryWarning && (
                   <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800 leading-relaxed">
-                    Dạng vật lý này chưa có trong Khung Ngân hàng đề. 
+                    Dạng toán này chưa có trong Khung Ngân hàng đề. 
                     <button onClick={handleQuickAddCategory} disabled={isAddingCategory} className="text-blue-600 font-bold ml-1 hover:underline whitespace-nowrap">
                       {isAddingCategory ? "Đang thêm..." : "Bấm để Thêm nhanh"}
                     </button>
@@ -369,9 +373,9 @@ export default function QuestionEditorModal({ isOpen, onClose, question, onSave 
               </div>
             </div>
             
-            <div className="bg-amber-50 p-4 rounded-xl border border-amber-200 shadow-sm">
-              <label className="text-xs font-bold text-amber-800 mb-1 block uppercase tracking-wider">Đáp án đúng</label>
-              <input value={formData.correct_answer} onChange={e => handleChange('correct_answer', e.target.value)} className="w-full border-2 border-amber-300 rounded p-3 text-lg font-bold text-amber-700 outline-none focus:border-amber-500" placeholder="A, B, C, D hoặc ĐĐSĐ..." />
+            <div className="bg-emerald-50 p-4 rounded-xl border border-emerald-200 shadow-sm">
+              <label className="text-xs font-bold text-emerald-800 mb-1 block uppercase tracking-wider">Đáp án đúng</label>
+              <input value={formData.correct_answer} onChange={e => handleChange('correct_answer', e.target.value)} className="w-full border-2 border-emerald-300 rounded p-3 text-lg font-bold text-emerald-700 outline-none focus:border-emerald-500" placeholder="A, B, C, D hoặc ĐĐSĐ..." />
             </div>
           </div>
 
@@ -424,13 +428,13 @@ export default function QuestionEditorModal({ isOpen, onClose, question, onSave 
               <div 
                 onClick={() => !formData.image_url && fileInputRef.current?.click()}
                 className={`relative w-full min-h-[160px] border-2 border-dashed rounded-xl flex flex-col items-center justify-center transition-colors
-                  ${formData.image_url ? 'border-amber-300 bg-amber-50/20' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 cursor-pointer'}`}
+                  ${formData.image_url ? 'border-emerald-300 bg-emerald-50/20' : 'border-gray-300 bg-gray-50 hover:bg-gray-100 cursor-pointer'}`}
               >
                 <input type="file" accept="image/*" className="hidden" ref={fileInputRef} onChange={handleImageUpload} />
                 
                 {isUploading && !isCropping && (
                   <div className="absolute inset-0 z-20 bg-white/80 flex items-center justify-center backdrop-blur-sm rounded-xl">
-                    <Loader2 className="w-8 h-8 animate-spin text-amber-500" />
+                    <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
                   </div>
                 )}
 
@@ -459,7 +463,7 @@ export default function QuestionEditorModal({ isOpen, onClose, question, onSave 
                   </div>
                 ) : (
                   <div className="text-center p-6">
-                    <UploadCloud className="w-10 h-10 text-amber-500 mx-auto mb-2 opacity-70" />
+                    <UploadCloud className="w-10 h-10 text-emerald-500 mx-auto mb-2 opacity-70" />
                     <p className="text-sm font-bold text-gray-600">Click, Kéo thả, hoặc <span className="text-indigo-600">Ctrl+V</span> để dán ảnh</p>
                     <p className="text-xs text-gray-400 mt-1">Ảnh sẽ tự động tải lên mây. Bạn có thể cắt lại nếu cần.</p>
                   </div>
@@ -469,7 +473,7 @@ export default function QuestionEditorModal({ isOpen, onClose, question, onSave 
               {/* Buttons below Image */}
               {formData.image_url && !isCropping && (
                 <div className="flex gap-3 mt-3">
-                  <button onClick={() => setIsCropping(true)} className="flex items-center justify-center gap-2 flex-1 py-2 border border-amber-600 text-amber-700 font-bold text-sm rounded-lg hover:bg-amber-50 transition-colors">
+                  <button onClick={() => setIsCropping(true)} className="flex items-center justify-center gap-2 flex-1 py-2 border border-emerald-600 text-emerald-700 font-bold text-sm rounded-lg hover:bg-emerald-50 transition-colors">
                     <Crop className="w-4 h-4" /> Cắt xén lại ảnh gốc
                   </button>
                 </div>
