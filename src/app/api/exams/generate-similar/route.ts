@@ -45,7 +45,7 @@ export async function POST(request: Request) {
     // Determine context mode
     let contextModeStr = "Chỉ thay đổi số liệu/hàm số, giữ nguyên bối cảnh thực tế (nếu có).";
     if (contextMode === "change") {
-        contextModeStr = "Thay đổi hoàn toàn bối cảnh thực tế (Ví dụ: Từ bài toán xe chạy sang bài toán con thuyền, từ quỹ đạo bóng bay sang dòng nước...). Nhưng vẫn giữ nguyên lõi vật lý và phương pháp giải.";
+        contextModeStr = "Thay đổi hoàn toàn bối cảnh thực tế (Ví dụ: Từ bài toán xe chạy sang bài toán con thuyền, từ quỹ đạo bóng bay sang dòng nước...). Nhưng vẫn giữ nguyên lõi toán học và phương pháp giải.";
     }
 
     const systemInstruction = `
@@ -118,7 +118,7 @@ export async function POST(request: Request) {
         
         // Fix \t LaTeX JSON parse bug
         let preprocessedText = text
-            .replace(/\\n(?=eq|otin|abla|atural)/g, '\\\\n')
+            .replace(/\\n(?=eq|otin|exists|eg|abla|u|i|earrow|atural|parallel)/g, '\\\\n')
             .replace(/\\r(?=ightarrow|ho|angle)/g, '\\\\r')
             .replace(/\\t(?=imes|heta|riangle|ext)/g, '\\\\t')
             .replace(/\\b(?=egin)/g, '\\\\b')
