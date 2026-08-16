@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
+import { requireStaff } from '@/utils/auth/guard';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getAllAIKeys } from '@/utils/aiKeys';
 import { filterCleanKeys, blockKey } from '@/utils/aiKeyManager';
 
 export async function POST(request: Request) {
+  const guard = await requireStaff();
+  if (!guard.ok) return guard.response;
+
   try {
     const { imageUrls = [], customPrompt, question, sampleAnswer, maxScore = 10, type, studentAnswer, correctAnswer, options } = await request.json();
 

@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
+import { requireStaff } from '@/utils/auth/guard';
 import { createClient } from '@supabase/supabase-js';
 
 export async function DELETE(request: Request) {
+  const guard = await requireStaff();
+  if (!guard.ok) return guard.response;
+
   try {
     // Khởi tạo Supabase Admin Client với quyền tối cao (Bypass RLS)
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;

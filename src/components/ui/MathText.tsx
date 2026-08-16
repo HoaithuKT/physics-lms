@@ -3,7 +3,6 @@
 import React from "react";
 import "katex/dist/katex.min.css";
 import { InlineMath, BlockMath } from 'react-katex';
-import { BlockPhysics, InlinePhysics } from "react-katex";
 import { fixLatexExt } from '@/utils/latexFix';
 
 interface PhysicsTextProps {
@@ -17,9 +16,9 @@ export function PhysicsText({ math, inline = false, className = "" }: PhysicsTex
   return (
     <span className={`text-[#f97316] ${className}`}>
       {inline ? (
-        <InlinePhysics math={fixedMath} />
+        <InlineMath math={fixedMath} />
       ) : (
-        <BlockPhysics math={fixedMath} />
+        <BlockMath math={fixedMath} />
       )}
     </span>
   );

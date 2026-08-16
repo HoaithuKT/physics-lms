@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
+import { requireAdmin } from '@/utils/auth/guard';
 import { getAllAIKeys, getCustomKeys, saveCustomKeys } from '@/utils/aiKeys';
 
 export async function GET(req: Request) {
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
+
   const url = new URL(req.url);
   const action = url.searchParams.get('action');
 
@@ -17,6 +21,9 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const guard = await requireAdmin();
+  if (!guard.ok) return guard.response;
+
   try {
     const body = await req.json();
     const { keys } = body; // mảng các chuỗi API Key

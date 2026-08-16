@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { requireStaff } from '@/utils/auth/guard';
 import { NextRequest, NextResponse } from "next/server";
 
 // Sử dụng service_role key để bypass RLS
@@ -8,6 +9,9 @@ const supabaseAdmin = createClient(
 );
 
 export async function POST(req: NextRequest) {
+  const guard = await requireStaff();
+  if (!guard.ok) return guard.response;
+
   try {
     const { formulas } = await req.json();
 

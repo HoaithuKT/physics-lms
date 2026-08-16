@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { requireUser } from '@/utils/auth/guard';
 import { createClient as createAdminClient } from '@supabase/supabase-js';
 
 const supabaseAdmin = createAdminClient(
@@ -7,6 +8,9 @@ const supabaseAdmin = createAdminClient(
 );
 
 export async function POST(req: Request) {
+  const guard = await requireUser();
+  if (!guard.ok) return guard.response;
+
   try {
     const body = await req.json();
     const { remedialId, score, globalImages, gradingDetails } = body;

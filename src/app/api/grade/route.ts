@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
+import { requireUser } from '@/utils/auth/guard';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { getAllAIKeys } from '@/utils/aiKeys';
 import { filterCleanKeys, blockKey } from '@/utils/aiKeyManager';
 
 export async function POST(request: Request) {
+  const guard = await requireUser();
+  if (!guard.ok) return guard.response;
+
   try {
     const { image, images, textAnswer, question, sampleAnswer, maxScore = 10 } = await request.json();
 

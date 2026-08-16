@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState, useCallback, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { BlockPhysics } from "react-katex";
+import { BlockMath } from "react-katex";
 import "katex/dist/katex.min.css";
 import { Library, ChevronRight, ChevronLeft, Search, BookOpen, Bookmark, ArrowLeft, ArrowRight, Home } from "lucide-react";
 import Link from "next/link";
@@ -242,7 +242,7 @@ export default function StudentHandbook() {
           <div className="flex flex-col sm:flex-row gap-3 md:gap-5 items-center sm:items-start flex-1 min-h-0">
             <div className="flex-1 min-w-0 w-full">
               <div className="formula-handwritten p-5 overflow-x-auto text-center">
-                <BlockPhysics math={formula.latex_content} />
+                <BlockMath math={formula.latex_content} />
               </div>
             </div>
             {formula.image_url && (
@@ -395,7 +395,7 @@ export default function StudentHandbook() {
                         )}
                       </div>
                       <div className="formula-handwritten p-4 overflow-x-auto text-center">
-                        <BlockPhysics math={formula.latex_content} />
+                        <BlockMath math={formula.latex_content} />
                       </div>
                       {formula.description && (
                         <p className="text-gray-500 text-sm mt-2 italic">{formula.description}</p>

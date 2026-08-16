@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { BookOpen, Sparkles, UploadCloud, Plus, Edit2, Trash2, Library, ChevronRight, X, Save, Loader2 } from "lucide-react";
 import 'katex/dist/katex.min.css';
-import { BlockPhysics } from 'react-katex';
+// react-katex xuat ra BlockMath (khong co BlockPhysics)
+import { BlockMath } from 'react-katex';
 
 export default function AdminHandbook() {
   const [categories, setCategories] = useState<any[]>([]);
@@ -577,7 +578,7 @@ export default function AdminHandbook() {
                             <div className="flex gap-4 items-start">
                               <div className="flex-1 min-w-0">
                                 <div className="formula-handwritten bg-slate-50 border border-slate-200 rounded-xl p-4 my-2 overflow-x-auto text-lg text-center">
-                                  <BlockPhysics math={formula.latex_content} />
+                                  <BlockMath math={formula.latex_content} />
                                 </div>
                               </div>
                               {formula.image_url && (
@@ -735,7 +736,7 @@ export default function AdminHandbook() {
                 {fLatex && (
                   <div className="bg-slate-50 border border-slate-200 rounded-xl p-4 overflow-x-auto text-lg text-center">
                     <p className="text-xs text-gray-400 mb-2 uppercase font-bold text-left">Xem trước KaTeX:</p>
-                    <BlockPhysics math={fLatex} errorColor="#ef4444" />
+                    <BlockMath math={fLatex} errorColor="#ef4444" />
                   </div>
                 )}
                 <div>
@@ -1040,7 +1041,7 @@ export default function AdminHandbook() {
                           {formula.latex_content && (
                             <div className="mt-2 p-3 formula-handwritten rounded-xl overflow-x-auto text-center">
                               <div className="text-[10px] text-gray-400 mb-1 font-sans text-left">👁️ Xem trước:</div>
-                              <BlockPhysics math={formula.latex_content} />
+                              <BlockMath math={formula.latex_content} />
                             </div>
                           )}
                         </div>

@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireStaff } from '@/utils/auth/guard';
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseAdmin = createClient(
@@ -7,6 +8,9 @@ const supabaseAdmin = createClient(
 );
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+  const guard = await requireStaff();
+  if (!guard.ok) return guard.response;
+
   try {
     const { id } = await params;
     

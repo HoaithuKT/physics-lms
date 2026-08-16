@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
+import { requireUser } from '@/utils/auth/guard';
 import { createClient } from '@supabase/supabase-js';
 
 export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
+  const guard = await requireUser();
+  if (!guard.ok) return guard.response;
+
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');

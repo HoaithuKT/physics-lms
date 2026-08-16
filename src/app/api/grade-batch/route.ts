@@ -1,7 +1,11 @@
 import { NextResponse } from 'next/server';
+import { requireUser } from '@/utils/auth/guard';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(request: Request) {
+  const guard = await requireUser();
+  if (!guard.ok) return guard.response;
+
   try {
     const { images, questions, serverId = 1 } = await request.json();
 

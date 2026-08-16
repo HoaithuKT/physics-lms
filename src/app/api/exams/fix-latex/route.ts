@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { requireStaff } from '@/utils/auth/guard';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
 // Hàm lấy API key xoay vòng
@@ -21,6 +22,9 @@ function getRotatedApiKeys() {
 export const maxDuration = 60;
 
 export async function POST(request: Request) {
+  const guard = await requireStaff();
+  if (!guard.ok) return guard.response;
+
   try {
     const { htmlContent } = await request.json();
 
