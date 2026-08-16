@@ -136,7 +136,15 @@ Trả về MỘT MẢNG JSON duy nhất (bắt đầu bằng [ và kết thúc b
      - Bạn PHẢI gán "tenBai" là tên bài học xa nhất/mới nhất trong chương trình mà câu hỏi đề cập tới (Ví dụ ý A thuộc Bài 1, ý C thuộc Bài 3 => Gán "tenBai": "Bài 3").
      - Bạn PHẢI gán "dangToan": "Vật lý tổng hợp".
   3. GIỮ NGUYÊN DANH MỤC: Nếu trường "chuyenDe" hoặc "tenBai" trong mẫu JSON đã được điền sẵn một giá trị (Không phải chữ "Tự suy luận"), BẠN PHẢI GIỮ NGUYÊN CHÍNH XÁC CHUỖI ĐÓ, KHÔNG ĐƯỢC TỰ Ý CẮT BỎ CÁC TIỀN TỐ (như "Chương I.", "Bài 2.") HAY THAY ĐỔI BẤT KỲ KÝ TỰ NÀO.
-  4. ĐỊNH DẠNG CÔNG THỨC TOÁN: Mọi công thức Vật lý PHẢI được bọc trong $...$ (ví dụ: $\\frac{1}{2}$). Bạn cứ viết lệnh LaTeX chuẩn, KHÔNG ĐƯỢC dùng 2 dấu gạch chéo (\\\\) để escape lệnh trừ khi xuống dòng.
+  4. ĐỊNH DẠNG CÔNG THỨC: Mọi công thức Vật lý PHẢI được bọc trong $...$ (ví dụ: $\\frac{1}{2}$). Bạn cứ viết lệnh LaTeX chuẩn, KHÔNG ĐƯỢC dùng 2 dấu gạch chéo (\\\\) để escape lệnh trừ khi xuống dòng.
+  4b. ĐẶC THÙ MÔN VẬT LÝ - ĐƠN VỊ ĐO VÀ KÝ HIỆU (RẤT QUAN TRỌNG):
+     - GIỮ NGUYÊN 100% ĐƠN VỊ ĐO của đề gốc, TUYỆT ĐỐI KHÔNG tự quy đổi (đề ghi 5 cm thì giữ 5 cm, không đổi thành 0,05 m). Đổi đơn vị là làm sai lệch đề bài.
+     - Đơn vị đo phải viết dạng chữ đứng: dùng \\text{...} (ví dụ: $v = 10\\ \\text{m/s}$, $F = 5\\ \\text{N}$, $\\lambda = 600\\ \\text{nm}$). KHÔNG để đơn vị thành chữ nghiêng như tên biến.
+     - GIỮ ĐÚNG KÝ HIỆU ĐẠI LƯỢNG chuẩn Vật lý, không tự đổi sang chữ khác: $v$ vận tốc, $a$ gia tốc, $F$ lực, $m$ khối lượng, $t$ thời gian, $\\lambda$ bước sóng, $\\omega$ tần số góc, $\\varphi$ pha, $\\mu$ hệ số ma sát, $\\rho$ khối lượng riêng.
+     - Đại lượng vectơ phải giữ dấu vectơ: $\\vec{F}$, $\\vec{v}$, $\\vec{a}$.
+     - Chỉ số dưới giữ nguyên ý nghĩa: $v_0$ (vận tốc ban đầu), $F_{ms}$ (lực ma sát), $U_{AB}$.
+     - Số dạng luỹ thừa 10 viết bằng LaTeX: $3\\cdot 10^8\\ \\text{m/s}$, KHÔNG viết 3e8 hay 3*10^8.
+  4c. HÌNH VẼ ĐẶC THÙ MÔN LÝ: sơ đồ mạch điện, hình biểu diễn lực, con lắc, thấu kính, gương, giao thoa sóng... đều tính là HÌNH VẼ - áp dụng đúng quy tắc số 5 và số 9 bên dưới (chèn marker + điền "viTriHinhAnh"), TUYỆT ĐỐI KHÔNG mô tả bằng lời hay vẽ lại bằng ký tự.
   5. NẾU TRONG ĐỀ CÓ HÌNH VẼ, ĐỒ THỊ, BẢNG BIẾN THIÊN, HOẶC BẢNG XÉT DẤU: Tuyệt đối KHÔNG cố gắng vẽ lại bằng Markdown, ASCII hay LaTeX. Thay vào đó, hãy chỉ ghi đúng chữ "[HÌNH VẼ]" hoặc "[BẢNG BIẾN THIÊN]" vào vị trí đó trong nội dung, VÀ điền thêm trường "viTriHinhAnh" như mô tả ở trên. Người dùng sẽ tự kiểm tra ảnh được tự động cắt ra.
   6. ÉP BUỘC TRƯỜNG ĐÁP ÁN ĐÚNG: Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC BỎ TRỐNG trường "dapAnDung".
      - Với câu Trắc nghiệm (NLC): Phải điền A, B, C hoặc D.

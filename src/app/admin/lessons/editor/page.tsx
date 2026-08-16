@@ -927,6 +927,9 @@ YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
 - CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình).
 
 - Phân số: Dạng \\frac{tử}{mẫu}. Góc: Dạng \\widehat{tên}. Hệ phương trình: Dùng \\begin{cases} ... \\end{cases}.
+- [ĐẶC THÙ VẬT LÝ] GIỮ NGUYÊN ĐƠN VỊ ĐO của đề gốc, TUYỆT ĐỐI KHÔNG tự quy đổi (đề ghi 5 cm thì giữ 5 cm). Đơn vị viết chữ đứng bằng \\text{...}: $v = 10\\ \\text{m/s}$, $F = 5\\ \\text{N}$, $\\lambda = 600\\ \\text{nm}$.
+- [ĐẶC THÙ VẬT LÝ] Giữ đúng ký hiệu đại lượng chuẩn ($v$ vận tốc, $a$ gia tốc, $F$ lực, $\\lambda$ bước sóng, $\\omega$ tần số góc, $\\varphi$ pha, $\\mu$ hệ số ma sát, $\\rho$ khối lượng riêng), đại lượng vectơ ghi $\\vec{F}$, chỉ số dưới giữ nguyên ý nghĩa ($v_0$, $F_{ms}$, $U_{AB}$). Số luỹ thừa 10 viết $3\\cdot 10^8$, không viết 3e8.
+- [ĐẶC THÙ VẬT LÝ] Sơ đồ mạch điện, hình biểu diễn lực, con lắc, thấu kính, giao thoa sóng đều tính là HÌNH VẼ: chèn marker ảnh theo quy tắc, KHÔNG vẽ lại bằng ký tự.
 6. [LỜI GIẢI CHI TIẾT]: Mỗi câu hỏi BẮT BUỘC phải có trường \`"answer"\` chứa lời giải chi tiết, giải thích rõ ràng từng bước. Nếu đề sai, hãy chỉ rõ cái sai trong lời giải và sửa lại cho đúng.
 7. TOÀN BỘ CÁC CÂU HỎI PHẢI ĐƯỢC GỘP CHUNG VÀO MỘT (1) ĐOẠN MÃ NGÔN NGỮ "quiz" DUY NHẤT (BẮT BUỘC BỌC TRONG \`\`\`quiz VÀ \`\`\`). BÊN TRONG LÀ MỘT MẢNG JSON (JSON ARRAY) CHỨA TẤT CẢ CÁC CÂU HỎI. Cấu trúc mỗi object JSON trong mảng:
 
@@ -988,6 +991,9 @@ YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
 - CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình). Các biểu thức toán học phải liền khối.
 
 - Phân số: Dạng \\frac{tử}{mẫu}. Góc: Dạng \\widehat{tên}. Hệ phương trình: Dùng \\begin{cases} ... \\end{cases}.
+- [ĐẶC THÙ VẬT LÝ] GIỮ NGUYÊN ĐƠN VỊ ĐO của đề gốc, TUYỆT ĐỐI KHÔNG tự quy đổi (đề ghi 5 cm thì giữ 5 cm). Đơn vị viết chữ đứng bằng \\text{...}: $v = 10\\ \\text{m/s}$, $F = 5\\ \\text{N}$, $\\lambda = 600\\ \\text{nm}$.
+- [ĐẶC THÙ VẬT LÝ] Giữ đúng ký hiệu đại lượng chuẩn ($v$ vận tốc, $a$ gia tốc, $F$ lực, $\\lambda$ bước sóng, $\\omega$ tần số góc, $\\varphi$ pha, $\\mu$ hệ số ma sát, $\\rho$ khối lượng riêng), đại lượng vectơ ghi $\\vec{F}$, chỉ số dưới giữ nguyên ý nghĩa ($v_0$, $F_{ms}$, $U_{AB}$). Số luỹ thừa 10 viết $3\\cdot 10^8$, không viết 3e8.
+- [ĐẶC THÙ VẬT LÝ] Sơ đồ mạch điện, hình biểu diễn lực, con lắc, thấu kính, giao thoa sóng đều tính là HÌNH VẼ: chèn marker ảnh theo quy tắc, KHÔNG vẽ lại bằng ký tự.
 2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG TOÁN HỌC]:
 Bài giảng bắt buộc phải có 2 phần chính liên tiếp nhau:
 * PHẦN 1: LÝ THUYẾT CHI TIẾT. Hãy giải thích cặn kẽ Định nghĩa, Định lý, Công thức cốt lõi. Văn phong tự nhiên, dễ đọc. BẮT BUỘC trình bày theo cấu trúc phân mục đánh số rõ ràng (1. 2. 3. ...) để học sinh dễ theo dõi và ghi chép bài. Tuyệt đối không dùng dấu ngắt trang (---).
@@ -1008,6 +1014,9 @@ YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
 - CÔNG THỨC PHẢI LIỀN MẠCH TRÊN 1 DÒNG: Tuyệt đối không được bẻ gãy, ngắt dòng (enter) giữa chừng một công thức (trừ hệ phương trình). Các biểu thức toán học phải liền khối và chuẩn xác.
 
 - Phân số: Dạng \\frac{tử}{mẫu}. Góc: Dạng \\widehat{tên}. Hệ phương trình: Dùng \\begin{cases} ... \\end{cases}.
+- [ĐẶC THÙ VẬT LÝ] GIỮ NGUYÊN ĐƠN VỊ ĐO của đề gốc, TUYỆT ĐỐI KHÔNG tự quy đổi (đề ghi 5 cm thì giữ 5 cm). Đơn vị viết chữ đứng bằng \\text{...}: $v = 10\\ \\text{m/s}$, $F = 5\\ \\text{N}$, $\\lambda = 600\\ \\text{nm}$.
+- [ĐẶC THÙ VẬT LÝ] Giữ đúng ký hiệu đại lượng chuẩn ($v$ vận tốc, $a$ gia tốc, $F$ lực, $\\lambda$ bước sóng, $\\omega$ tần số góc, $\\varphi$ pha, $\\mu$ hệ số ma sát, $\\rho$ khối lượng riêng), đại lượng vectơ ghi $\\vec{F}$, chỉ số dưới giữ nguyên ý nghĩa ($v_0$, $F_{ms}$, $U_{AB}$). Số luỹ thừa 10 viết $3\\cdot 10^8$, không viết 3e8.
+- [ĐẶC THÙ VẬT LÝ] Sơ đồ mạch điện, hình biểu diễn lực, con lắc, thấu kính, giao thoa sóng đều tính là HÌNH VẼ: chèn marker ảnh theo quy tắc, KHÔNG vẽ lại bằng ký tự.
 2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG TOÁN HỌC]:
 Bài giảng bắt buộc phải có 2 phần chính liên tiếp nhau:
 * PHẦN 1: TÓM TẮT LÝ THUYẾT TRỌNG TÂM. Hãy chắt lọc Định nghĩa, Định lý, Công thức cốt lõi. Bỏ qua diễn giải rườm rà. BẮT BUỘC trình bày theo cấu trúc phân mục đánh số rõ ràng (1. 2. 3. ...) để học sinh dễ theo dõi và ghi chép bài.
