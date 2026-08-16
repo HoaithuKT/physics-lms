@@ -19,7 +19,8 @@ export default function ScoresTab({ classId, classInfo, enrollments }: { classId
     if (!printRef.current) return;
     setExportingImage(true); 
     try {
-      const dataUrl = await captureElement(printRef.current);
+      // Ép khổ 860px để bảng điểm không bị bóp khi thầy xuất ảnh từ điện thoại
+      const dataUrl = await captureElement(printRef.current, { width: 860 });
       const fileName = `Bao_cao_diem_${classInfo?.name || 'Lop'}_${new Date().getTime()}.png`;
       await downloadOrShare(dataUrl, fileName);
     } catch (err: any) {
@@ -118,7 +119,6 @@ export default function ScoresTab({ classId, classInfo, enrollments }: { classId
                     value={scores[studentId] || ''}
                     onChange={e => handleScoreChange(studentId, e.target.value)}
                     className="w-full text-center py-1 bg-transparent border-b border-dashed border-gray-300 focus:outline-none focus:border-teal-500 font-bold text-gray-800"
-                    data-html2canvas-ignore="false"
                   />
                 </td>
                 <td className="p-2 border text-center bg-gray-50/50">
@@ -141,4 +141,3 @@ export default function ScoresTab({ classId, classInfo, enrollments }: { classId
     </div>
   );
 }
-

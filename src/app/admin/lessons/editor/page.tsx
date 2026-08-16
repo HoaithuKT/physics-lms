@@ -9,8 +9,8 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
 import { fixLatexText, applyLatexFixToActiveElement , cleanObjectLatex } from "@/utils/latexFixer";
+import { latexToDocxMath } from "@/utils/latexToDocxMath";
 import 'katex/dist/katex.min.css';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import { useSearchParams, useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
 import ReactCrop, { type Crop } from 'react-image-crop';
@@ -18,7 +18,11 @@ import BlockEditor, { Block } from "./BlockEditor";
 import PushToBankModal from './PushToBankModal';
 import 'react-image-crop/dist/ReactCrop.css';
 import confetti from 'canvas-confetti';
-import { Document, Packer, Paragraph, TextRun } from "docx";
+import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType, ImageRun, BorderStyle } from "docx";
+import { saveAs } from "file-saver";
+import { fetchImageWithDimensions, base64ToUint8Array } from "@/utils/exportDocx";
+import { IMAGE_NEEDED_REGEX, IMAGE_PLACEHOLDER_STRIP_REGEX, callGeminiWithKeyFallback, filesToGeminiParts } from "@/utils/aiQuestionScan";
+import { autoCropImage, type NormalizedBox } from "@/utils/autoCropImage";
 import { ArrowLeft, Save, Sparkles, Image as ImageIcon, Key, Loader2, RefreshCw, Video, Link as LinkIcon, FileText, X, CropIcon, Upload, ChevronLeft, ChevronRight, Maximize2, Minimize2, MonitorPlay, Presentation, CheckCircle2, XCircle, Edit2, Download, PlayCircle, Eye, ChevronRightCircle, RefreshCcw, Bot, Copy, Code2, ListTodo, ChevronUp, ChevronDown, AlertTriangle, Database, UploadCloud } from "lucide-react";
 
 interface PendingImage {
@@ -546,27 +550,44 @@ const parseMarkdownToBlocks = (content: string): Block[] => {
       }
       try {
           let rawJson = match[1].replace(/\n$/, '');
-          // Tiền xử lý phục hồi lỗi LaTeX escape: AI quên escape nên JSON parse \n thành kí tự xuống dòng
-          rawJson = rawJson
-              .replace(/\\n(?=eq|otin|exists|eg|abla|u|i|earrow|atural|parallel)/g, '\\\\n')
-              .replace(/\\r(?=ightarrow|ho|angle)/g, '\\\\r')
-              .replace(/\\t(?=imes|heta|riangle|ext)/g, '\\\\t')
-              .replace(/\\b(?=egin)/g, '\\\\b')
-              .replace(/\\f(?=rac|orall)/g, '\\\\f')
-              .replace(/\\e(?=nd)/g, '\\\\e');
-
           let data;
+
+          // Thử parse THẲNG trước tiên. Nội dung đã lưu đúng (qua JSON.stringify chuẩn
+          // ở serializeBlocksToMarkdown) sẽ parse thành công ngay ở bước này.
           try {
-             data = JSON.parse(rawJson);
-          } catch(e1) {
-             // Thử vá lỗi JSON bị AI cắt cụt do vượt max token
-             let patchedJson = rawJson.trim();
-             if (patchedJson.endsWith(',')) patchedJson = patchedJson.slice(0, -1);
-             if (patchedJson.endsWith('"')) patchedJson += '}]';
-             else if (patchedJson.endsWith('}')) patchedJson += ']';
-             else if (!patchedJson.endsWith(']')) patchedJson += '}]';
-             data = JSON.parse(patchedJson);
+              data = JSON.parse(rawJson);
+          } catch {
+              // Chỉ khi parse thẳng thất bại (dấu hiệu AI quên nhân đôi dấu \ lúc mới
+              // sinh nội dung) mới áp dụng phục hồi escape. Bắt buộc kèm (?<!\\) để KHÔNG
+              // đụng vào các cặp \\ đã đúng sẵn - trước đây thiếu điều kiện này nên mỗi
+              // lần MỞ LẠI một bài đã lưu đúng, bộ phục hồi lại nhân ba dấu \ (\\forall
+              // -> \\\forall), khiến JSON.parse biến \f thành ký tự điều khiển và công
+              // thức hiện lỗi "\orall" dù dữ liệu trong CSDL vẫn hoàn toàn đúng.
+              const recovered = rawJson
+                  .replace(/(?<!\\)\\n(?=eq|otin|exists|eg|abla|u|i|earrow|atural|parallel)/g, '\\\\n')
+                  .replace(/(?<!\\)\\r(?=ightarrow|ho|angle)/g, '\\\\r')
+                  .replace(/(?<!\\)\\t(?=imes|heta|riangle|ext)/g, '\\\\t')
+                  .replace(/(?<!\\)\\b(?=egin)/g, '\\\\b')
+                  .replace(/(?<!\\)\\f(?=rac|orall)/g, '\\\\f')
+                  .replace(/(?<!\\)\\e(?=nd)/g, '\\\\e');
+
+              try {
+                  data = JSON.parse(recovered);
+              } catch(e1) {
+                  // Thử vá lỗi JSON bị AI cắt cụt do vượt max token
+                  let patchedJson = recovered.trim();
+                  if (patchedJson.endsWith(',')) patchedJson = patchedJson.slice(0, -1);
+                  if (patchedJson.endsWith('"')) patchedJson += '}]';
+                  else if (patchedJson.endsWith('}')) patchedJson += ']';
+                  else if (!patchedJson.endsWith(']')) patchedJson += '}]';
+                  data = JSON.parse(patchedJson);
+              }
           }
+
+          // Dọn nốt ký tự điều khiển còn sót (nếu nội dung cũ đã lỡ bị lưu hỏng từ
+          // trước) - vô hại với nội dung vốn đã đúng vì không có gì để dọn.
+          data = cleanObjectLatex(data);
+
           if (Array.isArray(data)) {
               data.forEach(item => {
                   if (item.question) {
@@ -592,6 +613,86 @@ const parseMarkdownToBlocks = (content: string): Block[] => {
     return res.length > 0 ? res : [{ id: Math.random().toString(36).substring(7), type: 'md', content: "" }];
 };
 
+/**
+ * Khung toạ độ ảnh cho khối lý thuyết (md): AI ghi ngay sau marker, dạng
+ * `[IMAGE_PLACEHOLDER]{"fileIndex":0,"ymin":300,"xmin":250,"ymax":800,"xmax":750}`.
+ * Khối quiz thì mang khung trong trường JSON `viTriHinhAnh` nên không cần regex.
+ */
+const MD_IMAGE_BOX_REGEX = /\[IMAGE_PLACEHOLDER\]\s*(\{\s*"fileIndex"\s*:[^}]*\})/gi;
+
+/** Khung AI trả về có hợp lệ không (đủ 5 số, toạ độ thuận, nằm trong thang 0-1000). */
+const isValidImageBox = (box: any): box is NormalizedBox & { fileIndex: number } => {
+    if (!box || typeof box !== 'object') return false;
+    const nums = [box.fileIndex, box.ymin, box.xmin, box.ymax, box.xmax];
+    if (!nums.every((n) => typeof n === 'number' && Number.isFinite(n))) return false;
+    if (box.xmin >= box.xmax || box.ymin >= box.ymax) return false;
+    return box.xmin >= 0 && box.ymin >= 0 && box.xmax <= 1000 && box.ymax <= 1000;
+};
+
+/**
+ * Tự động cắt ảnh minh hoạ cho các khối vừa quét được, dùng đúng cỗ máy đang chạy bên
+ * Ngân hàng câu hỏi (`autoCropImage`: cắt theo khung 0-1000, phóng to + làm nét khi vùng
+ * cắt nhỏ, chặn khung vô lý), rồi thay marker bằng ảnh thật ngay trong nội dung.
+ *
+ * Cắt hỏng ở một khối thì bỏ qua đúng khối đó và giữ nguyên marker để rơi về luồng cắt
+ * tay như trước - không được làm hỏng cả lượt quét.
+ */
+const autoCropBlocksImages = async (
+    parsedBlocks: Block[],
+    sourceFiles: File[],
+    sourceUrls: string[],
+    supabase: any,
+): Promise<{ blocks: Block[]; croppedCount: number }> => {
+    let croppedCount = 0;
+
+    for (const b of parsedBlocks) {
+        try {
+            if (b.type === 'quiz' && b.content && typeof b.content === 'object') {
+                const box = b.content.viTriHinhAnh;
+                if (!isValidImageBox(box)) {
+                    if (box !== undefined) delete b.content.viTriHinhAnh;
+                    continue;
+                }
+                const file = sourceFiles[box.fileIndex];
+                if (!file) { delete b.content.viTriHinhAnh; continue; }
+
+                const url = await autoCropImage(supabase, file, box);
+                const imageMarkdown = `\n\n![Hình minh họa](${url})\n\n`;
+                const question = b.content.question || '';
+                const replaced = question.replace(IMAGE_PLACEHOLDER_STRIP_REGEX, imageMarkdown);
+                b.content.question = replaced !== question ? replaced : question + imageMarkdown;
+
+                // Giữ ảnh gốc + khung để còn đối chiếu và cắt lại thủ công nếu AI cắt lệch
+                b.content.autoCropMetadata = { originalUrl: sourceUrls[box.fileIndex] || '', box };
+                delete b.content.viTriHinhAnh; // đã dùng xong, không lưu vào CSDL cho rác
+                croppedCount++;
+                continue;
+            }
+
+            if (b.type === 'md' && typeof b.content === 'string') {
+                const matches = Array.from(b.content.matchAll(MD_IMAGE_BOX_REGEX));
+                for (const m of matches) {
+                    let box: any;
+                    try { box = JSON.parse(m[1]); } catch { continue; }
+                    if (!isValidImageBox(box)) continue;
+                    const file = sourceFiles[box.fileIndex];
+                    if (!file) continue;
+
+                    const url = await autoCropImage(supabase, file, box);
+                    b.content = b.content.replace(m[0], `\n\n![Hình minh họa](${url})\n\n`);
+                    croppedCount++;
+                }
+                // Khung nào cắt không nổi thì bỏ phần JSON đi, chỉ để lại marker cho cắt tay
+                b.content = b.content.replace(MD_IMAGE_BOX_REGEX, '[IMAGE_PLACEHOLDER]');
+            }
+        } catch (e) {
+            console.warn('Không tự cắt được ảnh cho 1 khối, giữ nguyên để cắt tay:', e);
+        }
+    }
+
+    return { blocks: parsedBlocks, croppedCount };
+};
+
 const serializeBlocksToMarkdown = (blocks: Block[]): string => {
     return blocks.map(b => {
         if (b.type === 'md') return b.content;
@@ -600,14 +701,226 @@ const serializeBlocksToMarkdown = (blocks: Block[]): string => {
     }).join('\n\n');
 };
 
+// ===== Xuất Giáo Án ra file .docx thật (dùng thư viện "docx", công thức là công thức
+// Word/MathType thật - không cần chuyển đổi thủ công) =====
+
+const MATH_MARKER = ' MATH';
+
+// Bóc tách công thức $...$ / $$...$$ thành các placeholder vô hại (  không bao giờ
+// xuất hiện trong nội dung thật) để không bị lẫn với ảnh/in đậm khi tách dòng thành runs.
+const extractMathPlaceholders = (text: string, store: string[]): string => {
+    if (!text) return text;
+    text = text.replace(/\$\$([\s\S]+?)\$\$/g, (_m: string, expr: string) => {
+        store.push(expr);
+        return `${MATH_MARKER}${store.length - 1} `;
+    });
+    text = text.replace(/\$([^\$\n]+?)\$/g, (_m: string, expr: string) => {
+        store.push(expr);
+        return `${MATH_MARKER}${store.length - 1} `;
+    });
+    return text;
+};
+
+// Tách 1 đoạn text thường (không còn ảnh/công thức) thành các TextRun, xử lý **in đậm**
+// và <span style="color:...">...</span> (không lồng nhau - đúng với cách nội dung AI sinh ra).
+const textToRuns = (text: string, opts: { color?: string; bold?: boolean } = {}): TextRun[] => {
+    if (!text) return [];
+    const boldItalicRuns = (t: string): TextRun[] => {
+        const runs: TextRun[] = [];
+        let remaining = t;
+        while (remaining.length > 0) {
+            const boldIdx = remaining.indexOf('**');
+            if (boldIdx !== -1) {
+                const endBold = remaining.indexOf('**', boldIdx + 2);
+                if (endBold !== -1) {
+                    if (boldIdx > 0) runs.push(new TextRun({ text: remaining.slice(0, boldIdx), color: opts.color, bold: opts.bold }));
+                    runs.push(new TextRun({ text: remaining.slice(boldIdx + 2, endBold), color: opts.color, bold: true }));
+                    remaining = remaining.slice(endBold + 2);
+                    continue;
+                }
+            }
+            runs.push(new TextRun({ text: remaining, color: opts.color, bold: opts.bold }));
+            break;
+        }
+        return runs;
+    };
+
+    const spanRegex = /<span[^>]*style="[^"]*color:\s*([^;"]+)[^"]*"[^>]*>([\s\S]*?)<\/span>/gi;
+    const runs: TextRun[] = [];
+    let lastIndex = 0;
+    let m: RegExpExecArray | null;
+    let hasSpan = false;
+    while ((m = spanRegex.exec(text)) !== null) {
+        hasSpan = true;
+        if (m.index > lastIndex) runs.push(...boldItalicRuns(text.slice(lastIndex, m.index)));
+        const color = m[1].trim().replace('#', '').toUpperCase();
+        runs.push(...textToRuns(m[2], { ...opts, color }));
+        lastIndex = m.index + m[0].length;
+    }
+    if (hasSpan) {
+        if (lastIndex < text.length) runs.push(...boldItalicRuns(text.slice(lastIndex)));
+        return runs;
+    }
+    return boldItalicRuns(text);
+};
+
+// Chuyển 1 dòng nội dung (có thể chứa ảnh, công thức, in đậm, span màu) thành mảng
+// children cho Paragraph của docx: TextRun | Math | ImageRun.
+const buildRunsFromLine = async (line: string, opts: { color?: string; bold?: boolean } = {}): Promise<any[]> => {
+    const mathStore: string[] = [];
+    const withPlaceholders = extractMathPlaceholders(line, mathStore);
+
+    const runs: any[] = [];
+    let remaining = withPlaceholders;
+    while (remaining.length > 0) {
+        const imgIdx = remaining.toLowerCase().indexOf('<img');
+        const mdIdx = remaining.indexOf('![');
+        const mathIdx = remaining.indexOf(MATH_MARKER);
+
+        const candidates = [
+            imgIdx !== -1 ? { type: 'img', idx: imgIdx } : null,
+            mdIdx !== -1 ? { type: 'mdimg', idx: mdIdx } : null,
+            mathIdx !== -1 ? { type: 'math', idx: mathIdx } : null,
+        ].filter((c): c is { type: string; idx: number } => c !== null);
+
+        if (candidates.length === 0) {
+            runs.push(...textToRuns(remaining, opts));
+            break;
+        }
+        candidates.sort((a, b) => a.idx - b.idx);
+        const next = candidates[0];
+
+        if (next.idx > 0) runs.push(...textToRuns(remaining.slice(0, next.idx), opts));
+
+        if (next.type === 'math') {
+            const endIdx = remaining.indexOf(' ', next.idx + MATH_MARKER.length);
+            const nStr = remaining.slice(next.idx + MATH_MARKER.length, endIdx);
+            const n = parseInt(nStr, 10);
+            runs.push(latexToDocxMath(mathStore[n]));
+            remaining = remaining.slice(endIdx + 1);
+        } else if (next.type === 'img') {
+            const end = remaining.indexOf('>', next.idx);
+            if (end === -1) { runs.push(...textToRuns(remaining.slice(next.idx), opts)); break; }
+            const tag = remaining.slice(next.idx, end + 1);
+            remaining = remaining.slice(end + 1);
+            const srcMatch = tag.match(/src="(data:image\/([^;]+);base64,([^"]+))"/i) || tag.match(/src='(data:image\/([^;]+);base64,([^']+))'/i);
+            if (srcMatch && srcMatch[3]) {
+                try {
+                    const buffer = base64ToUint8Array(srcMatch[3].replace(/\s+/g, ''));
+                    runs.push(new ImageRun({ data: buffer, transformation: { width: 300, height: 200 } } as any));
+                } catch (e) { /* bỏ qua ảnh lỗi */ }
+            }
+        } else {
+            const bracketEnd = remaining.indexOf('](', next.idx);
+            const parenEnd = bracketEnd !== -1 ? remaining.indexOf(')', bracketEnd) : -1;
+            if (bracketEnd === -1 || parenEnd === -1) {
+                runs.push(new TextRun({ text: '![', color: opts.color, bold: opts.bold }));
+                remaining = remaining.slice(next.idx + 2);
+            } else {
+                const url = remaining.slice(bracketEnd + 2, parenEnd).trim();
+                remaining = remaining.slice(parenEnd + 1);
+                try {
+                    const imgData = await fetchImageWithDimensions(url);
+                    if (imgData) runs.push(new ImageRun({ data: imgData.buffer, transformation: { width: imgData.width, height: imgData.height } } as any));
+                } catch (e) { /* bỏ qua ảnh lỗi */ }
+            }
+        }
+    }
+    return runs;
+};
+
+// Tách 1 khối text dài (nhiều dòng, ví dụ lời giải) theo từng dòng, gộp mỗi dòng
+// thành 1 Paragraph có icon mũi tên màu ở đầu dòng.
+const buildBulletParagraphs = async (text: string, bulletColor: string): Promise<Paragraph[]> => {
+    const cleaned = text.replace(/^(?:\*\*)?(?:Phương pháp giải|Lời giải|Hướng dẫn giải|Giải thích):?(?:\*\*)?\s*/i, '');
+    const lines = cleaned.split('\n').map(l => l.replace(/^[\-\+\*]\s*/, '').trim()).filter(Boolean);
+    const paragraphs: Paragraph[] = [];
+    for (const line of lines) {
+        const runs = await buildRunsFromLine(line);
+        paragraphs.push(new Paragraph({
+            children: [new TextRun({ text: '➤ ', color: bulletColor, bold: true }), ...runs],
+            spacing: { before: 40, after: 40 },
+        }));
+    }
+    return paragraphs;
+};
+
+// Chuyển 1 khối ```quiz``` (câu hỏi tương tác trong bài giảng) thành các Paragraph.
+const renderQuizToParagraphs = async (quiz: any, questionNumber: number, type: 'student' | 'teacher'): Promise<Paragraph[]> => {
+    const paragraphs: Paragraph[] = [];
+
+    const questionRuns = await buildRunsFromLine((quiz.question || '').replace(/\\n/g, ' '));
+    paragraphs.push(new Paragraph({
+        children: [new TextRun({ text: `Câu ${questionNumber}. `, bold: true, color: '0000FF' }), ...questionRuns],
+        spacing: { before: 160, after: 60 },
+    }));
+
+    if (quiz.options) {
+        for (let i = 0; i < quiz.options.length; i++) {
+            const opt = quiz.options[i];
+            const optText = typeof opt === 'string' ? opt : opt.content;
+            const label = String.fromCharCode(65 + i);
+            const optRuns = await buildRunsFromLine((optText || '').replace(/\\n/g, ' '));
+            paragraphs.push(new Paragraph({
+                children: [new TextRun({ text: `${label}. `, bold: true, color: '0000FF' }), ...optRuns],
+                spacing: { before: 20, after: 20 },
+            }));
+        }
+    }
+
+    if (type === 'teacher') {
+        const fullText: string = [quiz.explanation, quiz.sampleAnswer, quiz.answer].filter(Boolean).join('\n\n');
+        const lowerExp = fullText.toLowerCase();
+        const ppIndex = lowerExp.indexOf('phương pháp giải');
+        const lgIndex = lowerExp.indexOf('lời giải');
+
+        let methodText = '';
+        let explanationText = '';
+        if (ppIndex !== -1 && lgIndex !== -1 && ppIndex < lgIndex) {
+            const startPP = ppIndex + (lowerExp.indexOf('phương pháp giải:') === ppIndex ? 17 : 16);
+            const startLG = lgIndex + (lowerExp.indexOf('lời giải:') === lgIndex ? 9 : 8);
+            methodText = fullText.substring(startPP, lgIndex).trim();
+            explanationText = fullText.substring(startLG).trim();
+        } else if (ppIndex !== -1 && lgIndex === -1) {
+            const startPP = ppIndex + (lowerExp.indexOf('phương pháp giải:') === ppIndex ? 17 : 16);
+            methodText = fullText.substring(startPP).trim();
+        } else if (ppIndex === -1 && lgIndex !== -1) {
+            const startLG = lgIndex + (lowerExp.indexOf('lời giải:') === lgIndex ? 9 : 8);
+            explanationText = fullText.substring(startLG).trim();
+        } else {
+            explanationText = fullText.trim();
+        }
+
+        if (methodText) {
+            paragraphs.push(new Paragraph({
+                children: [new TextRun({ text: 'Phương pháp giải', bold: true, color: '0000FF' })],
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 160, after: 60 },
+            }));
+            paragraphs.push(...(await buildBulletParagraphs(methodText, 'E67E22')));
+        }
+        if (explanationText) {
+            paragraphs.push(new Paragraph({
+                children: [new TextRun({ text: 'Lời giải', bold: true, color: '0000FF' })],
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 100, after: 60 },
+            }));
+            paragraphs.push(...(await buildBulletParagraphs(explanationText, '27AE60')));
+        }
+    }
+
+    return paragraphs;
+};
+
 const getPrompt = (isPractice: boolean, isPresentation: boolean) => {
   if (isPractice) {
-      return `Bạn là một chuyên gia giáo dục Toán học xuất sắc hàng đầu thế giới. 
+      return `Bạn là một chuyên gia giáo dục Vật lý xuất sắc hàng đầu thế giới. 
 Hãy phân tích nội dung các ảnh/tài liệu này và BÓC TÁCH TOÀN BỘ CÁC CÂU HỎI BÀI TẬP thành các khối mã \`\`\`quiz\`\`\` định dạng JSON.
 YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
 1. [CẢNH BÁO LỖI ĐỀ]: Trách nhiệm cao nhất của bạn là giải thử từng câu. Nếu phát hiện câu hỏi bị sai đề, thiếu dữ kiện, mâu thuẫn toán học, hoặc không có đáp án đúng, hãy IN ĐẬM VÀ TÔ MÀU ĐỎ cảnh báo ngay trước đoạn mã \`\`\`quiz\`\`\` của câu hỏi đó (VD: **<span style="color:red">⚠️ LỖI ĐỀ BÀI: Câu hỏi này thiếu điều kiện m ≠ 0...</span>**).
 2. [KHÔNG BỎ SÓT BÀI TẬP]: Quét KỸ 100% tài liệu gốc. Tôi đưa lên bao nhiêu câu hỏi thì BẮT BUỘC bạn phải bóc tách bấy nhiêu câu. TUYỆT ĐỐI KHÔNG được qua loa hay bỏ sót bất kỳ câu nào, nếu vi phạm sẽ bị phạt nặng.
 3. [VỊ TRÍ HÌNH ẢNH/BẢNG BIỂU]: Nếu phát hiện câu hỏi trong tài liệu gốc có chứa hình vẽ, biểu đồ hoặc đồ thị, TUYỆT ĐỐI KHÔNG mô tả chi tiết làm lệch câu gốc. BẮT BUỘC phải chèn dòng chữ \`[CÓ HÌNH ẢNH KÈM THEO]\` vào ĐÚNG VỊ TRÍ mà hình ảnh đó xuất hiện trong câu hỏi gốc (ví dụ: ngay sau chữ "như hình vẽ bên:"). Tuyệt đối KHÔNG được tự ý vứt xuống cuối phần nội dung nếu nó nằm ở giữa câu.
+3b. [KHUNG TOẠ ĐỘ HÌNH ẢNH - ĐỂ HỆ THỐNG TỰ CẮT ẢNH]: Với MỖI câu hỏi có chèn \`[CÓ HÌNH ẢNH KÈM THEO]\`, BẮT BUỘC điền thêm trường \`"viTriHinhAnh"\` là object: {"fileIndex": (số thứ tự file ảnh chứa hình đó, ĐẾM TỪ 0 theo đúng thứ tự các file được gửi lên), "ymin": ..., "xmin": ..., "ymax": ..., "xmax": ...} - toạ độ khung bao quanh CHÍNH XÁC vùng hình vẽ/đồ thị/bảng của riêng câu đó trong ảnh gốc, chuẩn hoá theo thang 0-1000 (0 = mép trên/trái, 1000 = mép dưới/phải). Khung phải ôm trọn hình, không cắt cụt, không lấn sang hình của câu khác hay sang vùng chữ dài. Nếu KHÔNG xác định được rõ ràng vị trí, để \`"viTriHinhAnh": null\` - TUYỆT ĐỐI KHÔNG ĐOÁN BỪA vì cắt sai làm hỏng câu hỏi. Câu không có hình thì bỏ qua trường này.
 4. [KHÔNG VIẾT LÝ THUYẾT]: Tuyệt đối KHÔNG viết câu mở đầu, KHÔNG tóm tắt lý thuyết, KHÔNG giải thích. CHỈ ĐƯỢC PHÉP TRẢ VỀ CÁC ĐOẠN MÃ \`\`\`quiz\`\`\` (và các dòng cảnh báo lỗi đề nếu có).
 5. [CHUẨN HÓA TOÁN HỌC LATEX TỐI ƯU NHƯ MATHTYPE]:
 - Bao bọc TẤT CẢ công thức bằng dấu $ (Ví dụ: $x^2 + y^2 = 25$). Tuyệt đối KHÔNG bao bọc chữ tiếng Việt bên trong dấu $ (Ví dụ SAI: $Ta có: x = 2$, ĐÚNG: Ta có $x = 2$).
@@ -625,7 +938,16 @@ LOẠI 1: TRẮC NGHIỆM 4 LỰA CHỌN (1 ĐÁP ÁN ĐÚNG)
     "question": "Đạo hàm của hàm số $y = x^2 + 2x$ là?",
     "options": ["$y' = 2x + 2$", "$y' = x + 2$", "$y' = 2x$", "$y' = 2$"],
     "answerIndex": 0,
-    "answer": "Sử dụng công thức đạo hàm cơ bản: $(x^n)' = n.x^{n-1}$. Ta có $y' = 2x + 2$"
+    "answer": "Sử dụng công thức đạo hàm cơ bản: $(x^n)' = n.x^{n-1}$. Ta có $y' = 2x + 2$",
+    "viTriHinhAnh": null
+  },
+  {
+    "type": "multiple_choice",
+    "question": "Cho hình chữ nhật $ABCD$ như hình vẽ bên [CÓ HÌNH ẢNH KÈM THEO]. Tính độ dài $AC$.",
+    "options": ["$10$", "$12$", "$14$", "$48$"],
+    "answerIndex": 0,
+    "answer": "Áp dụng định lí Pythagore: $AC = \\\\sqrt{8^2 + 6^2} = 10$.",
+    "viTriHinhAnh": { "fileIndex": 0, "ymin": 305, "xmin": 640, "ymax": 565, "xmax": 920 }
   },
   {
     "type": "true_false_cluster",
@@ -658,8 +980,8 @@ GHI CHÚ TUYỆT ĐỐI QUAN TRỌNG VỀ JSON:
   }
 
   if (!isPresentation) {
-      return `Bạn là một chuyên gia giáo dục Toán học xuất sắc hàng đầu thế giới. 
-Hãy phân tích nội dung các ảnh tài liệu này và biên soạn lại thành một bài giảng Toán học HOÀN CHỈNH, CHI TIẾT, DỄ HIỂU.
+      return `Bạn là một chuyên gia giáo dục Vật lý xuất sắc hàng đầu thế giới. 
+Hãy phân tích nội dung các ảnh tài liệu này và biên soạn lại thành một bài giảng Vật lý HOÀN CHỈNH, CHI TIẾT, DỄ HIỂU.
 YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
 1. Dạng Markdown. [CHUẨN HÓA TOÁN HỌC LATEX TỐI ƯU NHƯ MATHTYPE]:
 - Bao bọc TẤT CẢ công thức bằng dấu $ (Ví dụ: $x^2 + y^2 = 25$). Tuyệt đối KHÔNG bao bọc chữ tiếng Việt bên trong dấu $ (Ví dụ SAI: $Ta có: x = 2$, ĐÚNG: Ta có $x = 2$).
@@ -674,11 +996,12 @@ Bài giảng bắt buộc phải có 2 phần chính liên tiếp nhau:
 - TẤT CẢ Tiêu đề Phần, Tên Dạng Bài phải là Heading 2 (##) kèm Emoji (Ví dụ: "## 💡 DẠNG 1: TÌM ĐIỀU KIỆN XÁC ĐỊNH").
 - TẤT CẢ Phương pháp giải phải là Heading 3 (###).
 - [QUY TẮC VÍ DỤ MẪU]: Trích lấy ví dụ bài tập. Toàn bộ nội dung của Ví dụ mẫu (bao gồm tiêu đề \`> ### 📌 Ví dụ mẫu\`, đề bài và lời giải) BẮT BUỘC phải được bọc trong thẻ trích dẫn Blockquote (thêm \`> \` vào đầu mỗi dòng). Ở phần lời giải, phải ghi chữ "> Hướng dẫn giải:" ngay trước khi giải.
-4. [TẠO CÂU HỎI TƯƠNG TÁC CHỐNG LƯỜI]: Thỉnh thoảng hãy chèn một câu hỏi quiz ở dạng đoạn mã "quiz" chứa chuỗi JSON (như multiple_choice, true_false, short_answer) để học sinh tự làm.`;
+4. [TẠO CÂU HỎI TƯƠNG TÁC CHỐNG LƯỜI]: Thỉnh thoảng hãy chèn một câu hỏi quiz ở dạng đoạn mã "quiz" chứa chuỗi JSON (như multiple_choice, true_false, short_answer) để học sinh tự làm.
+5. [HÌNH VẼ - CHÈN MARKER KÈM KHUNG TOẠ ĐỘ ĐỂ HỆ THỐNG TỰ CẮT ẢNH]: Nếu tài liệu gốc có hình vẽ, đồ thị, bảng biến thiên, TUYỆT ĐỐI KHÔNG vẽ lại bằng ký tự/ASCII và KHÔNG mô tả dài dòng. Hãy chèn thẻ \`[IMAGE_PLACEHOLDER]\` vào đúng vị trí cần hình, và NGAY SAU thẻ đó ghi liền một object JSON khung toạ độ: \`[IMAGE_PLACEHOLDER]{"fileIndex":0,"ymin":300,"xmin":250,"ymax":800,"xmax":750}\` - trong đó "fileIndex" là số thứ tự file ảnh chứa hình (ĐẾM TỪ 0 theo thứ tự file gửi lên), còn ymin/xmin/ymax/xmax là khung bao quanh CHÍNH XÁC vùng hình đó, chuẩn hoá theo thang 0-1000 (0 = mép trên/trái, 1000 = mép dưới/phải). Khung phải ôm trọn hình, không cắt cụt, không lấn sang vùng chữ. Nếu KHÔNG xác định được rõ vị trí thì chỉ ghi \`[IMAGE_PLACEHOLDER]\` và KHÔNG ghi JSON - tuyệt đối không đoán bừa toạ độ.`;
   }
 
-  const unifiedPrompt = `Bạn là một chuyên gia giáo dục Toán học xuất sắc hàng đầu thế giới. 
-Hãy phân tích nội dung các ảnh tài liệu này và biên soạn lại thành một bài giảng Toán học HOÀN CHỈNH, GỒM LÝ THUYẾT VÀ CÁC DẠNG BÀI TẬP, TRÌNH BÀY SIÊU ĐẸP, CỰC KỲ THU HÚT.
+  const unifiedPrompt = `Bạn là một chuyên gia giáo dục Vật lý xuất sắc hàng đầu thế giới. 
+Hãy phân tích nội dung các ảnh tài liệu này và biên soạn lại thành một bài giảng Vật lý HOÀN CHỈNH, GỒM LÝ THUYẾT VÀ CÁC DẠNG BÀI TẬP, TRÌNH BÀY SIÊU ĐẸP, CỰC KỲ THU HÚT.
 YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
 1. Dạng Markdown. [CHUẨN HÓA TOÁN HỌC LATEX TỐI ƯU NHƯ MATHTYPE]:
 - Bao bọc TẤT CẢ công thức bằng dấu $ (Ví dụ: $x^2 + y^2 = 25$). Tuyệt đối KHÔNG bao bọc chữ tiếng Việt bên trong dấu $ (Ví dụ SAI: $Ta có: x = 2$, ĐÚNG: Ta có $x = 2$).
@@ -688,18 +1011,18 @@ YÊU CẦU ĐỊNH DẠNG TUYỆT ĐỐI (LÀM SAI SẼ BỊ PHẠT):
 2. [CẤU TRÚC VÀNG CỦA BÀI GIẢNG TOÁN HỌC]:
 Bài giảng bắt buộc phải có 2 phần chính liên tiếp nhau:
 * PHẦN 1: TÓM TẮT LÝ THUYẾT TRỌNG TÂM. Hãy chắt lọc Định nghĩa, Định lý, Công thức cốt lõi. Bỏ qua diễn giải rườm rà. BẮT BUỘC trình bày theo cấu trúc phân mục đánh số rõ ràng (1. 2. 3. ...) để học sinh dễ theo dõi và ghi chép bài.
-* PHẦN 2: PHÂN DẠNG BÀI TẬP & PHƯƠNG PHÁP GIẢI. Hãy chia các bài tập thành các Dạng Toán riêng biệt. [KHÔNG BỎ SÓT KIẾN THỨC]: Quét kỹ 100% tài liệu, tôi đưa vào bao nhiêu dạng toán thì bắt buộc phải bóc tách bấy nhiêu dạng, tuyệt đối không được qua loa hay cắt xén bớt.
+* PHẦN 2: PHÂN DẠNG BÀI TẬP & PHƯƠNG PHÁP GIẢI. Hãy chia các bài tập thành các Dạng Toán riêng biệt. [KHÔNG BỎ SÓT KIẾN THỨC]: Quét kỹ 100% tài liệu, tôi đưa vào bao nhiêu dạng vật lý thì bắt buộc phải bóc tách bấy nhiêu dạng, tuyệt đối không được qua loa hay cắt xén bớt.
 3. [PHÂN BIỆT RẠCH RÒI BẰNG HEADING VÀ BLOCKQUOTE]:
 - TẤT CẢ Tiêu đề Phần, Tên Dạng Bài phải là Heading 2 (##) kèm Emoji (Ví dụ: "## 💡 DẠNG 1: TÌM ĐIỀU KIỆN XÁC ĐỊNH").
 - TẤT CẢ Phương pháp giải phải là Heading 3 (###) (Ví dụ: "### 💡 Phương pháp giải").
 - [QUY TẮC VÍ DỤ MẪU]: Trích lấy DUY NHẤT 1 bài tập ở mức độ CƠ BẢN làm Ví dụ mẫu. Tuyệt đối không đưa nhiều hơn 1 ví dụ. 
 - [RẤT QUAN TRỌNG]: Toàn bộ nội dung của Ví dụ mẫu (bao gồm tiêu đề \`> ### 📌 Ví dụ mẫu\`, đề bài và lời giải) BẮT BUỘC phải được bọc trong thẻ trích dẫn Blockquote (thêm \`> \` vào đầu mỗi dòng). Ở phần lời giải, phải ghi chữ "> Hướng dẫn giải:" ngay trước khi giải để hệ thống lên màu chuẩn mực.
-- [KIỂM TRA TÍNH CHÍNH XÁC & CẢNH BÁO LỖI]: Phải tự động giải lại toàn bộ bài tập/ví dụ. Nếu phát hiện đề bài sai, thiếu dữ kiện hoặc mâu thuẫn, hãy IN ĐẬM VÀ TÔ MÀU ĐỎ một dòng cảnh báo (VD: **<span style="color:red">⚠️ LỖI ĐỀ BÀI: Bài toán này thiếu điều kiện...</span>**) ngay trước ví dụ/bài tập đó, đồng thời tự động sửa lại số liệu cho đúng rồi mới giải.
+- [KIỂM TRA TÍNH CHÍNH XÁC & CẢNH BÁO LỖI]: Phải tự động giải lại toàn bộ bài tập/ví dụ. Nếu phát hiện đề bài sai, thiếu dữ kiện hoặc mâu thuẫn, hãy IN ĐẬM VÀ TÔ MÀU ĐỎ một dòng cảnh báo (VD: **<span style="color:red">⚠️ LỖI ĐỀ BÀI: Bài tập này thiếu điều kiện...</span>**) ngay trước ví dụ/bài tập đó, đồng thời tự động sửa lại số liệu cho đúng rồi mới giải.
 4. [PHÂN TRANG KHOA HỌC ĐỂ TRÌNH CHIẾU]: Sử dụng ĐÚNG 3 dấu gạch ngang \`---\` để ngắt trang (tạo slide mới).
 - MỖI MỘT ĐỊNH NGHĨA, ĐỊNH LÝ, HAY GHI CHÚ PHẢI NẰM TRÊN 1 SLIDE RIÊNG BIỆT (phải ngắt trang \`---\` ngay sau đó).
 - MỖI VÍ DỤ HOẶC BÀI TẬP BẮT BUỘC NẰM TRÊN 1 SLIDE MỚI. 
 - KHÔNG GỘP QUÁ NHIỀU NỘI DUNG VÀO 1 SLIDE VÌ ĐÂY LÀ ĐỂ CHIẾU LÊN TIVI (Slide càng ngắn gọn càng tốt).
-5. [QUY TẮC BẢNG BIẾN THIÊN & HÌNH VẼ]: Nếu bài toán có Hình vẽ, Bảng biến thiên... TUYỆT ĐỐI KHÔNG giải thích dài dòng bằng chữ. THAY VÀO ĐÓ, BẮT BUỘC chèn thẻ \`[IMAGE_PLACEHOLDER]\` vào đúng vị trí cần vẽ hình.
+5. [QUY TẮC BẢNG BIẾN THIÊN & HÌNH VẼ]: Nếu bài tập có Hình vẽ, Bảng biến thiên... TUYỆT ĐỐI KHÔNG giải thích dài dòng bằng chữ. THAY VÀO ĐÓ, BẮT BUỘC chèn thẻ \`[IMAGE_PLACEHOLDER]\` vào đúng vị trí cần vẽ hình, và NGAY SAU thẻ đó ghi liền object JSON khung toạ độ để hệ thống tự cắt ảnh: \`[IMAGE_PLACEHOLDER]{"fileIndex":0,"ymin":300,"xmin":250,"ymax":800,"xmax":750}\` - "fileIndex" là số thứ tự file ảnh chứa hình (ĐẾM TỪ 0), ymin/xmin/ymax/xmax là khung bao quanh CHÍNH XÁC vùng hình, chuẩn hoá thang 0-1000 (0 = mép trên/trái, 1000 = mép dưới/phải), ôm trọn hình và không lấn sang vùng chữ. Nếu không xác định được rõ vị trí thì chỉ ghi \`[IMAGE_PLACEHOLDER]\`, TUYỆT ĐỐI không đoán bừa toạ độ.
 6. [TẠO CÂU HỎI TƯƠNG TÁC CHỐNG LƯỜI]: Ngay TRƯỚC mỗi lần bạn đặt dấu ngắt trang \`---\` , bạn HÃY TỰ NGHĨ RA HOẶC TRÍCH 1 CÂU HỎI TRẮC NGHIỆM từ tài liệu để kiểm tra học sinh. Học sinh phải làm đúng câu này thì mới được đọc trang tiếp theo.
 7. Mỗi câu hỏi trắc nghiệm PHẢI được xuất ra ĐÚNG DƯỚI DẠNG ĐOẠN MÃ NGÔN NGỮ "quiz" chứa chuỗi JSON chuẩn xác. Cấu trúc JSON có 2 loại:
 
@@ -919,7 +1242,17 @@ function EditorContent() {
 
   useEffect(() => {
     const fetchCourses = async () => {
-      const { data } = await supabase.from('courses').select('id, title, grade, subject').order('created_at', { ascending: false });
+      // Bảng courses chỉ có cột grade_level, KHÔNG có cột grade/subject.
+      // Trước đây chọn nhầm 2 cột này nên truy vấn lỗi, danh sách khóa học rỗng,
+      // kéo theo ô "Thuộc khóa học" luôn trống và câu hỏi đẩy sang bị mất Lớp.
+      const { data, error } = await supabase
+        .from('courses')
+        .select('id, title, grade_level')
+        .order('created_at', { ascending: false });
+      if (error) {
+        console.error('Lỗi tải danh sách khóa học:', error.message);
+        return;
+      }
       if (data) setCourses(data);
     };
     fetchCourses();
@@ -975,14 +1308,6 @@ function EditorContent() {
     if (error) alert("Lỗi lưu bài: " + error.message); else alert("Đã lưu thành công!");
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader(); reader.readAsDataURL(file);
-      reader.onload = () => resolve((reader.result as string).split(',')[1]);
-      reader.onerror = error => reject(error);
-    });
-  };
-
   const addToQueue = (file: File) => {
     setPendingImages(prev => [...prev, { id: Math.random().toString(36).substring(7), file, previewUrl: URL.createObjectURL(file) }]);
   };
@@ -999,214 +1324,88 @@ function EditorContent() {
   const handleExportWord = async (type: 'student' | 'teacher' = 'teacher') => {
     try {
       let content = editorMode === 'form' ? serializeBlocksToMarkdown(blocks) : markdownContent;
-      
+
       if (type === 'student') {
          // Xóa bỏ các đoạn được đánh dấu là Lời Giải
          content = content.replace(/\*\*(?:Lời\s*giải|Hướng\s*dẫn\s*giải|HDG|Đáp\s*án).*?\*\*:?[\s\S]*?(?=\*\*Câu|$)/gi, '\n');
          content = content.replace(/<details>[\s\S]*?<summary>.*?(?:Lời\s*giải|Đáp\s*án).*?<\/summary>[\s\S]*?<\/details>/gi, '\n');
       }
 
-      // 0. Xóa màu xanh khỏi LaTeX
+      // Xóa màu chữ LaTeX (\color{}) và chữa lỗi cú pháp hệ phương trình viết tắt
       content = content.replace(/\\{1,2}color\s*\{[^}]+\}/gi, '');
+      content = content.replace(/\{\{begincases/g, '\\begin{cases}').replace(/endcases\}\}/g, '\\end{cases}');
 
-      // 1. Lọc và bóc tách các câu hỏi trắc nghiệm JSON (Xóa bỏ JSON thô)
-      let quizzesHtml: string[] = [];
-      let questionCounter = 1;
-      
+      // Bóc tách các khối câu hỏi ```quiz``` thành đối tượng JSON thật (không phải chuỗi)
+      const quizBlocks: any[] = [];
       content = content.replace(/```quiz\n([\s\S]*?)\n```/g, (match, jsonString) => {
           try {
               const quiz = JSON.parse(jsonString);
-              const protectHtml = (text: string) => {
-                  let protectedText = text || '';
-                  const imgBlocks: string[] = [];
-                  protectedText = protectedText.replace(/<img[^>]+>/gi, (match) => {
-                      if (!match.includes('width=')) match = match.replace('<img', '<img width="350"');
-                      imgBlocks.push(match);
-                      return `__IMG_TAG_${imgBlocks.length - 1}__`;
-                  });
-                  const brBlocks: string[] = [];
-                  protectedText = protectedText.replace(/<br\s*\/?>/gi, (match) => {
-                      brBlocks.push(match);
-                      return `__BR_TAG_${brBlocks.length - 1}__`;
-                  });
-                  
-                  const spanBlocks: string[] = [];
-                  protectedText = protectedText.replace(/<span[^>]*>/gi, (match) => {
-                      spanBlocks.push(match);
-                      return `__SPAN_START_${spanBlocks.length - 1}__`;
-                  });
-                  protectedText = protectedText.replace(/<\/span>/gi, () => `__SPAN_END__`);
-                  
-                  protectedText = protectedText.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-                  
-                  imgBlocks.forEach((img, i) => { protectedText = protectedText.replace(`__IMG_TAG_${i}__`, () => img); });
-                  brBlocks.forEach((br, i) => { protectedText = protectedText.replace(`__BR_TAG_${i}__`, () => br); });
-                  spanBlocks.forEach((span, i) => { protectedText = protectedText.replace(`__SPAN_START_${i}__`, () => span); });
-                  protectedText = protectedText.replace(/__SPAN_END__/g, '</span>');
-                  
-                  return protectedText;
-              };
-              const escapeText = (t: string) => protectHtml((t||'').replace(/\\n/g, '\n')).replace(/\n/g, '<br/>');
-              const escapeLines = (t: string, bulletColor: string) => {
-                  return (t||'')
-                     .replace(/\\n/g, '\n')
-                     .replace(/^(?:\*\*)?(?:Phương pháp giải|Lời giải|Hướng dẫn giải|Giải thích):?(?:\*\*)?\s*/i, '')
-                     .split('\n')
-                     .filter((l: string) => l.trim() !== '')
-                     .map((l: string) => {
-                         let cleanLine = l.replace(/^[\-\+\*]\s*/, '').trim();
-                         if (!cleanLine) return '';
-                         return `<p><span style="color: ${bulletColor}; font-weight: bold;">➤ </span> ${protectHtml(cleanLine)}</p>`;
-                     }).join('');
-              };
-              
-              let qHtml = `<p><span style="color: #0000FF; font-weight: bold;">Câu ${questionCounter}.</span> ${escapeText(quiz.question)}</p>`;
-              
-              if (quiz.options) {
-                 quiz.options.forEach((opt: any, i: number) => {
-                    const label = String.fromCharCode(65 + i);
-                    const optText = typeof opt === 'string' ? opt : opt.content;
-                    qHtml += `<p><span style="color: #0000FF; font-weight: bold;">${label}. </span> ${escapeText(optText)}</p>`; 
-                 });
+              quizBlocks.push(quiz);
+              return `\n@@QUIZ_${quizBlocks.length - 1}@@\n`;
+          } catch (e) { return match; }
+      });
+
+      const bodyParagraphs: Paragraph[] = [];
+      const lines = content.split('\n');
+      let questionCounter = 1;
+
+      for (const rawLine of lines) {
+          const trimmed = rawLine.trim();
+          if (!trimmed) continue;
+          if (trimmed === '---') continue; // dấu ngắt trang cũ - bỏ qua
+
+          const quizMatch = trimmed.match(/^@@QUIZ_(\d+)@@$/);
+          if (quizMatch) {
+              const quiz = quizBlocks[Number(quizMatch[1])];
+              if (quiz) {
+                  bodyParagraphs.push(...(await renderQuizToParagraphs(quiz, questionCounter, type)));
+                  questionCounter++;
               }
-              if (type === 'teacher') {
-                  let methodText = "";
-                  let explanationText = "";
-
-                  // Gộp chung các trường của AI và Bank để tránh việc nằm sai chỗ
-                  let fullText = [quiz.explanation, quiz.sampleAnswer, quiz.answer].filter(Boolean).join('\n\n');
-
-                  const lowerExp = fullText.toLowerCase();
-                  const ppIndex = lowerExp.indexOf("phương pháp giải");
-                  const lgIndex = lowerExp.indexOf("lời giải");
-                  
-                  if (ppIndex !== -1 && lgIndex !== -1 && ppIndex < lgIndex) {
-                      let startPP = ppIndex + (lowerExp.indexOf("phương pháp giải:") === ppIndex ? 17 : 16);
-                      let startLG = lgIndex + (lowerExp.indexOf("lời giải:") === lgIndex ? 9 : 8);
-                      methodText = fullText.substring(startPP, lgIndex).trim();
-                      explanationText = fullText.substring(startLG).trim();
-                  } else if (ppIndex !== -1 && lgIndex === -1) {
-                      let startPP = ppIndex + (lowerExp.indexOf("phương pháp giải:") === ppIndex ? 17 : 16);
-                      methodText = fullText.substring(startPP).trim();
-                  } else if (ppIndex === -1 && lgIndex !== -1) {
-                      let startLG = lgIndex + (lowerExp.indexOf("lời giải:") === lgIndex ? 9 : 8);
-                      explanationText = fullText.substring(startLG).trim();
-                  } else {
-                      explanationText = fullText.trim();
-                  }
-
-                  const cleanedMethod = escapeLines(methodText, '#E67E22');
-                  if (cleanedMethod) {
-                      qHtml += `<p style="color: #0000FF; text-align: center; font-weight: bold; margin-top: 16px; margin-bottom: 8px;">Phương pháp giải</p>`;
-                      qHtml += cleanedMethod;
-                  }
-                  
-                  const cleanedAnswer = escapeLines(explanationText, '#27AE60');
-                  if (cleanedAnswer) {
-                      qHtml += `<p style="color: #0000FF; text-align: center; font-weight: bold; margin-top: 16px; margin-bottom: 8px;">Lời giải</p>`;
-                      qHtml += cleanedAnswer;
-                  }
-              }
-              quizzesHtml.push(qHtml);
-              questionCounter++;
-              return `__QUIZ_PLACEHOLDER_${quizzesHtml.length - 1}__`;
-          } catch(e) { return match; }
-      });
-
-      // 2. Chữa các lỗi sai cú pháp LaTeX của AI để MathType/Word nhận diện được
-      content = content.replace(/\{\{begincases/g, '\\begin{cases}').replace(/endcases\}\}/g, '\\end{cases}');
-
-      // 3. Parser Markdown cơ bản sang HTML để MS Word hiểu được In đậm, Tiêu đề và Kéo dòng
-      let html = content.replace(/\\\\/g, '\\'); // Đưa dấu chéo kép về dấu chéo đơn chuẩn LaTeX cho MathType
-      
-      const spanBlocks: string[] = [];
-      html = html.replace(/<span[^>]*>/gi, (match) => {
-          spanBlocks.push(match);
-          return `__SPAN_START_${spanBlocks.length - 1}__`;
-      });
-      html = html.replace(/<\/span>/gi, () => `__SPAN_END__`);
-
-      html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-      
-      spanBlocks.forEach((span, i) => { html = html.replace(`__SPAN_START_${i}__`, () => span); });
-      html = html.replace(/__SPAN_END__/g, '</span>');
-      
-      // Parse Heading
-      html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-      html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-      html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-      
-      // Parse Bold/Italic
-      html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-      html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
-      
-
-
-      // Bao bọc <p> cho từng dòng để Word bắt buộc phải xuống đoạn thay vì dính chùm
-      html = html.split('\n').map(line => {
-         const t = line.trim();
-         if (!t) return '';
-         if (t.startsWith('<h') || t.startsWith('__QUIZ_PLACEHOLDER_') || t.startsWith('<br/>')) return t; // Không bọc p cho heading/quiz placeholder/img
-         return `<p>${line}</p>`;
-      }).join('\n');
-
-      // 4. Khôi phục lại khối HTML của Quiz
-      quizzesHtml.forEach((qHtml, index) => {
-         html = html.replace(`__QUIZ_PLACEHOLDER_${index}__`, () => qHtml);
-      });
-
-      // Parse Markdown Images ![alt](url) -> fetch and embed as base64
-      const imgRegex = /!\[([^\]]*)\]\(([^)]+)\)/g;
-      let match;
-      let newHtml = html;
-      while ((match = imgRegex.exec(html)) !== null) {
-        const alt = match[1];
-        const url = match[2];
-        try {
-          const res = await fetch(url);
-          if (res.ok) {
-            const arrayBuffer = await res.arrayBuffer();
-            const bytes = new Uint8Array(arrayBuffer);
-            let binary = '';
-            for (let i = 0; i < bytes.byteLength; i++) {
-                binary += String.fromCharCode(bytes[i]);
-            }
-            const base64 = btoa(binary);
-            const contentType = res.headers.get('content-type') || 'image/png';
-            const imgTag = `<br/><br/><div style="text-align: center;"><img src="data:${contentType};base64,${base64}" width="350" alt="${alt}" /></div><br/><br/>`;
-            newHtml = newHtml.replace(match[0], imgTag);
-          } else {
-             newHtml = newHtml.replace(match[0], `[Lỗi tải ảnh: ${alt}]`);
+              continue;
           }
-        } catch (e) {
-          newHtml = newHtml.replace(match[0], `[Lỗi tải ảnh: ${alt}]`);
-        }
+
+          let text = trimmed;
+
+          let isQuote = false;
+          if (text.startsWith('> ')) { isQuote = true; text = text.slice(2); }
+          else if (text === '>') { isQuote = true; text = ''; }
+
+          let headingLevel: (typeof HeadingLevel)[keyof typeof HeadingLevel] | undefined;
+          if (text.startsWith('### ')) { headingLevel = HeadingLevel.HEADING_3; text = text.slice(4); }
+          else if (text.startsWith('## ')) { headingLevel = HeadingLevel.HEADING_2; text = text.slice(3); }
+          else if (text.startsWith('# ')) { headingLevel = HeadingLevel.HEADING_1; text = text.slice(2); }
+
+          text = text.replace(/^[\-\+\*]\s*/, isQuote ? '' : '- ');
+
+          const runs = await buildRunsFromLine(text, isQuote ? { color: '555555' } : {});
+          bodyParagraphs.push(new Paragraph({
+              heading: headingLevel,
+              children: runs,
+              indent: isQuote ? { left: 480 } : undefined,
+              border: isQuote ? { left: { style: BorderStyle.SINGLE, size: 12, color: '6366F1', space: 8 } } : undefined,
+              spacing: { before: headingLevel ? 240 : 80, after: 80 },
+          }));
       }
-      html = newHtml;
 
-      const documentHtml = `
-      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-      <head>
-      <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-      <style>
-        body { font-family: "Times New Roman", Times, serif; font-size: 14pt; line-height: 1.5; }
-        h1 { font-size: 20pt; text-align: center; color: #00529b; }
-        h2 { font-size: 16pt; color: #00529b; margin-top: 24px; }
-        h3 { font-size: 14pt; font-weight: bold; margin-top: 16px; }
-        p { margin-top: 4px; margin-bottom: 4px; }
-      </style>
-      </head>
-      <body>
-        <h1>${title || "Giáo Án Lý Thuyết"}</h1>
-        ${html}
-      </body>
-      </html>`;
+      const doc = new Document({
+          styles: {
+              default: { document: { run: { size: 26, font: 'Times New Roman' } } },
+          },
+          sections: [{
+              properties: {},
+              children: [
+                  new Paragraph({
+                      children: [new TextRun({ text: title || 'Giáo Án Lý Thuyết', bold: true, size: 36, color: '00529B' })],
+                      alignment: AlignmentType.CENTER,
+                      spacing: { after: 300 },
+                  }),
+                  ...bodyParagraphs,
+              ],
+          }],
+      });
 
-      const blob = new Blob(['\ufeff', documentHtml], { type: 'application/msword' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url; a.download = `GiaoAn_${title || 'BaiGiang'}.doc`;
-      document.body.appendChild(a); a.click(); document.body.removeChild(a); URL.revokeObjectURL(url);
+      const blob = await Packer.toBlob(doc);
+      saveAs(blob, `GiaoAn_${title || 'BaiGiang'}.docx`);
     } catch (e) { alert("Lỗi xuất file Word: " + e); }
   };
 
@@ -1218,11 +1417,8 @@ function EditorContent() {
       // Tự động xin cấp phát khóa AI từ hệ thống Load Balancing
       const keyRes = await fetch('/api/admin/gemini-key');
       const keyData = await keyRes.json();
-      if (!keyRes.ok || !keyData.key) throw new Error(keyData.error || "Không thể cấp phát khóa AI.");
+      if (!keyRes.ok || !keyData.keys?.length) throw new Error(keyData.error || "Không thể cấp phát khóa AI.");
 
-      const genAI = new GoogleGenerativeAI(keyData.key);
-      const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
-      
       const isPractice = isPracticeModule;
       const prompt = getPrompt(isPractice, activeTab === 'presentation');
 
@@ -1231,25 +1427,39 @@ function EditorContent() {
           finalPrompt += "\n\n[NỘI DUNG VĂN BẢN TỪ FILE WORD]:\n" + pendingText;
       }
       
-      const imageParts = await Promise.all(
-        pendingImages.map(async (img) => {
-          const base64Data = await fileToBase64(img.file);
-          return { inlineData: { data: base64Data, mimeType: img.file.type } };
-        })
-      );
+      const imageParts = await filesToGeminiParts(pendingImages.map(img => img.file));
 
-      const result = await model.generateContent([finalPrompt, ...imageParts]);
-      const text = result.response.text();
-      
+      // Xoay vòng toàn bộ API key khi một key lỗi/quá tải, thay vì chết cả lượt quét
+      // vì đúng key đầu tiên bị 503 (bản cũ chỉ dùng keyData.key).
+      let text = await callGeminiWithKeyFallback(keyData.keys, finalPrompt, imageParts);
+
+      // TỰ ĐỘNG CẮT ẢNH ngay tại đây, khi File gốc còn trong bộ nhớ (bên dưới sẽ
+      // setPendingImages([]) làm mất File, lúc đó chỉ còn blob URL không cắt được nữa).
+      if (pendingImages.length > 0) {
+        try {
+          const parsed = parseMarkdownToBlocks(text);
+          const { blocks: croppedBlocks, croppedCount } = await autoCropBlocksImages(
+            parsed,
+            pendingImages.map(img => img.file),
+            pendingImages.map(img => img.previewUrl),
+            supabase,
+          );
+          if (croppedCount > 0) text = serializeBlocksToMarkdown(croppedBlocks);
+        } catch (e) {
+          console.warn('Bỏ qua bước tự cắt ảnh, giữ nguyên kết quả quét:', e);
+        }
+      }
+
       const separator = markdownContent.length > 0 && !markdownContent.endsWith('---') ? "\\n\\n---\\n\\n" : "\\n\\n";
+      const finalText = text;
       setMarkdownContent((prev: string) => {
-        const newMarkdown = prev ? prev + separator + text : text;
+        const newMarkdown = prev ? prev + separator + finalText : finalText;
         if (editorMode === 'form') {
            setBlocks(parseMarkdownToBlocks(newMarkdown));
         }
         return newMarkdown;
       });
-      
+
       if (pendingImages.length > 0) {
         setLastAnalyzedImages(pendingImages.map(img => img.previewUrl));
         // Giữ các ảnh trong blob memory để sử dụng cho crop
@@ -1428,19 +1638,19 @@ function EditorContent() {
         const bIndex = newBlocks.findIndex(b => b.id === targetCropBlockId);
         if (bIndex > -1) {
             const b = newBlocks[bIndex];
-            const placeholderRegex = /\[IMAGE_PLACEHOLDER\]|\[.*?CHÚ Ý.*?\]|\[.*?HÌNH VẼ.*?\]|\[.*?HÌNH ẢNH.*?\]|\[.*?BẢNG BIỂU.*?\]/i;
+            // So sánh trước/sau thay vì .test(): IMAGE_PLACEHOLDER_STRIP_REGEX mang cờ "g"
+            // nên .test() nhớ lastIndex giữa các lần gọi. Bản regex cũ ở đây còn thiếu cờ "g"
+            // nên chỉ thay được đúng 1 marker mỗi lần cắt.
+            const replaceMarker = (text: string): string => {
+                const replaced = (text || '').replace(IMAGE_PLACEHOLDER_STRIP_REGEX, imageMarkdown);
+                return replaced !== (text || '') ? replaced : (text || '') + imageMarkdown;
+            };
             if (b.type === 'md' && typeof b.content === 'string') {
-                if (placeholderRegex.test(b.content)) {
-                    b.content = b.content.replace(placeholderRegex, imageMarkdown);
-                } else {
-                    b.content += imageMarkdown;
-                }
+                b.content = replaceMarker(b.content);
             } else if (b.type === 'quiz') {
-                if (placeholderRegex.test(b.content.question || '')) {
-                    b.content.question = b.content.question.replace(placeholderRegex, imageMarkdown);
-                } else {
-                    b.content.question = (b.content.question || '') + imageMarkdown;
-                }
+                b.content.question = replaceMarker(b.content.question);
+                // Giữ nguyên autoCropMetadata để còn cắt lại được nhiều lần; chấm đỏ đã
+                // tự tắt nhờ blockNeedsImage kiểm tra "đã có ảnh trong nội dung hay chưa".
             }
             setBlocks(newBlocks);
         }
@@ -1868,7 +2078,9 @@ function EditorContent() {
 
                    {/* Cảnh báo Bảng/Ảnh */}
                    {(() => {
-                      const hasImageOrTable = /(?:\[IMAGE_PLACEHOLDER\]|\[.*?CHÚ Ý.*?\]|\[.*?HÌNH VẼ.*?\]|\|.*\|.*\n\s*\|[-\s:]+\|)/i.test(markdownContent);
+                      // Dùng regex chung (bản cũ ở đây thiếu nhánh "HÌNH ẢNH" nên không cảnh
+                      // báo với marker "[CÓ HÌNH ẢNH KÈM THEO]"); vẫn giữ thêm nhánh bảng Markdown.
+                      const hasImageOrTable = IMAGE_NEEDED_REGEX.test(markdownContent) || /\|.*\|.*\n\s*\|[-\s:]+\|/.test(markdownContent);
                       if (!hasImageOrTable) return null;
                       return (
                           <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3 shrink-0 flex items-center justify-between">
@@ -2060,13 +2272,21 @@ function EditorContent() {
           isOpen={isPushToBankModalOpen} 
           onClose={() => setIsPushToBankModalOpen(false)} 
           blocks={activeTab === 'elearning' ? elearningBlocks : presentationBlocks} 
-          courseContext={{ 
-            grade: courses.find(c => c.id === selectedCourseId)?.grade || "",
-            subject: courses.find(c => c.id === selectedCourseId)?.subject || "",
-            topic: chapters.find(c => c.id === selectedChapterId)?.title || "", 
-            lesson: title,
-            courseName: courses.find(c => c.id === selectedCourseId)?.title || ""
-          }} 
+          courseContext={(() => {
+            const course = courses.find(c => c.id === selectedCourseId);
+            // Một số khóa học để grade_level = 0 (chưa đặt); khi đó trả về rỗng
+            // để modal tự đoán Lớp từ tên khóa học.
+            const gradeLevel = Number(course?.grade_level) || 0;
+            return {
+              grade: gradeLevel > 0 ? String(gradeLevel) : "",
+              // Bảng courses không lưu Môn - giáo viên chọn trong modal,
+              // và bước kiểm tra trước khi lưu sẽ chặn nếu còn bỏ trống.
+              subject: "",
+              topic: chapters.find(c => c.id === selectedChapterId)?.title || "",
+              lesson: title,
+              courseName: course?.title || ""
+            };
+          })()}
         />
       )}
     </div>

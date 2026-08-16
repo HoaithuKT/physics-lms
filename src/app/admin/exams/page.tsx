@@ -2,9 +2,8 @@
 
 import React, { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { exportQuestionsToWord } from "@/utils/exportDocx";
-import { 
-  Sliders, Download, UploadCloud, Trash2, Printer, FileText, Settings, Database, Shuffle, CheckCircle, X, ChevronDown, ChevronRight, Folder, File, List
+import {
+  Sliders, Download, UploadCloud, Trash2, Settings, Database, Shuffle, X, ChevronDown, ChevronRight, Folder, File, List
 } from "lucide-react";
 import * as XLSX from "xlsx";
 
@@ -59,17 +58,12 @@ export default function ExamsManagerPage() {
   
   // Loading & Generating
   const [isLoadingTree, setIsLoadingTree] = useState(false);
-  const [isGenerating, setIsGenerating] = useState(false);
   
   // UI States
   const [expandedTopics, setExpandedTopics] = useState<Record<string, boolean>>({});
   const [expandedLessons, setExpandedLessons] = useState<Record<string, boolean>>({});
   const [expandedTypes, setExpandedTypes] = useState<Record<string, boolean>>({});
   const [isHeaderExpanded, setIsHeaderExpanded] = useState(true);
-
-  // Preview Modal
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-  const [generatedQuestions, setGeneratedQuestions] = useState<any[]>([]);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -122,16 +116,26 @@ export default function ExamsManagerPage() {
       if (err1) throw err1;
       
       // 2. Quét kho
-      let qQuery = supabase.from('questions').select('topic, lesson, math_form, grade, subject, question_type, difficulty');
-      if (grade) qQuery = qQuery.eq('grade', grade);
-      if (subject) qQuery = qQuery.eq('subject', subject);
-      if (topicFilter) qQuery = qQuery.eq('topic', topicFilter);
-      if (lessonFilter) qQuery = qQuery.eq('lesson', lessonFilter);
-      if (formFilter) qQuery = qQuery.eq('math_form', formFilter);
-      if (qTypeFilter) qQuery = qQuery.eq('question_type', qTypeFilter);
+      // Supabase/PostgREST mặc định chỉ trả tối đa 1000 dòng cho 1 lần truy vấn.
+      // Với bộ lọc rộng (VD chỉ chọn Lớp/Phân môn), số câu trong kho dễ vượt 1000
+      // nên phải phân trang lấy hết, nếu không số "(Kho: N)" sẽ đếm thiếu.
+      const qSelect = 'topic, lesson, math_form, grade, subject, question_type, difficulty';
+      const qData: any[] = [];
+      const PAGE_SIZE = 1000;
+      for (let from = 0; ; from += PAGE_SIZE) {
+        let qQuery = supabase.from('questions').select(qSelect).range(from, from + PAGE_SIZE - 1);
+        if (grade) qQuery = qQuery.eq('grade', grade);
+        if (subject) qQuery = qQuery.eq('subject', subject);
+        if (topicFilter) qQuery = qQuery.eq('topic', topicFilter);
+        if (lessonFilter) qQuery = qQuery.eq('lesson', lessonFilter);
+        if (formFilter) qQuery = qQuery.eq('math_form', formFilter);
+        if (qTypeFilter) qQuery = qQuery.eq('question_type', qTypeFilter);
 
-      const { data: qData, error: err2 } = await qQuery;
-      if (err2) throw err2;
+        const { data: page, error: err2 } = await qQuery;
+        if (err2) throw err2;
+        qData.push(...(page || []));
+        if (!page || page.length < PAGE_SIZE) break;
+      }
 
       const counts: Record<string, number> = {};
       const extraCatsMap = new Map<string, CategoryData>();
@@ -214,96 +218,28 @@ export default function ExamsManagerPage() {
     if(confirm("Bạn có chắc chắn muốn xoá toàn bộ ma trận?")) setMatrixItems([]);
   };
 
-  const generateExam = async () => {
+  // Trước đây bấm nút này là hệ thống tự chọn ngẫu nhiên câu hỏi rồi hiện luôn
+  // kết quả để xem/xuất - không có cơ hội xem/đổi từng câu cụ thể trước khi chốt.
+  // Giờ chuyển sang mở một TAB RIÊNG, rộng rãi, liệt kê toàn bộ câu hỏi ứng viên
+  // của từng dòng ma trận (không chỉ số lượng đã chọn ngẫu nhiên) để thầy/cô tự
+  // tick chọn đúng câu muốn đưa vào đề, sửa trực tiếp và lưu lại vào ngân hàng
+  // ngay tại đó. Chỉ khi nào ok thì mới sang bước xem đề hoàn chỉnh/xuất/chốt đề.
+  const generateExam = () => {
     if (matrixItems.length === 0) {
       alert("Vui lòng thêm ít nhất 1 dạng vật lý vào ma trận!");
       return;
     }
-    setIsGenerating(true);
-    try {
-      let finalQuestions: any[] = [];
-      
-      for (const item of matrixItems) {
-        let query = supabase
-          .from('questions')
-          .select('*')
-          .eq('math_form', item.math_form)
-          .eq('question_type', item.question_type)
-          .eq('difficulty', item.difficulty);
-        
-        if (grade) query = query.eq('grade', grade);
-        if (subject) query = query.eq('subject', subject);
-        
-        const { data, error } = await query;
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          // Bước 1: Trộn ngẫu nhiên
-          const shuffled = data.sort(() => 0.5 - Math.random());
-          // Bước 2: Ưu tiên các câu chưa dùng hoặc dùng ít
-          const sorted = shuffled.sort((a, b) => (a.usage_count || 0) - (b.usage_count || 0));
-          const selected = sorted.slice(0, item.count);
-          finalQuestions = [...finalQuestions, ...selected];
-        }
-      }
-      
-      if(finalQuestions.length === 0) {
-        alert("Không tìm thấy câu hỏi nào thoả mãn ma trận trong kho!");
-      } else {
-        setGeneratedQuestions(finalQuestions);
-        setShowPreviewModal(true);
-      }
-    } catch (error: any) {
-      alert("Lỗi khi sinh đề: " + error.message);
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const [isFinalizing, setIsFinalizing] = useState(false);
-
-  const handleFinalizeExam = async () => {
-    if (generatedQuestions.length === 0) return alert("Không có câu hỏi nào để chốt!");
-    setIsFinalizing(true);
-    try {
-      for (const q of generatedQuestions) {
-        const newCount = (q.usage_count || 0) + 1;
-        await supabase.from('questions').update({ usage_count: newCount }).eq('id', q.id);
-      }
-      setGeneratedQuestions(prev => prev.map(q => ({...q, usage_count: (q.usage_count || 0) + 1})));
-      alert("Đã chốt đề thành công! Số lần sử dụng của các câu hỏi trong đề đã được cộng thêm 1.");
-    } catch (error: any) {
-      alert("Lỗi khi chốt đề: " + error.message);
-    } finally {
-      setIsFinalizing(false);
-    }
-  };
-
-  const handlePrint = () => {
-    window.print();
-  };
-
-  const handleExportWordStudent = async () => {
-    try {
-      if(generatedQuestions.length === 0) return alert("Chưa có đề thi nào được sinh!");
-      await exportQuestionsToWord(generatedQuestions, 'student');
-    } catch (e: any) {
-      alert("Lỗi xuất Word: " + e.message);
-    }
-  };
-
-  const handleExportWordTeacher = async () => {
-    try {
-      if(generatedQuestions.length === 0) return alert("Chưa có đề thi nào được sinh!");
-      await exportQuestionsToWord(generatedQuestions, 'teacher');
-    } catch (e: any) {
-      alert("Lỗi xuất Word: " + e.message);
-    }
+    const draftKey = `examDraft_${Date.now()}`;
+    localStorage.setItem(draftKey, JSON.stringify({
+      examType, grade, subject,
+      matrixItems: matrixItems.map(({ id, math_form, question_type, difficulty, count }) => ({ id, math_form, question_type, difficulty, count })),
+    }));
+    window.open(`/admin/exams/select?draft=${draftKey}`, '_blank');
   };
 
   const handleExportMatrix = () => {
     const wsData = [
-      ["STT", "Dạng Vật lý", "Loại Câu", "Mức độ", "Số Câu"],
+      ["STT", "Dạng Toán", "Loại Câu", "Mức độ", "Số Câu"],
       ...matrixItems.map((item, i) => [
         i + 1,
         item.math_form,
@@ -319,18 +255,20 @@ export default function ExamsManagerPage() {
   };
 
   const getTypeName = (type: string) => {
-    if (['TN', 'NLC'].includes(type)) return 'Trắc nghiệm nhiều lựa chọn';
-    if (type === 'DS') return 'Trắc nghiệm Đúng/Sai';
-    if (type === 'TLN') return 'Trả lời ngắn';
-    if (type === 'TL') return 'Tự luận';
+    const t = type?.toLowerCase() || '';
+    if (['tn', 'nlc', 'multiple_choice'].includes(t)) return 'Trắc nghiệm nhiều lựa chọn';
+    if (['ds', 'true_false', 'true_false_cluster'].includes(t)) return 'Trắc nghiệm Đúng/Sai';
+    if (['tln', 'short_answer'].includes(t)) return 'Trả lời ngắn';
+    if (['tl', 'essay'].includes(t)) return 'Tự luận';
     return type || 'Khác';
   };
   
   const getDiffName = (level: string) => {
-    if (level === '1' || level === 'NB') return 'Mức 1';
-    if (level === '2' || level === 'TH') return 'Mức 2';
-    if (level === '3' || level === 'VD') return 'Mức 3';
-    if (level === '4' || level === 'VDC') return 'Mức 4';
+    const l = level?.toLowerCase() || '';
+    if (['1', 'nb', 'nhận biết'].includes(l)) return 'Mức 1 (Nhận biết)';
+    if (['2', 'th', 'thông hiểu'].includes(l)) return 'Mức 2 (Thông hiểu)';
+    if (['3', 'vd', 'vận dụng'].includes(l)) return 'Mức 3 (Vận dụng)';
+    if (['4', 'vdc', 'vận dụng cao'].includes(l)) return 'Mức 4 (Vận dụng cao)';
     return `Mức ${level}`;
   };
 
@@ -360,10 +298,10 @@ export default function ExamsManagerPage() {
         {/* Header & Filter */}
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col gap-4 flex-shrink-0">
           <div className="flex justify-between items-center cursor-pointer select-none" onClick={() => setIsHeaderExpanded(!isHeaderExpanded)}>
-            <h2 className="text-xl font-bold text-orange-800 flex items-center gap-2">
+            <h2 className="text-xl font-bold text-teal-800 flex items-center gap-2">
               <Sliders className="w-6 h-6" /> Thiết lập Ma trận Đề thi chuẩn 2025
             </h2>
-            <button className="text-gray-400 hover:text-orange-600 transition-colors p-1 bg-gray-50 rounded-lg hover:bg-orange-50">
+            <button className="text-gray-400 hover:text-teal-600 transition-colors p-1 bg-gray-50 rounded-lg hover:bg-teal-50">
               {isHeaderExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
             </button>
           </div>
@@ -381,44 +319,44 @@ export default function ExamsManagerPage() {
                 <option>Đề thi thử lớp 10</option>
               </select>
               <div className="w-px h-6 bg-gray-200 mx-1"></div>
-              <select value={grade} onChange={e=>setGrade(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-500 text-sm font-medium bg-white">
+              <select value={grade} onChange={e=>setGrade(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-teal-500 text-sm font-medium bg-white">
                 <option value="">-- Khối Lớp --</option>
                 {uniqueGrades.map(g => <option key={g} value={g}>{g}</option>)}
               </select>
-              <select value={subject} onChange={e=>setSubject(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-500 text-sm font-medium bg-white">
+              <select value={subject} onChange={e=>setSubject(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-teal-500 text-sm font-medium bg-white">
                 <option value="">-- Phân môn --</option>
                 {uniqueSubjects.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
-              <select value={topicFilter} onChange={e=>setTopicFilter(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-500 text-sm font-medium bg-white max-w-[200px]">
+              <select value={topicFilter} onChange={e=>setTopicFilter(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-teal-500 text-sm font-medium bg-white max-w-[200px]">
                 <option value="">-- Chuyên đề (Tất cả) --</option>
                 {topicList.map(t => <option key={t} value={t}>{t}</option>)}
               </select>
-              <select value={lessonFilter} onChange={e=>setLessonFilter(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-500 text-sm font-medium bg-white max-w-[200px]">
+              <select value={lessonFilter} onChange={e=>setLessonFilter(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-teal-500 text-sm font-medium bg-white max-w-[200px]">
                 <option value="">-- Bài học (Tất cả) --</option>
                 {lessonList.map(l => <option key={l} value={l}>{l}</option>)}
               </select>
-              <select value={formFilter} onChange={e=>setFormFilter(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-500 text-sm font-medium bg-white max-w-[200px]">
+              <select value={formFilter} onChange={e=>setFormFilter(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-teal-500 text-sm font-medium bg-white max-w-[200px]">
                 <option value="">-- Dạng vật lý (Tất cả) --</option>
                 {formList.map(f => <option key={f} value={f}>{f}</option>)}
               </select>
-              <select value={qTypeFilter} onChange={e=>setQTypeFilter(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-orange-500 text-sm font-medium bg-white max-w-[200px]">
+              <select value={qTypeFilter} onChange={e=>setQTypeFilter(e.target.value)} className="border border-gray-200 rounded-xl px-4 py-2.5 outline-none focus:ring-2 focus:ring-teal-500 text-sm font-medium bg-white max-w-[200px]">
                 <option value="">-- Dạng thức (Tất cả) --</option>
                 <option value="NLC">Trắc nghiệm</option>
                 <option value="DS">Đúng/Sai</option>
                 <option value="TLN">Trả lời ngắn</option>
                 <option value="TL">Tự luận</option>
               </select>
-              <button onClick={fetchTreeAndInventory} disabled={isLoadingTree} className="bg-orange-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-orange-700 transition-colors text-sm shadow-sm disabled:opacity-50 flex items-center gap-2">
+              <button onClick={fetchTreeAndInventory} disabled={isLoadingTree} className="bg-teal-600 text-white px-5 py-2.5 rounded-xl font-bold hover:bg-teal-700 transition-colors text-sm shadow-sm disabled:opacity-50 flex items-center gap-2">
                 {isLoadingTree ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Database className="w-4 h-4" />}
                 Tải & Quét Kho
               </button>
             </div>
 
             <div className="flex items-center justify-end gap-3 border-t border-gray-100 pt-3 mt-1">
-              <button onClick={handleExportMatrix} className="flex items-center gap-2 border border-orange-600 text-orange-700 hover:bg-orange-50 px-4 py-2.5 rounded-xl font-bold transition-colors text-sm bg-white">
+              <button onClick={handleExportMatrix} className="flex items-center gap-2 border border-teal-600 text-teal-700 hover:bg-teal-50 px-4 py-2.5 rounded-xl font-bold transition-colors text-sm bg-white">
                 <Download className="w-4 h-4" /> Xuất Excel mẫu
               </button>
-              <button className="flex items-center gap-2 border border-amber-600 text-amber-700 hover:bg-amber-50 px-4 py-2.5 rounded-xl font-bold transition-colors text-sm bg-white cursor-not-allowed opacity-50" title="Đang cập nhật">
+              <button className="flex items-center gap-2 border border-emerald-600 text-emerald-700 hover:bg-emerald-50 px-4 py-2.5 rounded-xl font-bold transition-colors text-sm bg-white cursor-not-allowed opacity-50" title="Đang cập nhật">
                 <UploadCloud className="w-4 h-4" /> Import Excel
               </button>
             </div>
@@ -432,7 +370,7 @@ export default function ExamsManagerPage() {
           {/* Cột trái: Cây thư mục */}
           <div className="w-[45%] bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden flex-shrink-0">
             <div className="p-3 bg-blue-50 border-b border-blue-100 flex justify-between items-center shrink-0">
-              <h3 className="font-bold text-blue-800 text-[15px] flex items-center gap-2">1. Chọn Dạng Vật lý</h3>
+              <h3 className="font-bold text-blue-800 text-[15px] flex items-center gap-2">1. Chọn Dạng Toán</h3>
             </div>
             <div className="flex-1 overflow-y-auto p-4 scrollbar-thin">
               {Object.keys(groupedCategories).length === 0 ? (
@@ -473,10 +411,10 @@ export default function ExamsManagerPage() {
                                     return (
                                       <div key={typeName} className="mb-2 last:mb-0">
                                         <div 
-                                          className="text-[13px] text-orange-800 font-bold flex items-center gap-2 cursor-pointer hover:text-orange-600 mb-1.5"
+                                          className="text-[13px] text-teal-800 font-bold flex items-center gap-2 cursor-pointer hover:text-teal-600 mb-1.5"
                                           onClick={() => toggleType(typeKey)}
                                         >
-                                          <List className="w-4 h-4 text-orange-500 shrink-0" />
+                                          <List className="w-4 h-4 text-teal-500 shrink-0" />
                                           {typeName}
                                         </div>
                                         {isTypeExpanded && (
@@ -545,8 +483,8 @@ export default function ExamsManagerPage() {
 
           {/* Cột phải: Bảng Ma trận */}
           <div className="w-[55%] bg-white rounded-2xl shadow-sm border border-gray-100 flex flex-col overflow-hidden">
-            <div className="p-3 bg-amber-50 border-b border-amber-100 flex justify-between items-center shrink-0">
-              <h3 className="font-bold text-amber-800 text-[15px]">2. Cấu hình Ma Trận</h3>
+            <div className="p-3 bg-emerald-50 border-b border-emerald-100 flex justify-between items-center shrink-0">
+              <h3 className="font-bold text-emerald-800 text-[15px]">2. Cấu hình Ma Trận</h3>
               <button onClick={clearMatrix} className="text-xs text-red-600 font-bold hover:bg-red-100 px-3 py-1.5 rounded-lg transition-colors flex items-center gap-1">
                 <Trash2 className="w-3.5 h-3.5" /> Xóa bảng
               </button>
@@ -563,7 +501,7 @@ export default function ExamsManagerPage() {
                   <thead className="bg-blue-50/50 sticky top-0 shadow-sm z-10">
                     <tr className="text-[11px] uppercase text-gray-500 font-bold border-b border-gray-100">
                       <th className="p-3">STT</th>
-                      <th className="p-3">Dạng Vật lý</th>
+                      <th className="p-3">Dạng Toán</th>
                       <th className="p-3 text-center">Loại Câu</th>
                       <th className="p-3 text-center">Mức độ</th>
                       <th className="p-3 text-center w-20">Số câu</th>
@@ -581,7 +519,7 @@ export default function ExamsManagerPage() {
                           <span className="font-medium text-indigo-600 text-[12px]">{item.question_type}</span>
                         </td>
                         <td className="p-3 text-center">
-                          <span className="font-medium text-orange-600 text-[12px]">{getDiffName(item.difficulty)}</span>
+                          <span className="font-medium text-teal-600 text-[12px]">{getDiffName(item.difficulty)}</span>
                         </td>
                         <td className="p-3">
                           <div className="flex flex-col items-center">
@@ -591,7 +529,7 @@ export default function ExamsManagerPage() {
                               max={item.max_count}
                               value={item.count} 
                               onChange={(e) => updateMatrixItem(item.id, 'count', parseInt(e.target.value) || 1)}
-                              className="w-full border border-gray-200 rounded p-1.5 text-[13px] outline-none focus:border-amber-500 text-center font-bold"
+                              className="w-full border border-gray-200 rounded p-1.5 text-[13px] outline-none focus:border-emerald-500 text-center font-bold"
                             />
                             <span className="text-[10px] text-gray-400 mt-1">(Kho: {item.max_count})</span>
                           </div>
@@ -612,15 +550,14 @@ export default function ExamsManagerPage() {
             <div className="p-4 border-t border-gray-100 bg-gray-50 shrink-0">
               <div className="flex items-center justify-between">
                 <div className="text-sm">
-                  <span className="text-gray-500">Tổng số câu:</span> <span className="font-black text-lg text-amber-600">{matrixItems.reduce((acc, curr) => acc + curr.count, 0)}</span>
+                  <span className="text-gray-500">Tổng số câu:</span> <span className="font-black text-lg text-emerald-600">{matrixItems.reduce((acc, curr) => acc + curr.count, 0)}</span>
                 </div>
-                <button 
+                <button
                   onClick={generateExam}
-                  disabled={isGenerating}
-                  className="bg-gradient-to-r from-amber-500 to-orange-600 text-white px-6 py-3 rounded-xl font-black shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2 disabled:opacity-50"
+                  className="bg-gradient-to-r from-emerald-500 to-teal-600 text-white px-6 py-3 rounded-xl font-black shadow-lg hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center gap-2"
                 >
-                  {isGenerating ? <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Shuffle className="w-5 h-5" />}
-                  TIẾN HÀNH TRỘN ĐỀ
+                  <Shuffle className="w-5 h-5" />
+                  XEM TRƯỚC & CHỌN CÂU HỎI
                 </button>
               </div>
             </div>
@@ -629,65 +566,6 @@ export default function ExamsManagerPage() {
         </div>
       </div>
 
-      {/* Exam Preview Modal */}
-      {showPreviewModal && (
-        <div className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm p-4 flex justify-center animate-in fade-in duration-200">
-          <div className="bg-white rounded-2xl w-full max-w-5xl h-full flex flex-col shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
-            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 bg-gray-50/50">
-              <h2 className="text-xl font-bold text-gray-800 flex items-center gap-2">
-                <FileText className="w-6 h-6 text-orange-600" /> Bản xem trước Đề thi
-              </h2>
-              <button onClick={() => setShowPreviewModal(false)} className="p-2 text-gray-400 hover:text-red-600 rounded-xl transition-colors">
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="p-4 bg-white border-b border-gray-100 flex items-center gap-3">
-              <button onClick={handlePrint} className="bg-orange-600 text-white px-4 py-2.5 rounded-lg font-bold flex items-center gap-2 text-sm shadow-sm hover:bg-orange-700">
-                <Printer className="w-4 h-4" /> In trực tiếp Web
-              </button>
-              <button onClick={handleExportWordStudent} className="bg-blue-600 text-white px-4 py-2.5 rounded-lg font-bold flex items-center gap-2 text-sm shadow-sm hover:bg-blue-700">
-                <Download className="w-4 h-4" /> Xuất Đề (Học Sinh)
-              </button>
-              <button onClick={handleExportWordTeacher} className="bg-indigo-600 text-white px-4 py-2.5 rounded-lg font-bold flex items-center gap-2 text-sm shadow-sm hover:bg-indigo-700">
-                <Download className="w-4 h-4" /> Xuất Đề + Lời Giải (Giáo Viên)
-              </button>
-              <button onClick={handleFinalizeExam} disabled={isFinalizing} className="bg-amber-600 text-white px-4 py-2.5 rounded-lg font-bold flex items-center gap-2 text-sm shadow-sm hover:bg-amber-700 disabled:opacity-50 ml-2">
-                {isFinalizing ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <CheckCircle className="w-4 h-4" />}
-                Chốt Đề (Lưu bộ đếm)
-              </button>
-              <span className="ml-auto text-sm text-gray-500">Đã tạo thành công {generatedQuestions.length} câu hỏi.</span>
-            </div>
-            <div id="print-area" className="flex-1 overflow-y-auto p-8 bg-gray-50" style={{ fontFamily: '"Times New Roman", Times, serif', fontSize: '12pt' }}>
-              <div className="text-center font-bold text-lg uppercase mb-6">{examType || "ĐỀ KIỂM TRA"}</div>
-              {generatedQuestions.map((q, i) => (
-                <div key={i} className="mb-4">
-                  <p className="font-bold inline-block">Câu {i + 1}. </p>
-                  <span className="ml-2 mr-2 inline-flex items-center justify-center px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-200 align-text-bottom">
-                    Đã xuất hiện: {q.usage_count || 0} lần
-                  </span>
-                  <span dangerouslySetInnerHTML={{ __html: ' ' + q.content.replace(/\\n/g, '<br/>').replace(/\\[HINH VẼ ĐỒ THỊ\\]|\\[HÌNH VẼ ĐỒ THỊ\\]/gi, '').replace(/\$(.*?)\$/g, '<span class="math">\\($1\\)</span>') }} />
-                  {['TN', 'NLC'].includes(q.question_type) && (
-                    <div className="grid grid-cols-2 mt-2 gap-y-1">
-                      <div><b>A.</b> <span dangerouslySetInnerHTML={{ __html: (q.option_a || '').replace(/\$(.*?)\$/g, '<span class="math">\\($1\\)</span>') }} /></div>
-                      <div><b>B.</b> <span dangerouslySetInnerHTML={{ __html: (q.option_b || '').replace(/\$(.*?)\$/g, '<span class="math">\\($1\\)</span>') }} /></div>
-                      <div><b>C.</b> <span dangerouslySetInnerHTML={{ __html: (q.option_c || '').replace(/\$(.*?)\$/g, '<span class="math">\\($1\\)</span>') }} /></div>
-                      <div><b>D.</b> <span dangerouslySetInnerHTML={{ __html: (q.option_d || '').replace(/\$(.*?)\$/g, '<span class="math">\\($1\\)</span>') }} /></div>
-                    </div>
-                  )}
-                  {q.question_type === 'DS' && (
-                    <div className="mt-2 space-y-1">
-                      <div><b>a)</b> <span dangerouslySetInnerHTML={{ __html: (q.option_a || '').replace(/\$(.*?)\$/g, '<span class="math">\\($1\\)</span>') }} /></div>
-                      <div><b>b)</b> <span dangerouslySetInnerHTML={{ __html: (q.option_b || '').replace(/\$(.*?)\$/g, '<span class="math">\\($1\\)</span>') }} /></div>
-                      <div><b>c)</b> <span dangerouslySetInnerHTML={{ __html: (q.option_c || '').replace(/\$(.*?)\$/g, '<span class="math">\\($1\\)</span>') }} /></div>
-                      <div><b>d)</b> <span dangerouslySetInnerHTML={{ __html: (q.option_d || '').replace(/\$(.*?)\$/g, '<span class="math">\\($1\\)</span>') }} /></div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

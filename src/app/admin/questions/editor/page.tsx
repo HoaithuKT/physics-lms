@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import {
   ArrowLeft, Image as ImageIcon, Trash2, Code2, Bot, Eye,
   Wand2, AlertCircle, Loader2, Copy, SaveAll, Edit, Trash, CloudUpload, X, Save, Info,
@@ -11,30 +10,21 @@ import {
 } from "lucide-react";
 import QuestionPreviewModal from "@/components/admin/QuestionPreviewModal";
 import RichTextarea from "@/components/admin/RichTextarea";
-
-interface QuestionData {
-  temp_id?: string;
-  question_id?: string;
-  grade: string;
-  subject: string;
-  topic: string;
-  lesson: string;
-  math_form: string;
-  question_type: string;
-  difficulty: string;
-  content: string;
-  option_a: string;
-  option_b: string;
-  option_c: string;
-  option_d: string;
-  correct_answer: string;
-  explanation: string;
-  image_url?: string;
-  isDuplicate?: boolean;
-  duplicateId?: string;
-  isNewLesson?: boolean;
-  isNewMathForm?: boolean;
-}
+import {
+  toBankType,
+  toDifficultyCode,
+  bankTypeLabel,
+  difficultyLabel,
+  BANK_TYPES,
+  DIFFICULTY_CODES,
+} from "@/utils/questionTypes";
+import {
+  type QuestionData,
+  IMAGE_NEEDED_REGEX,
+  scanFilesForQuestions,
+  parseExtractedQuestionsJson,
+} from "@/utils/aiQuestionScan";
+import { saveQuestionsToBank } from "@/utils/questionBankSave";
 
 export default function BatchAIEditorPage() {
   const router = useRouter();
@@ -162,108 +152,15 @@ export default function BatchAIEditorPage() {
     }
   };
 
-  const fileToBase64 = (file: File): Promise<string> => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader(); reader.readAsDataURL(file);
-      reader.onload = () => resolve((reader.result as string).split(',')[1]);
-      reader.onerror = error => reject(error);
-    });
-  };
+  const scanCtx = () => ({
+    globalGrade, globalSubject, globalTopics, globalLesson,
+    uniqueTopics, uniqueLessons, uniqueForms,
+    existingQuestions,
+  });
 
   const processExtractedJson = (rawText: string) => {
     try {
-      let jsonStr = rawText;
-      const jsonMatch = rawText.match(/```json\n([\s\S]*?)\n```/) || rawText.match(/```\n([\s\S]*?)\n```/);
-      if (jsonMatch) jsonStr = jsonMatch[1];
-      
-      const firstBracket = jsonStr.indexOf('[');
-      const lastBracket = jsonStr.lastIndexOf(']');
-      
-      let parsedData: any[] = [];
-      
-      // 1. Cắt chuỗi JSON thuần tuý ra trước
-      if (firstBracket !== -1) {
-        jsonStr = jsonStr.substring(firstBracket, lastBracket + 1);
-      } else {
-        const firstBrace = jsonStr.indexOf('{');
-        const lastBrace = jsonStr.lastIndexOf('}');
-        if (firstBrace !== -1) {
-          jsonStr = '[' + jsonStr.substring(firstBrace, lastBrace + 1) + ']';
-        } else {
-          throw new Error("Không tìm thấy cấu trúc JSON");
-        }
-      }
-
-      try {
-        parsedData = JSON.parse(jsonStr);
-      } catch(e) {
-        console.error("Lỗi parse JSON:", e);
-        alert("Lỗi: AI trả về định dạng JSON không hợp lệ. Vui lòng thử lại.");
-        return;
-      }
-
-      const newQuestions: QuestionData[] = parsedData.map(data => {
-        let qContent = data.noiDung || "";
-        // Tự động xóa các tiền tố "Câu X.", "Bài Y.", "VD Z:" ở đầu câu hỏi
-        qContent = qContent.replace(/^(?:(?:Câu|Bài|VD|Ví\s*dụ)\s*\d+[a-zA-Z]?\s*[:.-]?\s*)+/i, "");
-
-        const normalizedContent = qContent.trim().toLowerCase().replace(/\s+/g, '');
-        const duplicateMatch = existingQuestions.find(eq => eq.content === normalizedContent && eq.content !== "");
-
-        const lesson = data.tenBai || "";
-        const math_form = data.dangToan || "";
-        const isNewLesson = lesson !== "" && !uniqueLessons.includes(lesson);
-        const isNewMathForm = math_form !== "" && !uniqueForms.includes(math_form);
-
-        let parsedQuestionType = data.loaiCauHoi || "NLC";
-        if (parsedQuestionType.toLowerCase().includes("trắc nghiệm")) parsedQuestionType = "NLC";
-        else if (parsedQuestionType.toLowerCase().includes("đúng/sai") || parsedQuestionType.toLowerCase().includes("đúng sai")) parsedQuestionType = "DS";
-        else if (parsedQuestionType.toLowerCase().includes("ngắn")) parsedQuestionType = "TLN";
-        else if (parsedQuestionType.toLowerCase().includes("tự luận") || parsedQuestionType === "essay") parsedQuestionType = "TL";
-        else if (!["NLC", "DS", "TLN", "TL"].includes(parsedQuestionType)) parsedQuestionType = "NLC";
-
-        const questionData = {
-          temp_id: `TEMP_${Math.random().toString(36).substring(2, 9)}_${Date.now()}`,
-          grade: data.lop || globalGrade || "12",
-          subject: data.phanMon || globalSubject || "Đại số",
-          topic: data.chuyenDe || (globalTopics.length === 1 ? globalTopics[0] : ""),
-          lesson: lesson,
-          math_form: math_form,
-          isNewLesson,
-          isNewMathForm,
-          question_type: parsedQuestionType,
-          difficulty: data.mucDo || "1",
-          content: qContent,
-          option_a: data.dapAnA || "",
-          option_b: data.dapAnB || "",
-          option_c: data.dapAnC || "",
-          option_d: data.dapAnD || "",
-          correct_answer: data.dapAnDung || "",
-          explanation: data.loiGiai || "",
-          image_url: data.image_url || "",
-          isDuplicate: !!duplicateMatch,
-          duplicateId: duplicateMatch ? duplicateMatch.id : undefined
-        };
-
-        const parsedItems = [];
-        parsedItems.push(questionData);
-
-        // Xử lý tự động nhân bản nếu là câu hỏi DS đa bài học
-        if (data.loaiCauHoi === "DS" && data.isMultiLesson === true) {
-           const cloneData = {
-             ...questionData,
-             temp_id: `TEMP_${Math.random().toString(36).substring(2, 9)}_${Date.now()}_clone`,
-             lesson: "Ôn tập chương",
-             isNewLesson: !uniqueLessons.includes("Ôn tập chương"),
-             isDuplicate: false, // Bỏ cảnh báo trùng lặp cho bản sao này
-             duplicateId: undefined
-           };
-           parsedItems.push(cloneData);
-        }
-
-        return parsedItems;
-      }).flat();
-
+      const newQuestions = parseExtractedQuestionsJson(rawText, scanCtx());
       setParsedQuestions(prev => [...prev, ...newQuestions]);
       alert(`Đã nhận diện thành công ${newQuestions.length} câu hỏi!`);
       setAiImageFiles([]); // Clear files after scan
@@ -279,95 +176,11 @@ export default function BatchAIEditorPage() {
 
     setIsScanning(true);
     try {
-      const keyRes = await fetch('/api/admin/gemini-key');
-      const keyData = await keyRes.json();
-      if (!keyRes.ok || !keyData.keys || keyData.keys.length === 0) throw new Error(keyData.error || "Không thể cấp phát khóa AI.");
-
-      const topicHint = globalTopics.length === 1 ? globalTopics[0] : 'Tự suy luận';
-      const topicComment = globalTopics.length === 1 ? '// BẮT BUỘC: GIỮ NGUYÊN CHUỖI NÀY, TUYỆT ĐỐI KHÔNG ĐƯỢC SỬA ĐỔI BẤT KỲ KÝ TỰ NÀO.' : '// BẮT BUỘC: Tên Chương hoặc Chủ đề (VD: Chương I. Phương trình). PHẢI LẤY TỪ DANH SÁCH BÊN DƯỚI.';
-
-      const contextCategories = `
-DANH SÁCH BÀI HỌC ĐÃ CÓ TRONG HỆ THỐNG:
-${uniqueLessons.map(l => `- ${l}`).join("\n")}
-
-DANH SÁCH DẠNG TOÁN ĐÃ CÓ TRONG HỆ THỐNG:
-${uniqueForms.map(f => `- ${f}`).join("\n")}
-`;
-
-      const prompt = `TRƯỚC KHI BẮT ĐẦU, BẠN PHẢI:
-1. Đọc THẬT KỸ TOÀN BỘ nội dung ảnh/file từ đầu đến cuối, không bỏ sót bất kỳ câu hỏi hay hình ảnh nào.
-2. Đọc kỹ TOÀN BỘ yêu cầu trong prompt này trước khi trả lời. Mỗi quy tắc đều quan trọng.
-3. Kiểm tra lại output JSON trước khi gửi để đảm bảo ĐÚNG cấu trúc, ĐÚNG nội dung và KHÔNG thiếu trường nào.
-
-Bạn là chuyên gia Toán học. Hãy đọc (các) ảnh/file PDF này và bóc tách TẤT CẢ các câu hỏi có trong đó. 
-Trả về MỘT MẢNG JSON duy nhất (bắt đầu bằng [ và kết thúc bằng ]) chứa các object theo cấu trúc:
-[
-  {
-    "lop": "${globalGrade || 'Tự suy luận'}",
-    "phanMon": "${globalSubject || 'Tự suy luận'}",
-    "chuyenDe": "${topicHint}", ${topicComment}
-    "tenBai": "${globalLesson || 'Tự suy luận'}", ${globalLesson ? '// BẮT BUỘC: GIỮ NGUYÊN CHUỖI NÀY, TUYỆT ĐỐI KHÔNG ĐƯỢC SỬA ĐỔI BẤT KỲ KÝ TỰ NÀO.' : '// SO KHỚP VỚI DANH SÁCH BÊN DƯỚI. Nếu có bài tương tự, PHẢI COPY CHÍNH XÁC.'}
-    "dangToan": "Tự suy luận", // SO KHỚP VỚI DANH SÁCH BÊN DƯỚI. Nếu có dạng tương tự, PHẢI COPY CHÍNH XÁC.
-    "loaiCauHoi": "Tự suy luận (CHỈ ĐIỀN 1 TRONG 4: NLC, DS, TLN, TL)", // NLC (Trắc nghiệm), DS (Đúng/Sai), TLN (Trả lời ngắn), TL (Tự luận)
-    "mucDo": "Tự suy luận (CHỈ ĐIỀN 1, 2, 3 HOẶC 4)", // 1(Nhận biết), 2(Thông hiểu), 3(Vận dụng), 4(Vận dụng cao)
-    "noiDung": "Đề bài (BẮT BUỘC dùng LaTeX bọc trong $...$)",
-    "dapAnA": "Nội dung A", "dapAnB": "Nội dung B", "dapAnC": "Nội dung C", "dapAnD": "Nội dung D",
-    "dapAnDung": "A",
-    "loiGiai": "Phương pháp giải:\\n[Ghi phương pháp ở đây]\\n\\nLời giải:\\n[Ghi lời giải chi tiết ở đây. BẮT BUỘC dùng ký tự \\n để xuống dòng cho từng ý/bước giải để dễ đọc!]",
-    "isMultiLesson": false // CHỈ GÁN TRUE NẾU LÀ CÂU HỎI ĐÚNG/SAI (DS) MÀ CÁC Ý NHỎ NẰM Ở NHIỀU BÀI HỌC KHÁC NHAU. MẶC ĐỊNH LÀ FALSE.
-  }
-]
-  YÊU CẦU CỰC QUAN TRỌNG VỀ BÓC TÁCH: Bạn phải phân tích và bóc tách RẠCH RÒI 3 trường "chuyenDe" (Chương), "tenBai" (Bài học), và "dangToan" (Dạng toán). Tuyệt đối không gộp chung nội dung của chúng vào nhau. ĐẶC BIỆT CHÚ Ý TRƯỜNG "loaiCauHoi", nếu là bài tự luận chứng minh/tính toán (không có ABCD), BẮT BUỘC phải điền "TL".
-  
-  CƠ SỞ DỮ LIỆU ĐỐI CHIẾU: 
-  Bạn BẮT BUỘC PHẢI PHÂN LOẠI câu hỏi vào các Tên bài học và Dạng toán có trong danh sách dưới đây nếu có sự tương đồng. TUYỆT ĐỐI HẠN CHẾ TẠO MỚI (Chỉ được tự suy luận ra Dạng toán mới nếu trong danh sách thực sự không có dạng nào liên quan).
-  ${contextCategories}
-
-  LƯU Ý CỰC KỲ QUAN TRỌNG VỀ ĐỊNH DẠNG VÀ TÁCH CÂU: 
-  1. QUY TẮC TÁCH HOẶC GỘP Ý NHỎ: 
-     - TRƯỜNG HỢP TÁCH: Nếu một bài toán tự luận có các ý nhỏ (a, b, c...) hoàn toàn độc lập, không phụ thuộc nhau (VD: "Bài 1. Tính: a) 1+1 b) 2+2"). BẮT BUỘC TÁCH mỗi ý thành 1 object câu hỏi độc lập. Tự động ghép thêm "dẫn chung" vào từng ý.
-     - TRƯỜNG HỢP GỘP (KHÔNG TÁCH): Nếu các ý nhỏ có liên quan mật thiết, dùng chung dữ kiện gốc, ý b phụ thuộc ý a (VD: "Cho biểu thức P... a) Rút gọn b) Tìm P max"). BẮT BUỘC GỘP CHUNG toàn bộ đề bài và các ý nhỏ thành MỘT câu hỏi tự luận duy nhất. Giữ nguyên các ký hiệu "a)", "b)".
-  2. QUY ĐỊNH ĐỐI VỚI CÂU HỎI ĐÚNG/SAI (DS) ĐA BÀI HỌC:
-     Nếu câu hỏi DS có 4 ý thuộc về nhiều bài học khác nhau trong chương:
-     - Bạn HÃY ĐẶT "isMultiLesson": true.
-     - Bạn PHẢI gán "tenBai" là tên bài học xa nhất/mới nhất trong chương trình mà câu hỏi đề cập tới (Ví dụ ý A thuộc Bài 1, ý C thuộc Bài 3 => Gán "tenBai": "Bài 3").
-     - Bạn PHẢI gán "dangToan": "Toán tổng hợp".
-  3. GIỮ NGUYÊN DANH MỤC: Nếu trường "chuyenDe" hoặc "tenBai" trong mẫu JSON đã được điền sẵn một giá trị (Không phải chữ "Tự suy luận"), BẠN PHẢI GIỮ NGUYÊN CHÍNH XÁC CHUỖI ĐÓ, KHÔNG ĐƯỢC TỰ Ý CẮT BỎ CÁC TIỀN TỐ (như "Chương I.", "Bài 2.") HAY THAY ĐỔI BẤT KỲ KÝ TỰ NÀO.
-  4. ĐỊNH DẠNG CÔNG THỨC TOÁN: Mọi công thức Toán học PHẢI được bọc trong $...$ (ví dụ: $\\frac{1}{2}$). Bạn cứ viết lệnh LaTeX chuẩn, KHÔNG ĐƯỢC dùng 2 dấu gạch chéo (\\\\) để escape lệnh trừ khi xuống dòng.
-  5. NẾU TRONG ĐỀ CÓ HÌNH VẼ, ĐỒ THỊ, BẢNG BIẾN THIÊN, HOẶC BẢNG XÉT DẤU: Tuyệt đối KHÔNG cố gắng vẽ lại bằng Markdown, ASCII hay LaTeX. Thay vào đó, hãy chỉ ghi đúng chữ "[HÌNH VẼ]" hoặc "[BẢNG BIẾN THIÊN]" vào vị trí đó trong nội dung. Người dùng sẽ tự chèn ảnh vào sau.
-  6. ÉP BUỘC TRƯỜNG ĐÁP ÁN ĐÚNG: Bạn TUYỆT ĐỐI KHÔNG ĐƯỢC BỎ TRỐNG trường "dapAnDung".
-     - Với câu Trắc nghiệm (NLC): Phải điền A, B, C hoặc D.
-     - Với câu Đúng/Sai (DS): Phải điền chuỗi 4 ký tự Đ và S (VD: "Đ S Đ S" hoặc "ĐĐSĐ"). Hãy đọc kỹ đề bài và lời giải để suy ra. TUYỆT ĐỐI KHÔNG ĐƯỢC ĐỂ TRỐNG.
-  7. XÓA TIỀN TỐ CÂU HỎI: TUYỆT ĐỐI KHÔNG đưa các chữ như "Câu 1.", "Bài 2:", "VD 3", "Ví dụ 4." vào trong nội dung của trường "noiDung". Bạn phải tự động loại bỏ các cụm từ này ở đầu câu hỏi.
-  8. CÂU HỎI PHẢI ĐỘC LẬP VÀ TỰ CHỨA ĐẦY ĐỦ GIẢ THUYẾT: Mỗi câu hỏi sẽ được lưu RIÊNG BIỆT trong ngân hàng đề, nên TUYỆT ĐỐI KHÔNG ĐƯỢC viết kiểu tham chiếu ngữ cảnh bên ngoài như "Với các giả thiết như trong Ví dụ 5...", "Trong tình huống mở đầu...", "Trong Ví dụ 7...", "Theo bảng số liệu trên...". Nếu câu hỏi gốc trong ảnh có tham chiếu đến dữ kiện ở phần khác, BẠN PHẢI tự chép/nhúng đầy đủ toàn bộ dữ kiện cần thiết (số liệu, điều kiện, giả thuyết) vào trong "noiDung" để câu hỏi có thể hiểu được khi đứng một mình. Nếu không thể trích xuất đủ dữ kiện (ví dụ thiếu hình vẽ, bảng số liệu gốc không có trong ảnh), hãy BỎ QUA câu hỏi đó hoàn toàn, KHÔNG TẠO.
-  9. NHẬN DẠNG HÌNH ẢNH ĐI KÈM CÂU HỎI: Nếu trong ảnh có đồ thị, hình vẽ, bảng số liệu hoặc sơ đồ ĐI KÈM một câu hỏi, TUYỆT ĐỐI KHÔNG mô tả chi tiết làm lệch nội dung gốc của câu hỏi. Thay vào đó, bạn chỉ cần quét kỹ và thêm một dòng thông báo "[CÓ HÌNH ẢNH KÈM THEO]" vào cuối trường "noiDung". CHỈ ĐƯỢC PHÉP can thiệp/sửa đổi nội dung gốc của câu hỏi nếu bạn phát hiện câu hỏi bị sai đề, và trong trường hợp đó, PHẢI thêm một dòng thông báo "[CÂU HỎI CÓ THỂ BỊ SAI ĐỀ, ĐÃ SỬA LẠI]" để thông báo.`;
-
-      const parts = await Promise.all(aiImageFiles.map(async file => {
-        const base64Data = await fileToBase64(file);
-        return { inlineData: { data: base64Data, mimeType: file.type } };
-      }));
-
-      let success = false;
-      let lastErrorMsg = "";
-
-      for (const apiKey of keyData.keys) {
-        try {
-          const genAI = new GoogleGenerativeAI(apiKey);
-          const model = genAI.getGenerativeModel({ model: "gemini-3.6-flash" });
-          const result = await model.generateContent([ prompt, ...parts ]);
-          const text = result.response.text();
-          processExtractedJson(text);
-          success = true;
-          break;
-        } catch (e: any) {
-          console.warn("API Key lỗi, thử key tiếp theo...", e.message);
-          lastErrorMsg = e.message;
-        }
-      }
-
-      if (!success) {
-        throw new Error("Tất cả các API key đều bị lỗi hoặc quá tải (503). Vui lòng thử lại sau. Lỗi cuối: " + lastErrorMsg);
-      }
+      const newQuestions = await scanFilesForQuestions(aiImageFiles, scanCtx());
+      setParsedQuestions(prev => [...prev, ...newQuestions]);
+      alert(`Đã nhận diện thành công ${newQuestions.length} câu hỏi!`);
+      setAiImageFiles([]);
+      setManualJsonInput("");
     } catch (error: any) {
       console.error(error);
       alert("Lỗi AI: " + error.message);
@@ -388,7 +201,7 @@ Trả về MỘT MẢNG JSON duy nhất (bắt đầu bằng [ và kết thúc b
 DANH SÁCH BÀI HỌC ĐÃ CÓ TRONG HỆ THỐNG:
 ${uniqueLessons.map(l => `- ${l}`).join("\n")}
 
-DANH SÁCH DẠNG TOÁN ĐÃ CÓ TRONG HỆ THỐNG:
+DANH SÁCH DẠNG VẬT LÝ ĐÃ CÓ TRONG HỆ THỐNG:
 ${uniqueForms.map(f => `- ${f}`).join("\n")}
 `;
     const prompt = `TRƯỚC KHI BẮT ĐẦU, BẠN PHẢI:
@@ -396,7 +209,7 @@ ${uniqueForms.map(f => `- ${f}`).join("\n")}
 2. Đọc kỹ TOÀN BỘ yêu cầu trong prompt này trước khi trả lời. Mỗi quy tắc đều quan trọng.
 3. Kiểm tra lại output JSON trước khi gửi để đảm bảo ĐÚNG cấu trúc, ĐÚNG nội dung và KHÔNG thiếu trường nào.
 
-Bạn là chuyên gia Toán học. Hãy bóc tách TẤT CẢ câu hỏi trong ảnh/file và trả về MỘT MẢNG JSON:
+Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ảnh/file và trả về MỘT MẢNG JSON:
 [
   {
     "lop": "${globalGrade || 'Tự suy luận'}", "phanMon": "${globalSubject || 'Tự suy luận'}",
@@ -411,12 +224,12 @@ Bạn là chuyên gia Toán học. Hãy bóc tách TẤT CẢ câu hỏi trong �
   }
 ]
   CƠ SỞ DỮ LIỆU ĐỐI CHIẾU:
-  Bạn BẮT BUỘC PHẢI PHÂN LOẠI câu hỏi vào các Tên bài học và Dạng toán có trong danh sách dưới đây nếu có sự tương đồng. TUYỆT ĐỐI HẠN CHẾ TẠO MỚI.
+  Bạn BẮT BUỘC PHẢI PHÂN LOẠI câu hỏi vào các Tên bài học và Dạng vật lý có trong danh sách dưới đây nếu có sự tương đồng. TUYỆT ĐỐI HẠN CHẾ TẠO MỚI.
   ${contextCategories}
 
   LƯU Ý CỰC KỲ QUAN TRỌNG:
   1. TÁCH/GỘP Ý NHỎ: Các ý độc lập thì TÁCH, các ý phụ thuộc nhau thì GỘP thành 1 câu TL duy nhất. ĐẶC BIỆT CHÚ Ý TRƯỜNG "loaiCauHoi", nếu là bài tự luận (không có ABCD), BẮT BUỘC phải điền "TL".
-  2. CÂU ĐÚNG/SAI ĐA BÀI HỌC: Đặt "isMultiLesson": true, gán "tenBai" bài xa nhất, "dangToan": "Toán tổng hợp".
+  2. CÂU ĐÚNG/SAI ĐA BÀI HỌC: Đặt "isMultiLesson": true, gán "tenBai" bài xa nhất, "dangToan": "Vật lý tổng hợp".
   3. GIỮ NGUYÊN DANH MỤC: Nếu "chuyenDe"/"tenBai" đã điền sẵn, GIỮ NGUYÊN CHÍNH XÁC, KHÔNG CẮT TIỀN TỐ.
   4. CÔNG THỨC TOÁN: Bọc trong $...$ (Ví dụ: $A + B = B + A$). Viết LaTeX chuẩn, liền mạch trên 1 dòng. KHÔNG dùng \\\\\\\\ để escape.
   5. KHÔNG vẽ lại hình/bảng. Nếu có hình/bảng, bắt buộc làm theo quy tắc 7.
@@ -445,51 +258,13 @@ Bạn là chuyên gia Toán học. Hãy bóc tách TẤT CẢ câu hỏi trong �
     setIsSavingAll(true);
 
     try {
-      // 1. Tự động loại bỏ các câu bị trùng lặp (isDuplicate = true)
-      const validQuestions = parsedQuestions.filter(q => !q.isDuplicate);
-      const duplicatesCount = parsedQuestions.length - validQuestions.length;
+      const result = await saveQuestionsToBank(supabase, parsedQuestions);
 
-      if (validQuestions.length === 0) {
-        setIsSavingAll(false);
+      if (result.insertedCount === 0) {
         return alert("Tất cả câu hỏi đều bị trùng lặp với Ngân hàng! Không có câu hỏi mới nào được thêm.");
       }
 
-      // 2. Lọc và chuẩn bị lưu các danh mục mới (nếu có) từ các câu hỏi HỢP LỆ
-      const newCats = validQuestions.filter(q => q.isNewLesson || q.isNewMathForm).map(q => ({
-        grade: q.grade, subject: q.subject, topic: q.topic, lesson: q.lesson, math_form: q.math_form
-      }));
-      // Loại bỏ trùng lặp trong mảng newCats
-      const uniqueNewCats = Array.from(new Set(newCats.map(c => JSON.stringify(c)))).map(s => JSON.parse(s));
-      
-      if (uniqueNewCats.length > 0) {
-        const { error: catError } = await supabase.from('question_categories').insert(uniqueNewCats);
-        if (catError) console.error("Lỗi thêm danh mục mới:", catError);
-      }
-
-      const inserts = validQuestions.map(q => ({
-        question_id: `CH_${Date.now()}_${Math.random().toString(36).substring(2,6)}`,
-        grade: q.grade,
-        subject: q.subject,
-        topic: q.topic,
-        lesson: q.lesson,
-        math_form: q.math_form,
-        question_type: q.question_type,
-        difficulty: q.difficulty,
-        content: q.content,
-        option_a: q.option_a,
-        option_b: q.option_b,
-        option_c: q.option_c,
-        option_d: q.option_d,
-        correct_answer: q.correct_answer,
-        explanation: q.explanation,
-        image_url: q.image_url,
-        usage_count: 0
-      }));
-
-      const { error } = await supabase.from('questions').insert(inserts);
-      if (error) throw error;
-
-      alert(`Đã lưu thành công ${inserts.length} câu vào Ngân hàng!${duplicatesCount > 0 ? `\n(Đã tự động loại bỏ ${duplicatesCount} câu trùng lặp)` : ''}`);
+      alert(`Đã lưu thành công ${result.insertedCount} câu vào Ngân hàng!${result.duplicatesSkipped > 0 ? `\n(Đã tự động loại bỏ ${result.duplicatesSkipped} câu trùng lặp)` : ''}`);
       router.push("/admin/questions");
     } catch (e: any) {
       console.error(e);
@@ -514,7 +289,10 @@ Bạn là chuyên gia Toán học. Hãy bóc tách TẤT CẢ câu hỏi trong �
       const qId = `CH_${Date.now()}_${Math.random().toString(36).substring(2,6)}`;
       const insertData = {
         question_id: qId, grade: q.grade, subject: q.subject, topic: q.topic, lesson: q.lesson,
-        math_form: q.math_form, question_type: q.question_type, difficulty: q.difficulty, content: q.content,
+        math_form: q.math_form,
+        question_type: toBankType(q.question_type) ?? 'NLC',
+        difficulty: toDifficultyCode(q.difficulty) ?? '1',
+        content: q.content,
         option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d,
         correct_answer: q.correct_answer, explanation: q.explanation, image_url: q.image_url, usage_count: 0
       };
@@ -582,6 +360,54 @@ Bạn là chuyên gia Toán học. Hãy bóc tách TẤT CẢ câu hỏi trong �
     }
   };
 
+  /**
+   * Thống kê nhanh đợt quét: số câu theo từng Dạng thức và theo từng Mức độ,
+   * kèm bảng chéo Dạng thức × Mức độ để Thầy nắm cấu trúc đề ngay trên Bản đồ
+   * mà không phải bấm dò từng câu.
+   */
+  const scanSummary = React.useMemo(() => {
+    const byType: Record<string, number> = {};
+    const byDifficulty: Record<string, number> = {};
+    const matrix: Record<string, Record<string, number>> = {};
+    let thieuAnh = 0;
+    let trungLap = 0;
+
+    parsedQuestions.forEach(q => {
+      const t = toBankType(q.question_type) ?? 'NLC';
+      const d = toDifficultyCode(q.difficulty) ?? '1';
+      byType[t] = (byType[t] || 0) + 1;
+      byDifficulty[d] = (byDifficulty[d] || 0) + 1;
+      if (!matrix[t]) matrix[t] = {};
+      matrix[t][d] = (matrix[t][d] || 0) + 1;
+      if (!q.image_url && IMAGE_NEEDED_REGEX.test(q.content || '')) thieuAnh++;
+      if (q.isDuplicate) trungLap++;
+    });
+
+    return {
+      byType,
+      byDifficulty,
+      matrix,
+      thieuAnh,
+      trungLap,
+      typesPresent: BANK_TYPES.filter(t => byType[t] > 0),
+      total: parsedQuestions.length,
+    };
+  }, [parsedQuestions]);
+
+  /** Màu nhận diện theo Dạng thức - dùng chung cho ô số và bảng thống kê. */
+  const TYPE_STYLE: Record<string, { dot: string; chip: string; label: string }> = {
+    NLC: { dot: 'bg-teal-500', chip: 'bg-teal-50 text-teal-700 border-teal-200', label: 'Trắc nghiệm' },
+    DS: { dot: 'bg-orange-500', chip: 'bg-orange-50 text-orange-700 border-orange-200', label: 'Đúng/Sai' },
+    TLN: { dot: 'bg-purple-500', chip: 'bg-purple-50 text-purple-700 border-purple-200', label: 'Trả lời ngắn' },
+    TL: { dot: 'bg-blue-500', chip: 'bg-blue-50 text-blue-700 border-blue-200', label: 'Tự luận' },
+  };
+
+  const DIFF_STYLE: Record<string, string> = {
+    '1': 'bg-slate-100 text-slate-700 border-slate-200',
+    '2': 'bg-sky-50 text-sky-700 border-sky-200',
+    '3': 'bg-amber-50 text-amber-700 border-amber-200',
+    '4': 'bg-rose-50 text-rose-700 border-rose-200',
+  };
 
   return (
     <div className="flex h-screen bg-[#f3f4f6] overflow-hidden text-gray-800">
@@ -752,34 +578,124 @@ Bạn là chuyên gia Toán học. Hãy bóc tách TẤT CẢ câu hỏi trong �
                 <div className="grid grid-cols-4 gap-2">
                    {parsedQuestions.map((q, idx) => {
                       const isSelected = activeQuestionIdx === idx;
-                      const hasWarning = q.isDuplicate || (!q.image_url && (q.content.includes("HÌNH VẼ") || q.content.includes("ĐỒ THỊ") || q.content.includes("như hình") || q.content.includes("BẢNG BIẾN THIÊN")));
+                      // Tách bạch 2 loại cảnh báo để biết ngay phải xử lý gì
+                      const thieuAnh = !q.image_url && IMAGE_NEEDED_REGEX.test(q.content || '');
+                      const trungLap = !!q.isDuplicate;
                       return (
                          <button
                             key={q.temp_id}
                             onClick={() => setActiveQuestionIdx(idx)}
-                            className={`h-10 rounded-lg text-xs font-black transition-all flex items-center justify-center relative border ${
-                               isSelected 
-                                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-600/20 scale-105' 
-                                  : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200 hover:border-indigo-300'
+                            title={[
+                               `Câu ${idx + 1} · ${bankTypeLabel(q.question_type)} · ${difficultyLabel(q.difficulty)}`,
+                               thieuAnh ? '⚠️ THIẾU ẢNH - cần chèn hình cho câu này' : '',
+                               trungLap ? '⚠️ Trùng với câu đã có trong Ngân hàng' : '',
+                            ].filter(Boolean).join('\n')}
+                            className={`h-10 rounded-lg text-xs font-black transition-all flex items-center justify-center relative border overflow-hidden ${
+                               isSelected
+                                  ? 'bg-indigo-600 border-indigo-600 text-white shadow-md shadow-indigo-600/20 scale-105'
+                                  : thieuAnh
+                                     ? 'bg-red-50 text-red-700 border-red-300 hover:bg-red-100'
+                                     : 'bg-gray-50 hover:bg-gray-100 text-gray-700 border-gray-200 hover:border-indigo-300'
                             }`}
                          >
                             {idx + 1}
-                            {hasWarning && (
-                               <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-orange-500 ring-1 ring-white animate-pulse" />
+                            {/* Vạch màu dưới đáy: nhận biết ngay Dạng thức của từng câu */}
+                            <span className={`absolute bottom-0 left-0 right-0 h-[3px] ${TYPE_STYLE[toBankType(q.question_type) ?? 'NLC']?.dot || 'bg-gray-300'}`} />
+                            {/* Chấm ĐỎ: còn thiếu ảnh. Chấm CAM: trùng lặp. */}
+                            {thieuAnh && (
+                               <span className="absolute top-0.5 right-0.5 w-2 h-2 rounded-full bg-red-500 ring-2 ring-white animate-pulse" />
+                            )}
+                            {trungLap && (
+                               <span className="absolute top-0.5 left-0.5 w-2 h-2 rounded-full bg-orange-500 ring-2 ring-white" />
                             )}
                          </button>
                       );
                    })}
                 </div>
 
-                <div className="mt-6 border-t border-gray-100 pt-4 space-y-2">
+                {/* TỔNG HỢP ĐỢT QUÉT: số câu theo Dạng thức và theo Mức độ */}
+                <div className="mt-5 border-t border-gray-100 pt-4">
+                   <h4 className="text-[11px] font-black text-gray-400 uppercase tracking-wider mb-2.5">
+                      Tổng hợp ({scanSummary.total} câu)
+                   </h4>
+
+                   <div className="space-y-1.5">
+                      {scanSummary.typesPresent.map(t => (
+                         <div key={t} className={`flex items-center justify-between px-2.5 py-1.5 rounded-lg border text-[11.5px] font-bold ${TYPE_STYLE[t].chip}`}>
+                            <span className="flex items-center gap-1.5 truncate">
+                               <span className={`w-2 h-2 rounded-full shrink-0 ${TYPE_STYLE[t].dot}`} />
+                               {TYPE_STYLE[t].label}
+                            </span>
+                            <span className="font-black shrink-0">{scanSummary.byType[t]}</span>
+                         </div>
+                      ))}
+                   </div>
+
+                   <div className="mt-3 grid grid-cols-2 gap-1.5">
+                      {DIFFICULTY_CODES.filter(d => scanSummary.byDifficulty[d] > 0).map(d => (
+                         <div key={d} className={`flex items-center justify-between px-2 py-1 rounded-md border text-[10.5px] font-bold ${DIFF_STYLE[d]}`}>
+                            <span className="truncate">{difficultyLabel(d)}</span>
+                            <span className="font-black shrink-0 ml-1">{scanSummary.byDifficulty[d]}</span>
+                         </div>
+                      ))}
+                   </div>
+
+                   {/* Bảng chéo Dạng thức × Mức độ - nắm cấu trúc đề trong một cái liếc */}
+                   {scanSummary.typesPresent.length > 0 && (
+                      <div className="mt-3 rounded-lg border border-gray-200 overflow-hidden">
+                         <table className="w-full text-[10px] text-center border-collapse">
+                            <thead className="bg-gray-50 text-gray-500">
+                               <tr>
+                                  <th className="px-1.5 py-1 text-left font-black">Dạng</th>
+                                  <th className="px-1 py-1 font-black" title="Nhận biết">NB</th>
+                                  <th className="px-1 py-1 font-black" title="Thông hiểu">TH</th>
+                                  <th className="px-1 py-1 font-black" title="Vận dụng">VD</th>
+                                  <th className="px-1 py-1 font-black" title="Vận dụng cao">VDC</th>
+                               </tr>
+                            </thead>
+                            <tbody>
+                               {scanSummary.typesPresent.map(t => (
+                                  <tr key={t} className="border-t border-gray-100">
+                                     <td className="px-1.5 py-1 text-left font-bold text-gray-700 whitespace-nowrap">
+                                        <span className={`inline-block w-1.5 h-1.5 rounded-full mr-1 align-middle ${TYPE_STYLE[t].dot}`} />
+                                        {t}
+                                     </td>
+                                     {DIFFICULTY_CODES.map(d => (
+                                        <td key={d} className={`px-1 py-1 font-bold ${scanSummary.matrix[t]?.[d] ? 'text-gray-800' : 'text-gray-300'}`}>
+                                           {scanSummary.matrix[t]?.[d] || '·'}
+                                        </td>
+                                     ))}
+                                  </tr>
+                               ))}
+                            </tbody>
+                         </table>
+                      </div>
+                   )}
+                </div>
+
+                {/* Cảnh báo nổi bật: còn câu thiếu ảnh thì phải thấy ngay */}
+                {scanSummary.thieuAnh > 0 && (
+                   <div className="mt-3 flex items-start gap-2 px-3 py-2.5 rounded-lg bg-red-50 border border-red-300">
+                      <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                      <div className="text-[11.5px] font-bold text-red-700 leading-snug">
+                         Còn <span className="font-black">{scanSummary.thieuAnh}</span> câu cần chèn ảnh
+                         <div className="font-semibold text-red-600/80 text-[10.5px] mt-0.5">Ô số viền đỏ · chấm đỏ góc phải</div>
+                      </div>
+                   </div>
+                )}
+
+                <div className="mt-5 border-t border-gray-100 pt-4 space-y-2">
                    <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500">
                       <span className="w-2.5 h-2.5 rounded-full bg-indigo-600 block shadow-sm"></span>
                       <span>Đang chỉnh sửa</span>
                    </div>
                    <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500">
-                      <span className="w-2.5 h-2.5 rounded-full bg-orange-500 block animate-pulse"></span>
-                      <span>Cần lưu ý</span>
+                      <span className="w-2.5 h-2.5 rounded-full bg-red-500 block animate-pulse"></span>
+                      <span>Thiếu ảnh {scanSummary.thieuAnh > 0 && <b className="text-red-600">({scanSummary.thieuAnh})</b>}</span>
+                   </div>
+                   <div className="flex items-center gap-2 text-[11px] font-semibold text-gray-500">
+                      <span className="w-2.5 h-2.5 rounded-full bg-orange-500 block"></span>
+                      <span>Trùng lặp {scanSummary.trungLap > 0 && <b className="text-orange-600">({scanSummary.trungLap})</b>}</span>
                    </div>
                 </div>
 
@@ -974,7 +890,7 @@ Bạn là chuyên gia Toán học. Hãy bóc tách TẤT CẢ câu hỏi trong �
                                     {uniqueForms.filter(f => f !== q.math_form).map(f => <option key={f as string} value={f as string}>{f as string}</option>)}
                                   </select>
                                 ) : (
-                                  <span className="text-[11px] font-bold line-clamp-2 text-orange-700">{q.math_form || 'Chưa phân dạng toán'}</span>
+                                  <span className="text-[11px] font-bold line-clamp-2 text-orange-700">{q.math_form || 'Chưa phân dạng vật lý'}</span>
                                 )}
                              </div>
                              {q.isNewMathForm && (
@@ -987,7 +903,7 @@ Bạn là chuyên gia Toán học. Hãy bóc tách TẤT CẢ câu hỏi trong �
                                    type="text" 
                                    value={q.math_form} 
                                    onChange={e => updateParsedQuestion(q.temp_id!, 'math_form', e.target.value)}
-                                   placeholder="Nhập dạng toán mới..." 
+                                   placeholder="Nhập dạng vật lý mới..." 
                                    className="w-full text-[10px] p-1.5 border border-orange-200 rounded-md bg-white text-gray-700 outline-none focus:border-orange-500 font-medium shadow-sm"
                                  />
                                  <button onClick={() => handleApproveNewCategory(q.temp_id!, 'math_form', q.math_form)} className="w-full py-1 text-[10px] font-black tracking-wide bg-orange-100 text-orange-700 border border-orange-200 rounded hover:bg-orange-200 transition-colors uppercase">Duyệt Tạo Mới</button>
@@ -1009,11 +925,12 @@ Bạn là chuyên gia Toán học. Hãy bóc tách TẤT CẢ câu hỏi trong �
                             <option value="TLN">Trả lời ngắn / Điền khuyết</option>
                             <option value="TL">Tự luận / Trình bày chi tiết</option>
                           </select>
-                          <select value={q.difficulty} onChange={e => updateParsedQuestion(q.temp_id!, 'difficulty', e.target.value)} className="border border-gray-200 rounded-lg p-2 text-sm font-bold bg-white outline-none focus:border-indigo-500 w-36 shadow-sm cursor-pointer">
-                            <option value="Nhận biết">Nhận biết</option>
-                            <option value="Thông hiểu">Thông hiểu</option>
-                            <option value="Vận dụng">Vận dụng</option>
-                            <option value="Vận dụng cao">Vận dụng cao</option>
+                          {/* Value dùng MÃ 1-4 đúng như chuẩn lưu trong CSDL. Trước đây dùng
+                              nhãn chữ nên giá trị AI trả về ("2") không khớp option nào. */}
+                          <select value={toDifficultyCode(q.difficulty) ?? '1'} onChange={e => updateParsedQuestion(q.temp_id!, 'difficulty', e.target.value)} className="border border-gray-200 rounded-lg p-2 text-sm font-bold bg-white outline-none focus:border-indigo-500 w-36 shadow-sm cursor-pointer">
+                            {DIFFICULTY_CODES.map(code => (
+                              <option key={code} value={code}>{difficultyLabel(code)}</option>
+                            ))}
                           </select>
                        </div>
                     </div>

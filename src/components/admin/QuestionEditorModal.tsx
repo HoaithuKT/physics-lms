@@ -84,7 +84,7 @@ export default function QuestionEditorModal({ isOpen, onClose, question, onSave 
 
   const handleQuickAddCategory = async () => {
     if (!formData?.grade || !formData?.subject || !formData?.topic || !formData?.math_form) {
-      return alert("Vui lòng nhập đủ Lớp, Phân môn, Chuyên đề và Dạng toán để tạo Danh mục!");
+      return alert("Vui lòng nhập đủ Lớp, Phân môn, Chuyên đề và Dạng vật lý để tạo Danh mục!");
     }
     setIsAddingCategory(true);
     try {
@@ -96,7 +96,7 @@ export default function QuestionEditorModal({ isOpen, onClose, question, onSave 
         math_form: formData.math_form.trim()
       }]);
       if (error) throw error;
-      alert("Đã thêm Dạng toán vào Danh mục thành công!");
+      alert("Đã thêm Dạng vật lý vào Danh mục thành công!");
       fetchCategories();
     } catch(e: any) {
       alert("Lỗi: " + e.message);
@@ -346,11 +346,11 @@ export default function QuestionEditorModal({ isOpen, onClose, question, onSave 
                 <input value={formData.lesson} onChange={e => handleChange('lesson', e.target.value)} className="w-full border rounded p-2 text-sm outline-none focus:border-indigo-500" />
               </div>
               <div>
-                <label className="text-xs font-bold text-gray-500 mb-1 block">Dạng toán</label>
+                <label className="text-xs font-bold text-gray-500 mb-1 block">Dạng vật lý</label>
                 <input value={formData.math_form} onChange={e => handleChange('math_form', e.target.value)} className={`w-full border rounded p-2 text-sm outline-none focus:border-indigo-500 ${isCategoryWarning ? 'border-yellow-400 bg-yellow-50/50' : ''}`} />
                 {isCategoryWarning && (
                   <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-xs text-yellow-800 leading-relaxed">
-                    Dạng toán này chưa có trong Khung Ngân hàng đề. 
+                    Dạng vật lý này chưa có trong Khung Ngân hàng đề. 
                     <button onClick={handleQuickAddCategory} disabled={isAddingCategory} className="text-blue-600 font-bold ml-1 hover:underline whitespace-nowrap">
                       {isAddingCategory ? "Đang thêm..." : "Bấm để Thêm nhanh"}
                     </button>
