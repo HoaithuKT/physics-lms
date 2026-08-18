@@ -11,12 +11,12 @@ export async function GET(req: Request) {
 
   if (action === 'totalCount') {
     // Trả về tổng số Cổng AI đang khả dụng (Cả .env và json) để Học Sinh chọn
-    const allKeys = getAllAIKeys();
+    const allKeys = await getAllAIKeys();
     return NextResponse.json({ count: allKeys.length });
   }
 
   // Mặc định trả về Danh sách các Khóa Tuỳ chỉnh của Admin (ẩn đi một phần cho an toàn nếu cần, nhưng Admin thì cho xem)
-  const customKeys = getCustomKeys();
+  const customKeys = await getCustomKeys();
   return NextResponse.json({ customKeys });
 }
 
@@ -32,7 +32,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Định dạng dữ liệu không hợp lệ.' }, { status: 400 });
     }
 
-    const success = saveCustomKeys(keys);
+    const success = await saveCustomKeys(keys);
     if (success) {
       return NextResponse.json({ message: 'Đã lưu Cổng Máy chủ Trí tuệ Nhân tạo thành công!' });
     } else {
