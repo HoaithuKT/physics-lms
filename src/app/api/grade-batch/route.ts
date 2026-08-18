@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
+import { getAllAIKeys } from '@/utils/aiKeys';
+import { goiGemini } from '@/utils/geminiRunner';
 import { requireUser } from '@/utils/auth/guard';
-import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(request: Request) {
   const guard = await requireUser();
@@ -17,21 +18,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Không có câu hỏi nào cần chấm." }, { status: 400 });
     }
 
-    // Tìm tất cả các API keys có sẵn trong biến môi trường
-    const keys: string[] = [];
-    if (process.env.GEMINI_API_KEY) keys.push(process.env.GEMINI_API_KEY);
-    for (let i = 1; i <= 10; i++) {
-      if (process.env[`GEMINI_API_KEY_${i}`]) {
-        keys.push(process.env[`GEMINI_API_KEY_${i}`] as string);
-      }
-    }
-
+    // Lấy cả khoá trong biến môi trường lẫn khoá thầy cô tự thêm ở trang Trạm kiểm soát
+    // Cổng A.I. Bản cũ chỉ đọc biến môi trường nên khoá thêm tay không bao giờ được dùng.
+    const keys = await getAllAIKeys();
     if (keys.length === 0) {
       return NextResponse.json({ error: "Máy chủ chưa được cấu hình bất kỳ API Key nào." }, { status: 500 });
     }
-
-    const startIndex = Math.floor(Math.random() * keys.length);
-    const rotatedKeys = [...keys.slice(startIndex), ...keys.slice(0, startIndex)];
 
     const prompt = `Bạn là một Giáo viên Vật lý cực kỳ tận tâm và chấm bài rất chuẩn xác.
 Học sinh vừa làm bài thi tự luận và nộp BẰNG CÁC HÌNH ẢNH ĐÍNH KÈM (Có thể là nhiều ảnh chụp giấy thi).
@@ -77,33 +69,15 @@ Ví dụ định dạng trả về:
       }
     }
 
-    let lastError = null;
+    // Xoay khoá rồi xoay model - xem geminiRunner.ts
+    const kq = await goiGemini({
+      keys,
+      parts,
+      generationConfig: { responseMimeType: "application/json" },
+    });
+    console.log(`[Chấm gom nhóm] Dùng model ${kq.model}`);
+    return NextResponse.json(JSON.parse(kq.text));
 
-    // Chế độ xoay vòng (Round-Robin) API Keys để tránh bị quét Rate Limit 503
-    for (const apiKey of rotatedKeys) {
-      try {
-        const genAI = new GoogleGenerativeAI(apiKey);
-        const model = genAI.getGenerativeModel({ 
-          model: "gemini-3.7-flash", 
-          generationConfig: {
-            responseMimeType: "application/json"
-          }
-        });
-
-        const result = await model.generateContent(parts);
-        const text = result.response.text();
-        const parsed = JSON.parse(text);
-        
-        return NextResponse.json(parsed);
-
-      } catch (err: any) {
-        lastError = err;
-        console.error("Lỗi API Key (Batch Mode):", err.message);
-        continue;
-      }
-    }
-
-    throw new Error(lastError?.message || "Tất cả API keys đều quá tải (503).");
   } catch (error: any) {
     console.error("Lỗi AI Chấm điểm Batch:", error);
     return NextResponse.json({ error: error.message || "Đã xảy ra lỗi khi chấm điểm gom nhóm." }, { status: 500 });
