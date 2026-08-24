@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { X, Search, Loader2, Database, CheckCircle2, ChevronLeft, ChevronRight, CheckSquare, Square, Eye } from "lucide-react";
 import { createClient } from "@/utils/supabase/client";
 import ReactMarkdown from 'react-markdown';
-import { unifiedMarkdownComponents as customMarkdownComponents } from '@/components/CustomMarkdownComponents';
+import { unifiedMarkdownComponents as customMarkdownComponents , chuyenDiaChiAnh } from '@/components/CustomMarkdownComponents';
 import remarkPhysics from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import QuestionPreviewModal from "./QuestionPreviewModal";
@@ -360,7 +360,7 @@ export default function QuestionBankModal({ isOpen, onClose, onInsert, usedQuest
                            )}
                         </div>
                         <div className="text-[13px] text-gray-800 font-medium prose prose-sm max-w-none prose-p:my-1 line-clamp-3 leading-relaxed">
-                           <ReactMarkdown components={customMarkdownComponents} remarkPlugins={[remarkPhysics]} rehypePlugins={[rehypeKatex]}>{q.content || ""}</ReactMarkdown>
+                           <ReactMarkdown urlTransform={chuyenDiaChiAnh} components={customMarkdownComponents} remarkPlugins={[remarkPhysics]} rehypePlugins={[rehypeKatex]}>{q.content || ""}</ReactMarkdown>
                         </div>
                      </div>
                    </div>
