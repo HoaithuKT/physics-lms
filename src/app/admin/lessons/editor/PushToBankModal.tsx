@@ -1,6 +1,7 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
 import { createClient } from "@/utils/supabase/client";
+import { saveQuestionsToBank } from "@/utils/questionBankSave";
 import { X, UploadCloud, Loader2, Database, Info, ChevronDown, ChevronUp, Tag } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import { unifiedMarkdownComponents as customMarkdownComponents } from '@/components/CustomMarkdownComponents';
@@ -558,26 +559,27 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
          return;
       }
 
-      const newCats = newInserts.filter(q => q.math_form).map(q => ({
-        grade: q.grade, subject: q.subject, topic: q.topic, lesson: q.lesson, math_form: q.math_form
-      }));
-      const uniqueNewCats = Array.from(new Set(newCats.map(c => JSON.stringify(c)))).map(s => JSON.parse(s));
-      
-      if (uniqueNewCats.length > 0) {
-         const { data: existings } = await supabase.from('question_categories').select('grade,subject,topic,lesson,math_form');
-         const existSet = new Set((existings || []).map(c => `${c.grade}|${c.subject}|${c.topic}|${c.lesson}|${c.math_form}`));
-         const toInsert = uniqueNewCats.filter(c => !existSet.has(`${c.grade}|${c.subject}|${c.topic}|${c.lesson}|${c.math_form}`));
-         
-         if (toInsert.length > 0) {
-             const { error: catErr } = await supabase.from('question_categories').insert(toInsert);
-             if (catErr) console.warn("Lỗi thêm category:", catErr);
-         }
+      /*
+       * Đẩy qua saveQuestionsToBank thay vì tự ghi thẳng.
+       *
+       * Bản cũ tự dựng câu lệnh ghi nên bỏ qua hết các chốt của cửa lưu chung: không
+       * chặn câu thiếu Dạng, không nắn đáp án Đúng/Sai về khuôn ĐSSĐ, và tạo dòng danh
+       * mục theo cờ của AI thay vì tra bảng thật. Câu đẩy từ Luyện tập sang vì thế hay
+       * lệch khuôn so với câu soạn thẳng trong Ngân hàng, mà tới lúc ra đề mới lòi ra.
+       */
+      const kq = await saveQuestionsToBank(supabase, newInserts as any[]);
+
+      if (kq.insertedCount === 0 && kq.thieuPhanLoai.length > 0) {
+        alert(kq.thieuPhanLoai.length + ' câu chưa đẩy được vì thiếu Chương, Bài hoặc Dạng.' +
+          ' Hãy bổ sung phân loại cho các câu đó rồi đẩy lại.');
+        setIsPushing(false);
+        return;
       }
       
-      const { error } = await supabase.from('questions').insert(newInserts);
-      if (error) throw error;
-      
-      alert(`✅ Đã đẩy thành công ${newInserts.length} câu mới vào Ngân hàng!${duplicateCount > 0 ? ` (Bỏ qua ${duplicateCount} câu trùng lặp)` : ''}`);
+      alert(`✅ Đã đẩy thành công ${kq.insertedCount} câu mới vào Ngân hàng!${duplicateCount > 0 ? ` (Bỏ qua ${duplicateCount} câu trùng lặp)` : ''}`
+        + (kq.newCategoriesCreated > 0 ? `\nĐã bổ sung ${kq.newCategoriesCreated} dòng danh mục.` : "")
+        + (kq.daNan.length ? `\n\nMÁY ĐÃ TỰ NẮN ${kq.daNan.length} chỗ:\n- ` + kq.daNan.slice(0, 6).join("\n- ") : "")
+        + (kq.conKhuyet.length ? `\n\nCÒN KHUYẾT ${kq.conKhuyet.length} chỗ (vẫn lưu, nhưng ra đề sẽ hỏng):\n- ` + kq.conKhuyet.slice(0, 6).join("\n- ") : ""));
       onClose();
     } catch (e: any) {
       console.error(e);

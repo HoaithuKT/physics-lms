@@ -251,7 +251,7 @@ ${uniqueForms.map(f => `- ${f}`).join("\n")}
 2. Đọc kỹ TOÀN BỘ yêu cầu trong prompt này trước khi trả lời. Mỗi quy tắc đều quan trọng.
 3. Kiểm tra lại output JSON trước khi gửi để đảm bảo ĐÚNG cấu trúc, ĐÚNG nội dung và KHÔNG thiếu trường nào.
 
-Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ảnh/file và trả về MỘT MẢNG JSON:
+Bạn là chuyên gia Toán học. Hãy bóc tách TẤT CẢ câu hỏi trong ảnh/file và trả về MỘT MẢNG JSON:
 [
   {
     "lop": "${globalGrade || 'Tự suy luận'}", "phanMon": "${globalSubject || 'Tự suy luận'}",
@@ -271,7 +271,7 @@ Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ả
 
   LƯU Ý CỰC KỲ QUAN TRỌNG:
   1. TÁCH/GỘP Ý NHỎ: Các ý độc lập thì TÁCH, các ý phụ thuộc nhau thì GỘP thành 1 câu TL duy nhất. ĐẶC BIỆT CHÚ Ý TRƯỜNG "loaiCauHoi", nếu là bài tự luận (không có ABCD), BẮT BUỘC phải điền "TL".
-  2. CÂU ĐÚNG/SAI ĐA BÀI HỌC: Đặt "isMultiLesson": true, gán "tenBai" bài xa nhất, "dangToan": "Vật lý tổng hợp".
+  2. CÂU ĐÚNG/SAI ĐA BÀI HỌC: Đặt "isMultiLesson": true, gán "tenBai" bài xa nhất, "dangToan": "Toán tổng hợp".
   3. GIỮ NGUYÊN DANH MỤC: Nếu "chuyenDe"/"tenBai" đã điền sẵn, GIỮ NGUYÊN CHÍNH XÁC, KHÔNG CẮT TIỀN TỐ.
   4. CÔNG THỨC TOÁN: Bọc trong $...$ (Ví dụ: $A + B = B + A$). Viết LaTeX chuẩn, liền mạch trên 1 dòng. KHÔNG dùng \\\\\\\\ để escape.
   5. KHÔNG vẽ lại hình/bảng. Nếu có hình/bảng, bắt buộc làm theo quy tắc 7.
@@ -364,8 +364,17 @@ Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ả
 
       // Câu chưa rõ Chương/Bài bị giữ lại, không cho vào kho - nói rõ để thầy cô bổ sung
       const nhacThieu = result.thieuPhanLoai.length > 0
-        ? `\n\nCÒN ${result.thieuPhanLoai.length} CÂU CHƯA LƯU vì chưa rõ Chương hoặc Bài.`
-          + ' Thầy cô chọn Chương/Bài ở phần phân loại rồi bấm lưu lại, hoặc sửa từng câu.'
+        ? `\n\nCÒN ${result.thieuPhanLoai.length} CÂU CHƯA LƯU vì chưa rõ Chương, Bài hoặc Dạng.`
+          + ' Thầy cô chọn đủ ở phần phân loại rồi bấm lưu lại, hoặc sửa từng câu.'
+        : '';
+
+      // Nói rõ chỗ máy đã tự nắn và chỗ còn khuyết. Câu khuyết vẫn vào kho được nhưng
+      // đem ra đề là hỏng - không báo thì tới lúc in đề mới phát hiện.
+      const nhacNan = result.daNan.length
+        ? `\n\nMÁY ĐÃ TỰ NẮN ${result.daNan.length} chỗ:\n- ` + result.daNan.slice(0, 8).join('\n- ')
+        : '';
+      const nhacKhuyet = result.conKhuyet.length
+        ? `\n\nCÒN KHUYẾT ${result.conKhuyet.length} chỗ (vẫn lưu, nhưng ra đề sẽ hỏng):\n- ` + result.conKhuyet.slice(0, 8).join('\n- ')
         : '';
 
       if (result.insertedCount === 0) {
@@ -377,7 +386,8 @@ Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ả
 
       alert(`Đã lưu thành công ${result.insertedCount} câu vào Ngân hàng!`
         + (result.duplicatesSkipped > 0 ? `\n(Đã tự động loại bỏ ${result.duplicatesSkipped} câu trùng lặp)` : '')
-        + nhacThieu);
+        + (result.newCategoriesCreated > 0 ? `\nĐã bổ sung ${result.newCategoriesCreated} dòng danh mục.` : '')
+        + nhacThieu + nhacNan + nhacKhuyet);
       // Đã vào ngân hàng rồi thì bản nháp không cần giữ nữa
       if (result.insertedCount > 0) await boNhap(false);
       if (result.thieuPhanLoai.length === 0) router.push("/admin/questions");
@@ -389,33 +399,35 @@ Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ả
     }
   };
 
+  /**
+   * Lưu MỘT câu vào ngân hàng.
+   *
+   * Đi qua saveQuestionsToBank y như nút "Lưu tất cả" chứ không tự ghi thẳng nữa. Bản cũ
+   * ghi thẳng nên bỏ qua hết các chốt: không chặn câu thiếu Chương/Bài/Dạng, không nắn
+   * đáp án Đúng/Sai về khuôn, và tạo dòng danh mục theo cờ của AI thay vì tra bảng thật.
+   * Cùng một câu, lưu bằng nút này hay nút kia lại ra hai kết quả khác nhau.
+   */
   const handleSaveSingle = async (tempId: string) => {
     const q = parsedQuestions.find(q => q.temp_id === tempId);
     if (!q) return;
-    
+
     try {
-      if (q.isNewLesson || q.isNewMathForm) {
-        const { error: catError } = await supabase.from('question_categories').insert([{
-           grade: q.grade, subject: q.subject, topic: q.topic, lesson: q.lesson, math_form: q.math_form
-        }]);
-        if (catError) console.error("Lỗi thêm danh mục:", catError);
+      const kq = await saveQuestionsToBank(supabase, [q]);
+
+      if (kq.insertedCount === 0) {
+        const thieu = kq.thieuPhanLoai.length
+          ? 'Câu này chưa đủ Chương / Bài / Dạng nên chưa lưu được. Hãy chọn đủ ở khung phân loại rồi lưu lại.'
+          : 'Câu này bị bỏ qua vì trùng với câu đã có trong kho.';
+        alert(thieu);
+        return;
       }
 
-      const qId = `CH_${Date.now()}_${Math.random().toString(36).substring(2,6)}`;
-      const insertData = {
-        question_id: qId, grade: q.grade, subject: q.subject, topic: q.topic, lesson: q.lesson,
-        math_form: q.math_form,
-        question_type: toBankType(q.question_type) ?? 'NLC',
-        difficulty: toDifficultyCode(q.difficulty) ?? '1',
-        content: q.content,
-        option_a: q.option_a, option_b: q.option_b, option_c: q.option_c, option_d: q.option_d,
-        correct_answer: q.correct_answer, explanation: q.explanation, image_url: q.image_url, usage_count: 0
-      };
+      let tb = 'Đã lưu câu vào ngân hàng.';
+      if (kq.newCategoriesCreated > 0) tb += `\nĐã bổ sung ${kq.newCategoriesCreated} dòng danh mục.`;
+      if (kq.daNan.length) tb += '\n\nMÁY ĐÃ TỰ NẮN:\n- ' + kq.daNan.join('\n- ');
+      if (kq.conKhuyet.length) tb += '\n\nCÒN KHUYẾT, dùng ra đề sẽ hỏng:\n- ' + kq.conKhuyet.join('\n- ');
+      alert(tb);
 
-      const { error } = await supabase.from('questions').insert(insertData);
-      if (error) throw error;
-      
-      // Xoá câu hỏi đã lưu khỏi danh sách hiện tại
       handleRemoveQuestion(tempId);
     } catch (e: any) {
       alert("Lỗi khi lưu câu hỏi: " + e.message);
@@ -469,7 +481,7 @@ Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ả
         };
       }));
       
-      alert(`Đã thêm ${field === 'lesson' ? 'Tên Bài' : 'Dạng Toán'} mới vào danh mục!`);
+      alert(`Đã thêm ${field === 'lesson' ? 'Tên Bài' : 'Dạng Vật Lý'} mới vào danh mục!`);
     } catch (e: any) {
       alert("Lỗi khi thêm danh mục: " + e.message);
     }
@@ -636,9 +648,9 @@ Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ả
                   >
                     <input type="file" multiple accept="image/*,application/pdf" className="hidden" ref={fileInputRef} onChange={handleAIFileUpload} />
                     {dangDungPdf && (
-                      <div className="mt-2 flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" /> {dangDungPdf}
-                      </div>
+                    <div className="mt-2 flex items-center gap-2 text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" /> {dangDungPdf}
+                    </div>
                     )}
                     
                     {aiImageFiles.length === 0 ? (
@@ -1123,7 +1135,7 @@ Bạn là chuyên gia Vật lý. Hãy bóc tách TẤT CẢ câu hỏi trong ả
                              {q.isNewMathForm && (
                                <div className="flex flex-col gap-1.5 mt-1 border-t border-orange-100 pt-1.5">
                                  <select onChange={e => handleMapCategory(q.temp_id!, 'math_form', e.target.value)} className="w-full text-[10px] p-1.5 border border-orange-200 rounded-md bg-white text-gray-700 outline-none focus:border-orange-500 font-medium shadow-sm cursor-pointer">
-                                    <option value="">-- Ép về Dạng Toán có sẵn --</option>
+                                    <option value="">-- Ép về Dạng Vật Lý có sẵn --</option>
                                     {uniqueForms.map(f => <option key={f as string} value={f as string}>{f as string}</option>)}
                                  </select>
                                  <input 
