@@ -10,6 +10,7 @@ import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
 import 'katex/dist/katex.min.css';
+import { doiVeTenChuan } from "@/utils/phanLoaiCauHoi";
 
 interface PushToBankModalProps {
   isOpen: boolean;
@@ -98,22 +99,32 @@ function AddNewCategoryModal({
         math_form: formName.trim()
       };
       
-      const { data: existing } = await supabase.from('question_categories')
-         .select('id')
+      /*
+       * Soi cả bài bằng tên đã chuẩn hoá thay vì hỏi đúng từng ký tự.
+       *
+       * Bản cũ so bằng .eq('math_form', ...) nên tên chỉ lệch một dấu chấm cuối hay một
+       * cặp ngoặc nhọn trong công thức là coi như chưa có, thêm luôn dòng mới - kho lại
+       * mọc thêm một dạng song sinh, câu bị xé lẻ ra hai chỗ và ra đề theo dạng nào cũng
+       * hụt câu. Nay có tên cũ thì dùng lại tên cũ.
+       */
+      const { data: cungBai } = await supabase.from('question_categories')
+         .select('math_form')
          .eq('grade', ctx.grade)
          .eq('subject', ctx.subject)
          .eq('topic', ctx.topic)
-         .eq('lesson', ctx.lesson || '')
-         .eq('math_form', formName.trim())
-         .maybeSingle();
+         .eq('lesson', ctx.lesson || '');
+
+      const tenCu = doiVeTenChuan(formName.trim(), (cungBai || []).map((c: any) => String(c.math_form || '')));
          
-      if (!existing) {
+      if (!tenCu) {
          const { error } = await supabase.from('question_categories').insert([payload]);
          if (error) throw error;
       }
       
-      alert("Đã lưu Dạng bài mới thành công!");
-      onSave(formName.trim());
+      alert(tenCu
+        ? `Bài này đã có Dạng y hệt rồi (chỉ khác vài dấu), đã dùng lại tên cũ:\n"${tenCu}"`
+        : "Đã lưu Dạng bài mới thành công!");
+      onSave(tenCu || formName.trim());
       onClose();
     } catch (e: any) {
       alert("Lỗi lưu Dạng bài: " + e.message);
