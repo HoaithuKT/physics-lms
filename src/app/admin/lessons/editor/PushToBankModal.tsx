@@ -1,16 +1,24 @@
 "use client";
 import React, { useState, useEffect, useRef } from 'react';
+import { chuyenDiaChiAnh } from '@/components/CustomMarkdownComponents';
 import { createClient } from "@/utils/supabase/client";
+import { X, UploadCloud, Loader2, Database, Info, ChevronDown, ChevronUp, Tag, AlertTriangle, Copy, ClipboardPaste, CheckCircle2 } from 'lucide-react';
+import {
+  blockTypeToBankType,
+  toDifficultyCode,
+  normalizeQuestionForCompare,
+} from '@/utils/questionTypes';
 import { saveQuestionsToBank } from "@/utils/questionBankSave";
-import { X, UploadCloud, Loader2, Database, Info, ChevronDown, ChevronUp, Tag } from 'lucide-react';
+import { findMatchingChapterTitle } from '@/utils/topicMatch';
+import { buildDetectFormsPrompt, parseDetectFormsResponse, type DetectFormsResultItem } from '@/utils/detectFormsPrompt';
 import ReactMarkdown from 'react-markdown';
-import { unifiedMarkdownComponents as customMarkdownComponents , chuyenDiaChiAnh } from '@/components/CustomMarkdownComponents';
+import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
 import 'katex/dist/katex.min.css';
-import { doiVeTenChuan } from "@/utils/phanLoaiCauHoi";
+import { doiVeTenChuan, chuanTen } from "@/utils/phanLoaiCauHoi";
 
 interface PushToBankModalProps {
   isOpen: boolean;
@@ -42,7 +50,19 @@ function ComboBox({ value, onChange, options, placeholder, width }: { value: str
                   placeholder={placeholder}
                   style={{ border: '1px solid #93c5fd', borderRadius: 6, padding: '3px 8px', fontSize: 12, width, background: '#fff' }} 
               />
-              <button title="Quay lại chọn danh sách" onClick={() => { setIsCustom(false); onChange(''); }} style={{ background: 'none', border: 'none', fontSize: 13, color: '#ef4444', cursor: 'pointer', padding: 2 }}>✕</button>
+              {/* Nút này XOÁ giá trị để quay lại danh sách chọn. Trước đây tooltip chỉ ghi
+                  "Quay lại chọn danh sách" nên dễ hiểu nhầm, trong khi nó xoá Tên bài của
+                  mọi câu hỏi cùng lúc. Nay ghi rõ và có hỏi lại. */}
+              <button
+                type="button"
+                title="Xoá nội dung đang gõ để chọn lại từ danh sách"
+                onClick={() => {
+                  if (value && !confirm(`Xoá "${value}" khỏi tất cả câu hỏi trong danh sách?`)) return;
+                  setIsCustom(false);
+                  onChange('');
+                }}
+                style={{ background: 'none', border: 'none', fontSize: 13, color: '#ef4444', cursor: 'pointer', padding: 2 }}
+              >✕</button>
           </div>
       );
   }
@@ -115,12 +135,12 @@ function AddNewCategoryModal({
          .eq('lesson', ctx.lesson || '');
 
       const tenCu = doiVeTenChuan(formName.trim(), (cungBai || []).map((c: any) => String(c.math_form || '')));
-         
+
       if (!tenCu) {
          const { error } = await supabase.from('question_categories').insert([payload]);
          if (error) throw error;
       }
-      
+
       alert(tenCu
         ? `Bài này đã có Dạng y hệt rồi (chỉ khác vài dấu), đã dùng lại tên cũ:\n"${tenCu}"`
         : "Đã lưu Dạng bài mới thành công!");
@@ -186,19 +206,14 @@ function autoDetectGradeSubject(courseName: string): { grade: string; subject: s
   const gradeMatch = name.match(/(?:lớp|lop|khối|khoi|l)\s*(\d{1,2})/i) || name.match(/\b(10|11|12|[6-9])\b/);
   if (gradeMatch) grade = gradeMatch[1];
 
-  // Detect Môn: tìm tên môn phổ biến
-  let subject = '';
-  if (/toán|toan|math/i.test(name)) subject = 'Toán';
-  else if (/lý|ly|vật lý|physics/i.test(name)) subject = 'Vật lý';
-  else if (/hóa|hoa|hoá|chemistry/i.test(name)) subject = 'Hóa học';
-  else if (/sinh|biology/i.test(name)) subject = 'Sinh học';
-  else if (/văn|van|ngữ văn|ngu van/i.test(name)) subject = 'Ngữ văn';
-  else if (/anh|english/i.test(name)) subject = 'Tiếng Anh';
-
-  return { grade, subject };
+  // KHÔNG tự đoán Môn nữa. Tên khóa học chỉ cho biết "Toán", trong khi ngân hàng
+  // phân theo phân môn ("Đại số", "Hình học"). Đoán bừa sẽ đẻ ra môn thứ ba và
+  // làm phân mảnh danh mục. Để giáo viên chọn từ danh sách môn đang có,
+  // bước kiểm tra trước khi lưu sẽ chặn nếu còn bỏ trống.
+  return { grade, subject: '' };
 }
 
-/* ===== Thuật toán nhận dạng Dạng Toán tự động (TF-IDF chuẩn & N-grams) ===== */
+/* ===== Thuật toán nhận dạng Dạng Vật Lý tự động (TF-IDF chuẩn & N-grams) ===== */
 function autoDetectMathForm(content: string, explanation: string, forms: string[]): string {
   if (!forms || forms.length === 0) return '';
   const normalize = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, ""); 
@@ -253,15 +268,38 @@ function autoDetectMathForm(content: string, explanation: string, forms: string[
   return bestForm;
 }
 
-/* ===== Tự gán mức độ dựa trên vị trí câu trong bài ===== */
-function autoAssignDifficulty(index: number, total: number): string {
-  // Phân bổ: 25% đầu = Nhận biết, 25% tiếp = Thông hiểu, 30% tiếp = Vận dụng, 20% cuối = Vận dụng cao
-  const ratio = index / total;
-  if (ratio < 0.25) return 'Nhận biết';
-  if (ratio < 0.50) return 'Thông hiểu';
-  if (ratio < 0.80) return 'Vận dụng';
-  return 'Vận dụng cao';
+/**
+ * Xác định Dạng vật lý cho một câu hỏi, kể cả câu Đúng/Sai 4 mệnh đề.
+ *
+ * Trước đây MỌI câu Đúng/Sai đều bị gán cứng "Vật lý tổng hợp" ngay khi mở modal,
+ * bất kể 4 mệnh đề có thực sự thuộc nhiều dạng khác nhau hay không. Nay xét
+ * riêng từng mệnh đề: cùng 1 dạng thì gán đúng dạng đó, khác dạng thì mới gán
+ * "Tổng hợp", không nhận diện được ý nào thì để trống cho AI/giáo viên xử lý.
+ */
+function resolveMathForm(q: any, forms: string[], tongHopLabel: string): string {
+  if (q.question_type === 'true_false_cluster') {
+    const statements = [q.option_a, q.option_b, q.option_c, q.option_d]
+      .map((s: string) => String(s || '').trim())
+      .filter(Boolean);
+    if (statements.length === 0) return '';
+
+    const detected = statements
+      .map((s: string) => autoDetectMathForm(s, '', forms))
+      .filter(Boolean);
+    const unique = Array.from(new Set(detected));
+
+    if (unique.length === 0) return ''; // không nhận diện được mệnh đề nào
+    if (unique.length === 1) return unique[0] as string; // cả 4 ý cùng 1 dạng
+    return tongHopLabel; // các ý thuộc nhiều dạng khác nhau
+  }
+
+  return autoDetectMathForm(q.content, q.explanation, forms);
 }
+
+/* ===== Tự gán mức độ dựa trên vị trí câu trong bài ===== */
+// Trước đây hàm này gán mức độ theo VỊ TRÍ trong danh sách (25% đầu = Nhận biết...),
+// nên câu khó xếp đầu bị gán "Nhận biết" còn câu dễ xếp cuối bị gán "Vận dụng cao".
+// Nay để trống và bắt giáo viên chọn (có nút gán hàng loạt ở thanh trên).
 
 /* ===== Parse quiz blocks ===== */
 function parseQuizBlocks(blocks: any[], ctx: PushToBankModalProps['courseContext']) {
@@ -312,7 +350,7 @@ function parseQuizBlocks(blocks: any[], ctx: PushToBankModalProps['courseContext
       grade, subject,
       topic: ctx.topic || "", lesson: ctx.lesson || "",
       math_form: "",
-      difficulty: autoAssignDifficulty(index, quizBlocks.length),
+      difficulty: '',
       question_type: blockType,
       type_label: typeLabels[blockType] || 'Khác',
       question_type_label: typeLabels[blockType] || blockType,
@@ -329,10 +367,20 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
   const [questions, setQuestions] = useState<any[]>([]);
   const [collapsed, setCollapsed] = useState<Record<string, boolean>>({});
   const [editCtx, setEditCtx] = useState({ grade: '', subject: '', topic: '', lesson: '' });
-  const [categories, setCategories] = useState<any[]>([]); // Dạng toán từ DB
-  const [mathFormFilter, setMathFormFilter] = useState(''); // Dropdown filter cho dạng toán chung
+  const [categories, setCategories] = useState<any[]>([]); // Dạng vật lý từ DB
+  const [mathFormFilter, setMathFormFilter] = useState(''); // Dropdown filter cho dạng vật lý chung
   const [geminiLoading, setGeminiLoading] = useState(false);
   const [showAddCategoryModal, setShowAddCategoryModal] = useState<{isOpen: boolean, targetId: string}>({isOpen: false, targetId: ''});
+  // Dạng vật lý MỚI do AI đề xuất (chưa có trong Ngân hàng) - chờ giáo viên duyệt tại chỗ,
+  // không tự áp dụng ngay để tránh sinh danh mục rác nếu AI đặt tên chưa chuẩn.
+  const [pendingFormSuggestions, setPendingFormSuggestions] = useState<Record<string, string>>({});
+  // Phòng khi Cổng AI của hệ thống báo lỗi (hết quota, quá tải 503...): giáo viên
+  // tự copy prompt dán vào Gemini Web/ChatGPT, rồi dán kết quả JSON ngược lại đây.
+  const [showManualDetectModal, setShowManualDetectModal] = useState(false);
+  const [manualDetectPrompt, setManualDetectPrompt] = useState('');
+  const [manualDetectInput, setManualDetectInput] = useState('');
+  const [manualDetectError, setManualDetectError] = useState('');
+  const [manualDetectCopied, setManualDetectCopied] = useState(false);
   const hasParsedRef = useRef(false);
   const supabase = createClient();
 
@@ -354,7 +402,7 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
 
       setCollapsed({});
 
-      // Fetch danh mục dạng toán từ DB và tự động nhận diện
+      // Fetch danh mục dạng vật lý từ DB và tự động nhận diện
       fetchCategories(parsed);
     }
     if (!isOpen) {
@@ -367,35 +415,64 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
       const { data } = await supabase.from('question_categories').select('*');
       if (data) {
          setCategories(data);
+
+         // Bảng chapters (nguồn của courseContext.topic) và question_categories.topic
+         // dùng khác định dạng (số La Mã/số thường, viết hoa toàn bộ/đầu câu...) nên
+         // so khớp tuyệt đối luôn thất bại. Đối chiếu mờ để nhận ra cùng một Chương,
+         // rồi dùng lại đúng chuỗi đã có trong ngân hàng - nhờ vậy dropdown Chương/Bài
+         // không còn hiện dạng "khoá" (input tự do) và phạm vi Dạng vật lý đối chiếu
+         // đúng chương đang soạn thay vì phải dò trên toàn bộ ngân hàng.
+         // Tính bối cảnh NGAY TẠI ĐÂY thay vì đọc state editCtx.
+         // Trước đây đọc editCtx từ closure nên luôn nhận giá trị CŨ (rỗng lúc modal
+         // vừa mở), khiến mọi bộ lọc đều lọt và hàm dò chạy trên toàn bộ ~229 dạng
+         // toán của mọi chương. Kết quả là câu hỏi bị gán dạng của chương khác, mà
+         // dropdown chỉ liệt kê dạng của chương đang soạn nên hiện TRỐNG.
+         const baseCtx = {
+            grade: courseContext.grade || autoDetectGradeSubject(courseContext.courseName || '').grade || '',
+            subject: courseContext.subject || '',
+            topic: courseContext.topic || '',
+            lesson: courseContext.lesson || '',
+         };
+
+         const sameGradeTopics = Array.from(new Set(
+            data.filter(c => !baseCtx.grade || c.grade === baseCtx.grade).map(c => c.topic)
+         )).filter(Boolean) as string[];
+         const matchedTopic = baseCtx.topic
+            ? (findMatchingChapterTitle(baseCtx.topic, sameGradeTopics) || baseCtx.topic)
+            : '';
+
+         const effectiveCtx = { ...baseCtx, topic: matchedTopic };
+
+         setEditCtx(prevCtx => (
+            matchedTopic && matchedTopic !== prevCtx.topic ? { ...prevCtx, topic: matchedTopic } : prevCtx
+         ));
+
          const globalForms = Array.from(new Set(data.map(c => c.math_form))).filter(Boolean) as string[];
-         const globalTongHop = globalForms.find(f => /tổng hợp/i.test(f)) || "Toán tổng hợp";
-         
-         setQuestions(prev => prev.map(q => {
-             if (!q.math_form) {
-               // Dạng Đúng/Sai luôn ưu tiên gán Toán tổng hợp (nếu có trong hệ thống)
-               if (q.question_type === 'true_false_cluster' && globalTongHop) {
-                   return { ...q, math_form: globalTongHop };
-               }
-               // Detect bằng formsToUse dựa trên bối cảnh hiện tại (nếu có)
-               const relevantCategories = data.filter(c =>
-                  (!editCtx.grade || c.grade === editCtx.grade) &&
-                  (!editCtx.subject || c.subject === editCtx.subject) &&
-                  (!editCtx.topic || c.topic === editCtx.topic) &&
-                  (!editCtx.lesson || c.lesson === editCtx.lesson)
-               );
-               const relevantForms = Array.from(new Set(relevantCategories.map(c => c.math_form))).filter(Boolean);
-               const formsToDetect = relevantForms.length > 0 ? relevantForms : globalForms;
-               
-               const detected = autoDetectMathForm(q.content, q.explanation, formsToDetect);
-               if (detected) return { ...q, math_form: detected };
-            }
-            return q;
-         }));
+         const globalTongHop = globalForms.find(f => /tổng hợp/i.test(f)) || "Vật lý tổng hợp";
+
+         // Chỉ dò trong phạm vi Chương/Bài đang soạn. Nếu chương này chưa có dạng nào
+         // thì để trống cho AI hoặc giáo viên xử lý, KHÔNG lấy bừa dạng của chương khác.
+         const scopedForms = Array.from(new Set(
+            data.filter(c =>
+               (!effectiveCtx.grade || c.grade === effectiveCtx.grade) &&
+               (!effectiveCtx.subject || c.subject === effectiveCtx.subject) &&
+               (!effectiveCtx.topic || c.topic === effectiveCtx.topic) &&
+               (!effectiveCtx.lesson || c.lesson === effectiveCtx.lesson)
+            ).map(c => c.math_form)
+         )).filter(Boolean) as string[];
+
+         if (scopedForms.length > 0) {
+            setQuestions(prev => prev.map(q => {
+               if (q.math_form) return q;
+               const detected = resolveMathForm(q, scopedForms, globalTongHop);
+               return detected ? { ...q, math_form: detected } : q;
+            }));
+         }
       }
     } catch (e) { console.error('[PushToBank] Fetch categories error:', e); }
   };
 
-  // Lọc dạng toán phù hợp với Bối cảnh hiện tại (Lớp, Môn, Chương, Bài)
+  // Lọc dạng vật lý phù hợp với Bối cảnh hiện tại (Lớp, Môn, Chương, Bài)
   const relevantCategories = categories.filter(c =>
     (!editCtx.grade || c.grade === editCtx.grade) &&
     (!editCtx.subject || c.subject === editCtx.subject) &&
@@ -422,16 +499,14 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
         return;
      }
      
-     const globalTongHop = allForms.find(f => /tổng hợp/i.test(f));
+     const globalTongHop = allForms.find(f => /tổng hợp/i.test(f)) || "Vật lý tổng hợp";
 
      setQuestions(prev => {
         const next = prev.map(q => {
            if (!q.math_form) {
-              if (q.question_type === 'true_false_cluster' && globalTongHop) {
-                 count++;
-                 return { ...q, math_form: globalTongHop };
-              }
-              const detected = autoDetectMathForm(q.content, q.explanation, formsToUse);
+              // Câu Đúng/Sai: xét riêng từng mệnh đề, chỉ gán "Tổng hợp" khi các
+              // mệnh đề THỰC SỰ thuộc nhiều dạng khác nhau (không gán cứng nữa).
+              const detected = resolveMathForm(q, formsToUse, globalTongHop);
               if (detected) {
                  count++;
                  return { ...q, math_form: detected };
@@ -439,7 +514,7 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
            }
            return q;
         });
-        
+
         setTimeout(() => {
            if (count > 0) alert(`✨ Đã nhận diện và điền tự động Dạng bài cho ${count} câu hỏi trống!`);
            else alert("Không tìm thấy Dạng bài nào phù hợp với các câu hỏi đang trống.");
@@ -449,64 +524,272 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
      });
   };
 
-  const handleAutoDetectGemini = async () => {
+  /**
+   * Bối cảnh dùng chung cho cả luồng AI tự động lẫn luồng dán tay: danh sách Dạng
+   * toán trong phạm vi chương, nhãn "Tổng hợp", và các câu còn thiếu Dạng vật lý
+   * hoặc Mức độ (kèm câu đang gán dạng ngoài phạm vi chương đang soạn).
+   */
+  const getDetectFormsContext = () => {
     const allForms = Array.from(new Set(categories.map(c => c.math_form))).filter(Boolean) as string[];
     const formsToUse = relevantForms.length > 0 ? relevantForms : allForms;
-    
-    if (formsToUse.length === 0) {
-       alert("Chưa có danh sách Dạng bài nào trong hệ thống để đối chiếu!");
-       return;
-    }
-    const globalTongHop = allForms.find(f => /tổng hợp/i.test(f)) || "Toán tổng hợp";
+    const globalTongHop = allForms.find(f => /tổng hợp/i.test(f)) || "Vật lý tổng hợp";
 
-    // Chọn các câu đang trống, HOẶC đang gán một dạng bài không có trong Dropdown (loại trừ Toán tổng hợp)
-    const emptyQs = questions.filter(q => 
-       !q.math_form || 
+    const emptyQs = questions.filter(q =>
+       !q.math_form ||
+       !q.difficulty ||
        (!formsToUse.includes(q.math_form) && q.math_form !== globalTongHop)
     );
+
+    return { allForms, formsToUse, globalTongHop, emptyQs };
+  };
+
+  /**
+   * Áp dụng kết quả { id: { form, isNew, difficulty } } vào danh sách câu hỏi.
+   * Dùng chung cho cả kết quả gọi AI tự động lẫn kết quả dán tay từ Gemini Web -
+   * cùng một quy tắc áp dụng (dạng có sẵn thì điền ngay, dạng mới thì chờ duyệt,
+   * Mức độ chỉ điền vào ô đang trống) để hai luồng không bao giờ lệch nhau.
+   */
+  const applyDetectFormsResult = (
+    data: Record<string, DetectFormsResultItem>,
+    expectedIds: string[]
+  ) => {
+    let formCount = 0;
+    let difficultyCount = 0;
+    let missingCount = 0;
+    const newSuggestions: Record<string, string> = {};
+
+    // Tính trước danh sách câu hỏi mới trên một bản chụp `questions` hiện tại
+    // (KHÔNG dùng updater `prev => ...` của setQuestions) vì React chạy updater
+    // đó bất đồng bộ ở lần render sau - nếu đếm formCount/difficultyCount/
+    // newSuggestions bên trong updater rồi return ngay sau setQuestions() thì
+    // các biến đếm luôn bằng 0 khi đọc, và newSuggestions luôn rỗng nên đề xuất
+    // Dạng vật lý MỚI không bao giờ được đưa vào hàng chờ duyệt.
+    const nextQuestions = questions.map(q => {
+         if (!expectedIds.includes(q.id)) return q;
+
+         const result = data[q.id];
+         if (!result) {
+            missingCount++;
+            return q;
+         }
+
+         const patch: any = {};
+
+         if (result.form) {
+            if (result.isNew) {
+               // Dạng mới -> chờ duyệt, chưa gán vào câu hỏi
+               newSuggestions[q.id] = result.form;
+            } else {
+               patch.math_form = result.form;
+               formCount++;
+            }
+         }
+
+         // Chỉ điền vào ô Mức độ đang trống để không đè lên lựa chọn giáo viên
+         // đã tự đặt trước đó.
+         if (result.difficulty && !q.difficulty) {
+            patch.difficulty = result.difficulty;
+            difficultyCount++;
+         }
+
+         return Object.keys(patch).length > 0 ? { ...q, ...patch } : q;
+    });
+
+    setQuestions(nextQuestions);
+
+    if (Object.keys(newSuggestions).length > 0) {
+      setPendingFormSuggestions(prev => ({ ...prev, ...newSuggestions }));
+    }
+
+    return { formCount, difficultyCount, missingCount, newCount: Object.keys(newSuggestions).length };
+  };
+
+  const reportDetectFormsResult = (source: string, r: { formCount: number; difficultyCount: number; missingCount: number; newCount: number }) => {
+    const parts: string[] = [];
+    if (r.formCount > 0) parts.push(`điền Dạng vật lý cho ${r.formCount} câu`);
+    if (r.difficultyCount > 0) parts.push(`điền Mức độ cho ${r.difficultyCount} câu`);
+    if (r.newCount > 0) parts.push(`đề xuất ${r.newCount} Dạng vật lý MỚI đang chờ Thầy duyệt (khung màu cam dưới câu hỏi)`);
+    if (r.missingCount > 0) parts.push(`còn ${r.missingCount} câu chưa xử lý được, Thầy chọn tay giúp`);
+    alert(parts.length ? `✨ ${source} đã ${parts.join('; ')}.` : `${source} không nhận diện được câu nào.`);
+  };
+
+  /**
+   * Xếp TỪNG câu về đúng Chương / Bài / Dạng đã có trong danh mục.
+   *
+   * Bản cũ chỉ đoán Dạng, còn Chương và Bài thì lấy từ "bối cảnh chung" đọc được ở đầu
+   * tài liệu. Tài liệu đưa vào lại thường là một ĐỀ KIỂM TRA nên bối cảnh đó ra những thứ
+   * như "Chương = BÀI KIỂM TRA, Bài = GKI" - không có trong danh mục, đẩy vào kho là mọc
+   * thêm nhánh rác, mà cả 22 câu bị nhét chung một chỗ dù chúng thuộc nhiều chương.
+   *
+   * Nay đưa cả cây danh mục thật cho máy, mỗi câu tự tìm về nhánh của nó. Dạng nào máy
+   * phải đề xuất mới thì hiện khung cam chờ thầy cô duyệt, không tự thêm vào danh mục.
+   */
+  const handleAutoDetectGemini = async () => {
+    const { emptyQs } = getDetectFormsContext();
     if (emptyQs.length === 0) {
-       alert("Tất cả câu hỏi đã được gán Dạng bài!");
+       alert("Tất cả câu hỏi đã có đủ Dạng vật lý và Mức độ!");
        return;
+    }
+
+    const gr = editCtx.grade || '';
+    const su = editCtx.subject || '';
+    const danhMucLop = categories.filter(c =>
+      (!gr || String(c.grade) === String(gr)) && (!su || c.subject === su));
+
+    if (!gr || !su) {
+      alert('Hãy chọn Lớp và Phân môn ở khung "Bối cảnh tự động" trước, để máy biết tra cây danh mục nào.');
+      return;
+    }
+    if (danhMucLop.length === 0) {
+      alert(`Danh mục của lớp ${gr} - ${su} còn trống. Hãy dựng Chương/Bài/Dạng ở trang "Khối lớp & Danh mục" trước.`);
+      return;
     }
 
     setGeminiLoading(true);
     try {
-        const res = await fetch('/api/admin/detect-forms', {
+        const res = await fetch('/api/admin/phan-bo-cau-hoi', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                questions: emptyQs.map(q => ({ id: q.id, question_type: q.question_type, content: q.content })),
-                formsToUse,
-                allForms
+                grade: gr,
+                subject: su,
+                danhMuc: danhMucLop.map(c => ({ topic: c.topic, lesson: c.lesson, math_form: c.math_form })),
+                questions: emptyQs.map(q => ({
+                  id: q.id,
+                  question_type: q.question_type,
+                  // Câu Đúng/Sai: gửi kèm 4 mệnh đề, vì nội dung chính nằm ở đó chứ không
+                  // phải ở câu dẫn - chỉ gửi câu dẫn thì máy không đủ căn cứ xếp chỗ.
+                  content: q.question_type === 'true_false_cluster'
+                    ? [q.content, q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean).join(' | ')
+                    : q.content,
+                })),
             })
         });
 
         const data = await res.json();
-        
-        if (!res.ok) {
-            throw new Error(data.error || "Lỗi máy chủ");
+        if (!res.ok) throw new Error(data.error || "Lỗi máy chủ");
+
+        const xepDuoc: any[] = data.xepDuoc || [];
+        const khongXep: any[] = data.khongXep || [];
+        const deXuatDangMoi: Record<string, string> = {};
+        let soXep = 0;
+
+        setQuestions(prev => prev.map(q => {
+          const kq = xepDuoc.find(x => x.id === q.id);
+          if (!kq) return q;
+          soXep++;
+          // Dạng máy phải tự đặt thì CHƯA gán vào câu - để khung cam chờ duyệt, y như
+          // đường cũ. Gán thẳng là danh mục mọc thêm dạng mà thầy cô chưa hề xem.
+          if (kq.dangMoi) {
+            deXuatDangMoi[q.id] = kq.math_form;
+            return { ...q, topic: kq.topic, lesson: kq.lesson, difficulty: kq.difficulty };
+          }
+          return { ...q, topic: kq.topic, lesson: kq.lesson, math_form: kq.math_form, difficulty: kq.difficulty };
+        }));
+
+        if (Object.keys(deXuatDangMoi).length > 0) {
+          setPendingFormSuggestions(prev => ({ ...prev, ...deXuatDangMoi }));
         }
 
-        const mapping = data;
-        let count = 0;
-        setQuestions(prev => prev.map(q => {
-             if (mapping[q.id]) {
-                 const matchedForm = allForms.find(f => f.trim().toLowerCase() === mapping[q.id].trim().toLowerCase());
-                 if (matchedForm) {
-                     count++;
-                     return { ...q, math_form: matchedForm };
-                 }
-             }
-             return q;
-        }));
-        
-        setTimeout(() => alert(`✨ AI Gemini đã nhận diện và điền tự động Dạng bài cho ${count} câu hỏi!`), 100);
+        const soChuong = new Set(xepDuoc.map(x => x.topic)).size;
+        const phan: string[] = [];
+        if (soXep > 0) phan.push(`xếp ${soXep} câu vào ${soChuong} chương của danh mục`);
+        if (Object.keys(deXuatDangMoi).length > 0) {
+          phan.push(`đề xuất ${Object.keys(deXuatDangMoi).length} Dạng MỚI đang chờ Thầy cô duyệt (khung cam dưới câu hỏi)`);
+        }
+        if (khongXep.length > 0) phan.push(`còn ${khongXep.length} câu máy không xếp được, Thầy cô chọn tay giúp`);
+        setTimeout(() => alert(phan.length
+          ? `✨ AI đã ${phan.join('; ')}.`
+          : 'AI không xếp được câu nào vào danh mục. Kiểm tra lại Lớp / Phân môn đã chọn đúng chưa.'), 100);
     } catch (e: any) {
         console.error(e);
-        alert("Lỗi khi gọi AI Gemini: " + e.message);
+        // Gọi AI tự động thất bại (hết quota, quá tải, mất mạng...) - gợi ý ngay
+        // lối thoát bằng tay thay vì chỉ báo lỗi rồi thôi.
+        if (confirm("Lỗi khi gọi AI Gemini: " + e.message + "\n\nDùng cách THỦ CÔNG (dán tay vào Gemini Web) luôn không?")) {
+          openManualDetectModal();
+        }
     } finally {
         setGeminiLoading(false);
     }
+  };
+
+  /** Mở hộp thoại thủ công: sinh sẵn prompt để giáo viên copy dán vào Gemini Web/ChatGPT. */
+  const openManualDetectModal = () => {
+    const { formsToUse, globalTongHop, emptyQs } = getDetectFormsContext();
+    if (emptyQs.length === 0) {
+       alert("Tất cả câu hỏi đã có đủ Dạng vật lý và Mức độ!");
+       return;
+    }
+
+    const prompt = buildDetectFormsPrompt({
+      questions: emptyQs.map(q => ({
+        id: q.id,
+        question_type: q.question_type,
+        content: q.content,
+        statements: q.question_type === 'true_false_cluster'
+          ? [q.option_a, q.option_b, q.option_c, q.option_d].filter(Boolean)
+          : undefined,
+      })),
+      formsToUse,
+      globalTongHop,
+      forManualCopy: true,
+    });
+
+    setManualDetectPrompt(prompt);
+    setManualDetectInput('');
+    setManualDetectError('');
+    setManualDetectCopied(false);
+    setShowManualDetectModal(true);
+  };
+
+  const handleCopyManualPrompt = async () => {
+    try {
+      await navigator.clipboard.writeText(manualDetectPrompt);
+      setManualDetectCopied(true);
+      setTimeout(() => setManualDetectCopied(false), 2000);
+    } catch {
+      alert("Không copy được tự động. Thầy bôi đen và copy thủ công đoạn văn bản bên dưới giúp.");
+    }
+  };
+
+  /** Đọc kết quả JSON dán tay từ Gemini Web/ChatGPT rồi áp dụng như luồng tự động. */
+  const applyManualDetectInput = () => {
+    if (!manualDetectInput.trim()) {
+      setManualDetectError('Chưa dán nội dung kết quả vào ô bên dưới.');
+      return;
+    }
+
+    const { allForms, emptyQs } = getDetectFormsContext();
+
+    try {
+      const data = parseDetectFormsResponse(manualDetectInput, allForms);
+      const result = applyDetectFormsResult(data, emptyQs.map(q => q.id));
+      setShowManualDetectModal(false);
+      setTimeout(() => reportDetectFormsResult('Kết quả dán tay', result), 100);
+    } catch (e: any) {
+      setManualDetectError('Không đọc được kết quả: ' + e.message + '. Kiểm tra lại đã dán đúng và đủ đoạn JSON AI trả về chưa.');
+    }
+  };
+
+  /** Duyệt một Dạng vật lý mới do AI đề xuất -> áp dụng cho câu hỏi đó. */
+  const approveNewForm = (questionId: string, formName: string) => {
+    const name = formName.trim();
+    if (!name) return;
+    setQuestions(prev => prev.map(q => q.id === questionId ? { ...q, math_form: name } : q));
+    setPendingFormSuggestions(prev => {
+      const next = { ...prev };
+      delete next[questionId];
+      return next;
+    });
+  };
+
+  /** Bỏ đề xuất Dạng vật lý mới, để trống cho giáo viên tự chọn. */
+  const rejectNewForm = (questionId: string) => {
+    setPendingFormSuggestions(prev => {
+      const next = { ...prev };
+      delete next[questionId];
+      return next;
+    });
   };
 
   const handleUpdateField = (id: string, field: string, value: string) => {
@@ -540,32 +823,111 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
 
   const expandAll = () => setCollapsed({});
 
+  /**
+   * Soát lỗi trước khi đẩy. Mỗi mục gồm nhãn và danh sách id câu bị thiếu,
+   * dùng cả cho bảng cảnh báo lẫn việc tô đỏ từng câu trong danh sách.
+   */
+  const blockingIssues = React.useMemo(() => {
+    const issues: { key: string; label: string; ids: string[] }[] = [];
+    const add = (key: string, label: string, filter: (q: any) => boolean) => {
+      const ids = questions.filter(filter).map(q => q.id);
+      if (ids.length) issues.push({ key, label, ids });
+    };
+
+    add('lesson', 'Thiếu Tên bài', q => !String(q.lesson || '').trim());
+    add('topic', 'Thiếu Chuyên đề (Chương)', q => !String(q.topic || '').trim());
+    add('grade', 'Thiếu Lớp', q => !String(q.grade || '').trim());
+    add('subject', 'Thiếu Môn', q => !String(q.subject || '').trim());
+    add('math_form', 'Thiếu Dạng vật lý', q => !String(q.math_form || '').trim());
+    add('difficulty', 'Chưa chọn Mức độ', q => !toDifficultyCode(q.difficulty));
+    add('answer', 'Chưa có đáp án đúng', q =>
+      q.question_type !== 'essay' && !String(q.correct_answer || '').trim());
+    add('options', 'Thiếu phương án trả lời', q =>
+      (q.question_type === 'multiple_choice' || q.question_type === 'true_false_cluster') &&
+      ![q.option_a, q.option_b, q.option_c, q.option_d].every(o => String(o || '').trim()));
+
+    return issues;
+  }, [questions]);
+
+  /** Tập hợp id các câu đang có vấn đề, để tô đỏ trong danh sách */
+  const problemIds = React.useMemo(
+    () => new Set(blockingIssues.flatMap(i => i.ids)),
+    [blockingIssues]
+  );
+
+  /** Các câu trùng nhau ngay trong đợt đẩy này */
+  const duplicateInBatchIds = React.useMemo(() => {
+    const seen = new Map<string, string>();
+    const dups = new Set<string>();
+    for (const q of questions) {
+      const key = normalizeQuestionForCompare(q.content);
+      if (!key) continue;
+      if (seen.has(key)) dups.add(q.id);
+      else seen.set(key, q.id);
+    }
+    return dups;
+  }, [questions]);
+
   const handlePushAll = async () => {
     if (questions.length === 0) return alert("Không có câu hỏi nào.");
+
+    // Chặn lưu khi còn thiếu thông tin bắt buộc - trước đây ghi thẳng vào CSDL
+    // nên sinh ra hàng loạt câu mất Tên bài, mất Dạng vật lý, chưa chọn đáp án.
+    if (blockingIssues.length > 0) {
+      alert(
+        '⚠️ Chưa thể đẩy vào Ngân hàng vì còn thiếu thông tin:\n\n' +
+        blockingIssues.map(i => `• ${i.label}: ${i.ids.length} câu`).join('\n') +
+        '\n\nCác câu thiếu đã được tô đỏ trong danh sách bên dưới.'
+      );
+      return;
+    }
+
     setIsPushing(true);
     try {
       const inserts = questions.map(q => ({
         question_id: `CH_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
         grade: q.grade, subject: q.subject, topic: q.topic, lesson: q.lesson,
-        math_form: q.math_form, question_type: q.question_type, difficulty: q.difficulty,
+        math_form: q.math_form,
+        // Quy đổi sang mã chuẩn của ngân hàng (NLC/DS/TLN/TL và mức độ 1-4).
+        // Trước đây ghi thẳng mã tiếng Anh nên câu hỏi lọt khỏi mọi bộ lọc.
+        question_type: blockTypeToBankType(q.question_type),
+        difficulty: toDifficultyCode(q.difficulty) ?? '',
         content: q.content, option_a: q.option_a, option_b: q.option_b,
         option_c: q.option_c, option_d: q.option_d, correct_answer: q.correct_answer,
         explanation: q.explanation, image_url: q.image_url, usage_count: 0
       }));
 
-      // Kiểm tra trùng lặp dựa trên nội dung câu hỏi
-      const contents = inserts.map(q => q.content);
-      const { data: existingQs } = await supabase
+      // Bỏ câu trùng nhau NGAY TRONG đợt đẩy này (giữ câu đầu tiên)
+      const seen = new Set<string>();
+      const deduped = inserts.filter(q => {
+        const key = normalizeQuestionForCompare(q.content);
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      const dupInBatch = inserts.length - deduped.length;
+
+      // Đối chiếu với toàn bộ ngân hàng theo nội dung đã chuẩn hoá
+      // (trước đây chỉ so khớp tuyệt đối nên lệch một dấu cách là lọt).
+      const { data: bankRows } = await supabase
         .from('questions')
         .select('content')
-        .in('content', contents);
+        .eq('grade', deduped[0]?.grade || '')
+        .eq('subject', deduped[0]?.subject || '');
 
-      const existingContents = new Set((existingQs || []).map(q => q.content));
-      const newInserts = inserts.filter(q => !existingContents.has(q.content));
-      const duplicateCount = inserts.length - newInserts.length;
+      const bankKeys = new Set(
+        (bankRows || []).map(r => normalizeQuestionForCompare(r.content)).filter(Boolean)
+      );
+      const newInserts = deduped.filter(q => !bankKeys.has(normalizeQuestionForCompare(q.content)));
+      const dupInBank = deduped.length - newInserts.length;
+      const duplicateCount = dupInBatch + dupInBank;
 
       if (newInserts.length === 0) {
-         alert(`⚠️ Bỏ qua: ${duplicateCount} câu hỏi này đã có sẵn trong Ngân hàng rồi!`);
+         alert(
+           `⚠️ Không có câu nào mới để đẩy.\n\n` +
+           `• Trùng trong chính đợt này: ${dupInBatch} câu\n` +
+           `• Đã có sẵn trong Ngân hàng: ${dupInBank} câu`
+         );
          setIsPushing(false);
          return;
       }
@@ -574,23 +936,29 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
        * Đẩy qua saveQuestionsToBank thay vì tự ghi thẳng.
        *
        * Bản cũ tự dựng câu lệnh ghi nên bỏ qua hết các chốt của cửa lưu chung: không
-       * chặn câu thiếu Dạng, không nắn đáp án Đúng/Sai về khuôn ĐSSĐ, và tạo dòng danh
-       * mục theo cờ của AI thay vì tra bảng thật. Câu đẩy từ Luyện tập sang vì thế hay
-       * lệch khuôn so với câu soạn thẳng trong Ngân hàng, mà tới lúc ra đề mới lòi ra.
+       * chặn câu thiếu Dạng, không nắn đáp án Đúng/Sai về khuôn ĐSSĐ, không chuẩn hoá
+       * loại câu và mức độ. Câu đẩy từ Luyện tập sang vì thế hay lệch khuôn so với câu
+       * soạn thẳng trong Ngân hàng, mà tới lúc ra đề mới lòi ra.
        */
       const kq = await saveQuestionsToBank(supabase, newInserts as any[]);
 
       if (kq.insertedCount === 0 && kq.thieuPhanLoai.length > 0) {
-        alert(kq.thieuPhanLoai.length + ' câu chưa đẩy được vì thiếu Chương, Bài hoặc Dạng.' +
-          ' Hãy bổ sung phân loại cho các câu đó rồi đẩy lại.');
+        alert(
+          kq.thieuPhanLoai.length + ' câu chưa đẩy được vì thiếu Chương, Bài hoặc Dạng.' +
+          ' Hãy bổ sung phân loại cho các câu đó rồi đẩy lại.'
+        );
         setIsPushing(false);
         return;
       }
       
-      alert(`✅ Đã đẩy thành công ${kq.insertedCount} câu mới vào Ngân hàng!${duplicateCount > 0 ? ` (Bỏ qua ${duplicateCount} câu trùng lặp)` : ''}`
-        + (kq.newCategoriesCreated > 0 ? `\nĐã bổ sung ${kq.newCategoriesCreated} dòng danh mục.` : "")
-        + (kq.daNan.length ? `\n\nMÁY ĐÃ TỰ NẮN ${kq.daNan.length} chỗ:\n- ` + kq.daNan.slice(0, 6).join("\n- ") : "")
-        + (kq.conKhuyet.length ? `\n\nCÒN KHUYẾT ${kq.conKhuyet.length} chỗ (vẫn lưu, nhưng ra đề sẽ hỏng):\n- ` + kq.conKhuyet.slice(0, 6).join("\n- ") : ""));
+      alert(
+        `✅ Đã đẩy ${kq.insertedCount} câu mới vào Ngân hàng!` +
+        (kq.newCategoriesCreated > 0 ? `\nĐã bổ sung ${kq.newCategoriesCreated} dòng danh mục.` : "") +
+        (kq.daNan.length ? `\n\nMÁY ĐÃ TỰ NẮN ${kq.daNan.length} chỗ:\n- ` + kq.daNan.slice(0, 6).join("\n- ") : "") +
+        (kq.conKhuyet.length ? `\n\nCÒN KHUYẾT ${kq.conKhuyet.length} chỗ (vẫn lưu, nhưng ra đề sẽ hỏng):\n- ` + kq.conKhuyet.slice(0, 6).join("\n- ") : "") +
+        (dupInBatch > 0 ? `\n• Bỏ qua ${dupInBatch} câu trùng nhau trong đợt này` : '') +
+        (dupInBank > 0 ? `\n• Bỏ qua ${dupInBank} câu đã có sẵn trong Ngân hàng` : '')
+      );
       onClose();
     } catch (e: any) {
       console.error(e);
@@ -711,12 +1079,21 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
                     {geminiLoading ? '⏳ Đang phân tích...' : '✨ Dùng AI (Hệ thống)'}
                   </button>
                   <div style={{ width: 1, height: 16, background: '#cbd5e1', margin: '0 4px' }}></div>
-                  <button 
+                  <button
                     onClick={handleAutoDetectAll}
                     style={{ background: 'none', border: 'none', color: '#475569', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline' }}
                     title="Dùng thuật toán cơ bản (Offline)"
                   >
                     Dùng thuật toán
+                  </button>
+                  <div style={{ width: 1, height: 16, background: '#cbd5e1', margin: '0 4px' }}></div>
+                  <button
+                    type="button"
+                    onClick={openManualDetectModal}
+                    title="Dùng khi Cổng AI của hệ thống báo lỗi (hết quota, quá tải...) - tự dán vào Gemini Web/ChatGPT"
+                    style={{ background: 'none', border: 'none', color: '#7c3aed', fontSize: 11, fontWeight: 600, cursor: 'pointer', textDecoration: 'underline', display: 'flex', alignItems: 'center', gap: 4 }}
+                  >
+                    <ClipboardPaste style={{ width: 12, height: 12 }} /> Thủ công
                   </button>
                 </div>
 
@@ -760,8 +1137,11 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
                 const badgeText: Record<string, string> = { 'Trắc nghiệm': '#1d4ed8', 'Đúng/Sai': '#92400e', 'Đúng/Sai 4 ý': '#92400e', 'Trả lời ngắn': '#065f46', 'Tự luận': '#5b21b6' };
                 const diffColors: Record<string, string> = { 'Nhận biết': '#3b82f6', 'Thông hiểu': '#10b981', 'Vận dụng': '#f59e0b', 'Vận dụng cao': '#ef4444' };
 
+                const hasProblem = problemIds.has(q.id);
+                const isDuplicate = duplicateInBatchIds.has(q.id);
+
                 return (
-                  <div key={q.id || `fb-${idx}`} style={{ background: '#fff', borderRadius: 10, border: '1px solid #e2e8f0', marginBottom: 10, boxShadow: '0 1px 2px rgba(0,0,0,0.04)' }}>
+                  <div key={q.id || `fb-${idx}`} style={{ background: '#fff', borderRadius: 10, border: `1px solid ${hasProblem ? '#fca5a5' : isDuplicate ? '#fde68a' : '#e2e8f0'}`, marginBottom: 10, boxShadow: hasProblem ? '0 0 0 2px rgba(248,113,113,0.15)' : '0 1px 2px rgba(0,0,0,0.04)' }}>
                     {/* CARD HEADER */}
                     <div style={{ padding: '8px 12px', background: '#fafafa', borderBottom: isCollapsed ? 'none' : '1px solid #e2e8f0', display: 'flex', alignItems: 'center', gap: 6, minHeight: 38 }}>
                       <button type="button" onClick={() => toggleCollapse(q.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, display: 'flex', flexShrink: 0 }}>
@@ -771,6 +1151,19 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
                       <span style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: badgeBg[q.question_type_label] || '#f1f5f9', color: badgeText[q.question_type_label] || '#475569', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                         {q.question_type_label}
                       </span>
+
+                      {isDuplicate && (
+                        <span title="Trùng nội dung với một câu khác trong đợt này, sẽ được bỏ qua khi đẩy"
+                          style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#fef3c7', color: '#92400e', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <Copy style={{ width: 10, height: 10 }} /> TRÙNG
+                        </span>
+                      )}
+                      {hasProblem && (
+                        <span title="Câu này còn thiếu thông tin bắt buộc"
+                          style={{ fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, background: '#fee2e2', color: '#b91c1c', whiteSpace: 'nowrap', display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <AlertTriangle style={{ width: 10, height: 10 }} /> THIẾU
+                        </span>
+                      )}
 
                       {/* Preview khi thu gọn */}
                       {isCollapsed && (
@@ -783,7 +1176,8 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
                       <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }} onClick={e => e.stopPropagation()}>
                         {/* Mức độ */}
                         <select value={q.difficulty} onChange={e => handleUpdateField(q.id, 'difficulty', e.target.value)}
-                          style={{ fontSize: 11, border: '1px solid #e2e8f0', borderRadius: 5, padding: '2px 4px', color: diffColors[q.difficulty] || '#64748b', fontWeight: 700 }}>
+                          style={{ fontSize: 11, border: `1px solid ${q.difficulty ? '#e2e8f0' : '#fca5a5'}`, borderRadius: 5, padding: '2px 4px', color: diffColors[q.difficulty] || '#dc2626', fontWeight: 700 }}>
+                          <option value="">-- Chọn mức độ --</option>
                           <option value="Nhận biết">Nhận biết</option>
                           <option value="Thông hiểu">Thông hiểu</option>
                           <option value="Vận dụng">Vận dụng</option>
@@ -797,20 +1191,49 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
                             handleUpdateField(q.id, 'math_form', e.target.value);
                           }
                         }}
-                          style={{ fontSize: 11, border: '1px solid #e2e8f0', borderRadius: 5, padding: '2px 4px', maxWidth: 140 }}>
-                          <option value="">Dạng bài...</option>
+                          style={{ fontSize: 11, border: `1px solid ${q.math_form ? '#e2e8f0' : '#fca5a5'}`, borderRadius: 5, padding: '2px 4px', maxWidth: 140, color: q.math_form ? undefined : '#dc2626', fontWeight: q.math_form ? undefined : 700 }}>
+                          <option value="">-- Chọn dạng bài --</option>
+                          {/* Dạng đang gán nhưng thuộc chương khác vẫn phải hiện ra, nếu không
+                              ô sẽ trông như trống dù thực tế đã có giá trị (gây hiểu nhầm là
+                              AI không chạy). Có ghi chú rõ để giáo viên biết mà đổi lại. */}
+                          {q.math_form && !relevantForms.includes(q.math_form) && (
+                            <option value={q.math_form}>{q.math_form} (khác chương)</option>
+                          )}
                           {relevantForms.map(f => <option key={f} value={f}>{f}</option>)}
                           <option value="__custom__">✏️ Nhập mới...</option>
                         </select>
                       </div>
                     </div>
 
+                    {/* Đề xuất Dạng vật lý MỚI từ AI - chờ duyệt tại chỗ, chưa tự ghi vào ngân hàng */}
+                    {pendingFormSuggestions[q.id] && (
+                      <div onClick={e => e.stopPropagation()} style={{ margin: '0 16px 10px', padding: '8px 12px', background: '#fff7ed', border: '1px solid #fed7aa', borderRadius: 8, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                        <span style={{ fontSize: 11, fontWeight: 700, color: '#c2410c', whiteSpace: 'nowrap' }}>🆕 AI đề xuất Dạng mới:</span>
+                        <input
+                          value={pendingFormSuggestions[q.id]}
+                          onChange={e => setPendingFormSuggestions(prev => ({ ...prev, [q.id]: e.target.value }))}
+                          style={{ flex: 1, minWidth: 140, fontSize: 12, border: '1px solid #fdba74', borderRadius: 6, padding: '3px 8px', background: '#fff' }}
+                        />
+                        <button type="button" onClick={() => approveNewForm(q.id, pendingFormSuggestions[q.id])}
+                          style={{ fontSize: 11, fontWeight: 700, color: '#fff', background: '#16a34a', border: 'none', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>
+                          ✓ Duyệt
+                        </button>
+                        <button type="button" onClick={() => rejectNewForm(q.id)}
+                          style={{ fontSize: 11, fontWeight: 700, color: '#64748b', background: '#fff', border: '1px solid #cbd5e1', borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>
+                          Bỏ
+                        </button>
+                        <span style={{ fontSize: 10, color: '#9a3412', width: '100%' }}>
+                          Chưa có trong Ngân hàng - Thầy có thể sửa tên trước khi duyệt. Duyệt xong sẽ tự tạo Dạng vật lý mới này khi đẩy vào Ngân hàng.
+                        </span>
+                      </div>
+                    )}
+
                     {/* CARD BODY */}
                     {!isCollapsed && (
                       <div style={{ padding: '12px 16px', fontSize: 14, lineHeight: 1.7, color: '#1e293b' }}>
                         {q.content ? (
                           <div style={{ marginBottom: 10 }}>
-                            <ReactMarkdown urlTransform={chuyenDiaChiAnh} components={customMarkdownComponents} remarkPlugins={[remarkMath, remarkBreaks]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{q.content}</ReactMarkdown>
+                            <ReactMarkdown urlTransform={chuyenDiaChiAnh} remarkPlugins={[remarkMath, remarkBreaks, remarkGfm]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{q.content}</ReactMarkdown>
                           </div>
                         ) : (
                           <div style={{ color: '#94a3b8', fontStyle: 'italic', marginBottom: 10 }}>(Chưa có nội dung)</div>
@@ -826,7 +1249,7 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
                                 <div key={letter} style={{ padding: '6px 10px', borderRadius: 7, fontSize: 13, border: isCorrect ? '2px solid #14b8a6' : '1px solid #e2e8f0', background: isCorrect ? '#f0fdfa' : '#fff', display: 'flex', gap: 5, alignItems: 'flex-start' }}>
                                   <strong style={{ color: isCorrect ? '#0d9488' : '#64748b' }}>{letter}.</strong>
                                   <span style={{ flex: 1 }}>
-                                    {val ? <ReactMarkdown urlTransform={chuyenDiaChiAnh} components={customMarkdownComponents} remarkPlugins={[remarkMath, remarkBreaks]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{val}</ReactMarkdown> : <span style={{ color: '#ccc' }}>—</span>}
+                                    {val ? <ReactMarkdown urlTransform={chuyenDiaChiAnh} remarkPlugins={[remarkMath, remarkBreaks, remarkGfm]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{val}</ReactMarkdown> : <span style={{ color: '#ccc' }}>—</span>}
                                   </span>
                                   {isCorrect && <span style={{ color: '#0d9488', fontWeight: 700 }}>✓</span>}
                                 </div>
@@ -845,7 +1268,7 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
                               return (
                                 <div key={letter} style={{ padding: '5px 10px', borderRadius: 6, marginBottom: 4, border: '1px solid #e2e8f0', background: '#fff', display: 'flex', alignItems: 'center', gap: 8, fontSize: 13 }}>
                                   <strong style={{ color: '#64748b', minWidth: 18 }}>{letter}.</strong>
-                                  <span style={{ flex: 1 }}>{val ? <ReactMarkdown urlTransform={chuyenDiaChiAnh} components={customMarkdownComponents} remarkPlugins={[remarkMath, remarkBreaks]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{val}</ReactMarkdown> : '—'}</span>
+                                  <span style={{ flex: 1 }}>{val ? <ReactMarkdown urlTransform={chuyenDiaChiAnh} remarkPlugins={[remarkMath, remarkBreaks, remarkGfm]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{val}</ReactMarkdown> : '—'}</span>
                                   <span style={{ fontSize: 11, fontWeight: 700, padding: '1px 7px', borderRadius: 4, background: isTrue ? '#d1fae5' : '#fee2e2', color: isTrue ? '#065f46' : '#991b1b' }}>{isTrue ? 'ĐÚNG' : 'SAI'}</span>
                                 </div>
                               );
@@ -864,7 +1287,7 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
                         {q.question_type === 'essay' && q.correct_answer && (
                           <div style={{ padding: '7px 12px', borderRadius: 7, marginTop: 6, background: '#fefce8', border: '1px solid #fde68a', fontSize: 12, color: '#854d0e' }}>
                             <strong>Lời giải mẫu:</strong>
-                            <div style={{ marginTop: 4 }}><ReactMarkdown urlTransform={chuyenDiaChiAnh} components={customMarkdownComponents} remarkPlugins={[remarkMath, remarkBreaks]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{q.correct_answer}</ReactMarkdown></div>
+                            <div style={{ marginTop: 4 }}><ReactMarkdown urlTransform={chuyenDiaChiAnh} remarkPlugins={[remarkMath, remarkBreaks, remarkGfm]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{q.correct_answer}</ReactMarkdown></div>
                           </div>
                         )}
 
@@ -872,7 +1295,7 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
                         {q.explanation && q.question_type !== 'essay' && (
                           <div style={{ padding: '7px 12px', borderRadius: 7, marginTop: 6, background: '#fefce8', border: '1px solid #fde68a', fontSize: 12, color: '#854d0e' }}>
                             <strong>💡 Hướng dẫn giải:</strong>
-                            <div style={{ marginTop: 4 }}><ReactMarkdown urlTransform={chuyenDiaChiAnh} components={customMarkdownComponents} remarkPlugins={[remarkMath, remarkBreaks]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{q.explanation}</ReactMarkdown></div>
+                            <div style={{ marginTop: 4 }}><ReactMarkdown urlTransform={chuyenDiaChiAnh} remarkPlugins={[remarkMath, remarkBreaks, remarkGfm]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{q.explanation}</ReactMarkdown></div>
                           </div>
                         )}
                       </div>
@@ -885,15 +1308,43 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
         </div>
 
         {/* ===== FOOTER ===== */}
-        <div style={{ padding: '12px 20px', background: '#fff', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: 10, alignItems: 'center' }}>
-          <button onClick={onClose} type="button" style={{ padding: '8px 22px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 10, fontWeight: 700, fontSize: 14, color: '#475569', cursor: 'pointer' }}>
-            Đóng
-          </button>
-          <button onClick={handlePushAll} type="button" disabled={isPushing || questions.length === 0}
-            style={{ padding: '8px 22px', background: '#a21caf', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, color: '#fff', cursor: isPushing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: questions.length === 0 ? 0.5 : 1, boxShadow: '0 2px 8px rgba(162,28,175,0.25)' }}>
-            {isPushing ? <Loader2 style={{ width: 16, height: 16 }} /> : <UploadCloud style={{ width: 16, height: 16 }} />}
-            Đồng ý đưa {questions.length} câu vào Ngân hàng
-          </button>
+        <div style={{ padding: '12px 20px', background: '#fff', borderTop: '1px solid #e2e8f0' }}>
+
+          {/* Bảng soát lỗi trước khi lưu */}
+          {(blockingIssues.length > 0 || duplicateInBatchIds.size > 0) && (
+            <div style={{ marginBottom: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              {blockingIssues.length > 0 && (
+                <div style={{ background: '#fef2f2', border: '1px solid #fecaca', borderRadius: 8, padding: '8px 12px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontWeight: 700, fontSize: 12.5, color: '#b91c1c', marginBottom: 4 }}>
+                    <AlertTriangle style={{ width: 14, height: 14 }} />
+                    Chưa thể đẩy vào Ngân hàng — còn thiếu thông tin
+                  </div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px 14px', fontSize: 12, color: '#7f1d1d' }}>
+                    {blockingIssues.map(i => (
+                      <span key={i.key}>• {i.label}: <b>{i.ids.length}</b> câu</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+              {duplicateInBatchIds.size > 0 && (
+                <div style={{ background: '#fffbeb', border: '1px solid #fde68a', borderRadius: 8, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: '#92400e' }}>
+                  <Copy style={{ width: 14, height: 14, flexShrink: 0 }} />
+                  Có <b>{duplicateInBatchIds.size}</b> câu trùng nội dung với câu khác ngay trong đợt này — sẽ tự động bỏ qua, chỉ giữ câu đầu tiên.
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 10, alignItems: 'center' }}>
+            <button onClick={onClose} type="button" style={{ padding: '8px 22px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 10, fontWeight: 700, fontSize: 14, color: '#475569', cursor: 'pointer' }}>
+              Đóng
+            </button>
+            <button onClick={handlePushAll} type="button" disabled={isPushing || questions.length === 0 || blockingIssues.length > 0}
+              style={{ padding: '8px 22px', background: blockingIssues.length > 0 ? '#cbd5e1' : '#a21caf', border: 'none', borderRadius: 10, fontWeight: 700, fontSize: 14, color: '#fff', cursor: (isPushing || blockingIssues.length > 0) ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 8, opacity: questions.length === 0 ? 0.5 : 1, boxShadow: blockingIssues.length > 0 ? 'none' : '0 2px 8px rgba(162,28,175,0.25)' }}>
+              {isPushing ? <Loader2 style={{ width: 16, height: 16 }} /> : <UploadCloud style={{ width: 16, height: 16 }} />}
+              Đồng ý đưa {Math.max(0, questions.length - duplicateInBatchIds.size)} câu vào Ngân hàng
+            </button>
+          </div>
         </div>
       </div>
       
@@ -915,13 +1366,80 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
               handleUpdateField(showAddCategoryModal.targetId, 'math_form', newForm);
            }
         }} 
-        initialContext={editCtx} 
-        uniqueGrades={uniqueGrades} 
-        uniqueSubjects={uniqueSubjects} 
-        uniqueTopics={uniqueTopics} 
-        uniqueLessons={uniqueLessons} 
+        initialContext={editCtx}
+        uniqueGrades={uniqueGrades}
+        uniqueSubjects={uniqueSubjects}
+        uniqueTopics={uniqueTopics}
+        uniqueLessons={uniqueLessons}
         supabase={supabase}
       />
+
+      {/* Hộp thoại Thủ công: dùng khi Cổng AI của hệ thống báo lỗi (hết quota,
+          quá tải 503...). Giáo viên tự copy prompt dán vào Gemini Web/ChatGPT
+          rồi dán kết quả JSON ngược lại - không phụ thuộc server đang gặp sự cố. */}
+      {showManualDetectModal && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 90, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+          <div style={{ background: '#fff', borderRadius: 16, width: '100%', maxWidth: 640, maxHeight: '92vh', display: 'flex', flexDirection: 'column', boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <div style={{ padding: '16px 20px', borderBottom: '1px solid #e2e8f0', background: '#faf5ff', display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderRadius: '16px 16px 0 0' }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#6b21a8', display: 'flex', alignItems: 'center', gap: 8, margin: 0 }}>
+                <ClipboardPaste style={{ width: 18, height: 18 }} /> Phân tích Dạng vật lý &amp; Mức độ - Thủ công
+              </h2>
+              <button onClick={() => setShowManualDetectModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+                <X style={{ width: 18, height: 18, color: '#94a3b8' }} />
+              </button>
+            </div>
+
+            <div style={{ padding: 20, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 16 }}>
+              <div style={{ background: '#eff6ff', border: '1px solid #bfdbfe', borderRadius: 10, padding: '12px 14px', fontSize: 12.5, color: '#1e40af', lineHeight: 1.6 }}>
+                Dùng khi nút &quot;Dùng AI (Hệ thống)&quot; báo lỗi (hết quota, quá tải 503...).
+                <br />
+                <b>Bước 1:</b> Copy prompt bên dưới. <b>Bước 2:</b> Dán vào Gemini Web, ChatGPT hoặc AI Studio bất kỳ. <b>Bước 3:</b> Dán kết quả JSON AI trả về vào ô cuối, rồi bấm Áp dụng.
+              </div>
+
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                  <label style={{ fontSize: 12.5, fontWeight: 700, color: '#374151' }}>Bước 1 · Prompt (đã kèm sẵn nội dung câu hỏi)</label>
+                  <button type="button" onClick={handleCopyManualPrompt}
+                    style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, fontWeight: 700, padding: '4px 10px', borderRadius: 6, border: '1px solid #c4b5fd', background: manualDetectCopied ? '#f0fdf4' : '#f5f3ff', color: manualDetectCopied ? '#166534' : '#6d28d9', cursor: 'pointer' }}>
+                    {manualDetectCopied ? <><CheckCircle2 style={{ width: 13, height: 13 }} /> Đã copy</> : <><Copy style={{ width: 13, height: 13 }} /> Copy Prompt</>}
+                  </button>
+                </div>
+                <textarea
+                  readOnly
+                  value={manualDetectPrompt}
+                  style={{ width: '100%', height: 140, padding: 10, border: '1px solid #e2e8f0', borderRadius: 8, fontSize: 11.5, fontFamily: 'monospace', color: '#475569', background: '#f8fafc', resize: 'vertical' }}
+                  onClick={(e) => (e.target as HTMLTextAreaElement).select()}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: 12.5, fontWeight: 700, color: '#374151', marginBottom: 6, display: 'block' }}>Bước 2 · Dán kết quả JSON AI trả về vào đây</label>
+                <textarea
+                  value={manualDetectInput}
+                  onChange={(e) => { setManualDetectInput(e.target.value); setManualDetectError(''); }}
+                  placeholder='Dán nguyên văn câu trả lời của AI vào đây, ví dụ: [{"id": "...", "form": "...", "isNew": false, "difficulty": "Thông hiểu"}, ...]'
+                  style={{ width: '100%', height: 140, padding: 10, border: `1px solid ${manualDetectError ? '#fca5a5' : '#e2e8f0'}`, borderRadius: 8, fontSize: 12, fontFamily: 'monospace', resize: 'vertical' }}
+                />
+                {manualDetectError && (
+                  <div style={{ marginTop: 6, fontSize: 12, color: '#dc2626', display: 'flex', alignItems: 'flex-start', gap: 5 }}>
+                    <AlertTriangle style={{ width: 13, height: 13, flexShrink: 0, marginTop: 1 }} /> {manualDetectError}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div style={{ padding: '14px 20px', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'flex-end', gap: 10 }}>
+              <button onClick={() => setShowManualDetectModal(false)} style={{ padding: '8px 18px', background: '#f1f5f9', border: '1px solid #cbd5e1', borderRadius: 8, fontWeight: 700, fontSize: 13, color: '#475569', cursor: 'pointer' }}>
+                Đóng
+              </button>
+              <button onClick={applyManualDetectInput} disabled={!manualDetectInput.trim()}
+                style={{ padding: '8px 20px', background: manualDetectInput.trim() ? '#7c3aed' : '#cbd5e1', border: 'none', borderRadius: 8, fontWeight: 700, fontSize: 13, color: '#fff', cursor: manualDetectInput.trim() ? 'pointer' : 'not-allowed' }}>
+                Áp dụng kết quả
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
