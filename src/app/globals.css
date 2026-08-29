@@ -317,11 +317,15 @@
 }
 
 /* ===== Giới hạn kích thước ảnh trong Markdown (Bài giảng / Đề thi) ===== */
-.prose img, 
-.markdown-body img,
-img[alt="Hình vẽ"],
-img[alt="Bảng biến thiên"],
-img[alt="Minh họa"] {
+/* Lưới an toàn cho ảnh lọt ra ngoài bộ dựng của mình (VD dán thẳng thẻ <img>). Ảnh do
+   CustomMarkdownComponents dựng mang lớp .anh-noi-dung và được loại ra khỏi luật này -
+   nếu không, mấy dòng !important dưới đây đè chết cả cỡ ảnh Thầy cô chọn (Nhỏ/Vừa/To)
+   lẫn kiểu xếp hai ảnh nằm ngang. */
+.prose img:not(.anh-noi-dung),
+.markdown-body img:not(.anh-noi-dung),
+img[alt="Hình vẽ"]:not(.anh-noi-dung),
+img[alt="Bảng biến thiên"]:not(.anh-noi-dung),
+img[alt="Minh họa"]:not(.anh-noi-dung) {
   display: block !important;
   max-height: 400px !important;
   height: auto !important;
