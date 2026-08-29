@@ -1,12 +1,13 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useParams } from "next/navigation";
 import { createClient } from "@/utils/supabase/client";
-import { Loader2, ArrowLeft, ArrowRight, CheckCircle2, XCircle, AlertCircle, List, PlayCircle, FileText, Download, ChevronRight } from "lucide-react";
+import { Loader2, ArrowLeft, ArrowRight, CheckCircle2, XCircle, AlertCircle, List, PlayCircle, FileText, Download, ChevronRight, ChevronDown } from "lucide-react";
 import Link from "next/link";
 import ReactMarkdown from 'react-markdown';
-import remarkPhysics from 'remark-math';
+import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import rehypeRaw from 'rehype-raw';
 import remarkBreaks from 'remark-breaks';
@@ -22,7 +23,12 @@ const normalizeAnswer = (s: string) => {
       .replace(/^[xy]=/, ''); // Bỏ qua x= hoặc y= ở đầu đáp án
 };
 
-import { appMarkdownComponents , chuyenDiaChiAnh } from '@/components/CustomMarkdownComponents';
+// Dùng bộ chữ RESPONSIVE dành cho học sinh (giống AzotaExamUI bên Luyện tập).
+// Trước đây trang này lấy nhầm appMarkdownComponents - bộ hardcode px cho màn
+// rộng (h1 55px, p/li 35px) - nên trên điện thoại 375px chữ nội dung to gấp
+// hơn 2 lần tiêu đề trang, mỗi dòng chỉ vừa ~10 ký tự.
+import { studentMarkdownComponents as appMarkdownComponents, preprocessMarkdown , chuyenDiaChiAnh } from '@/components/CustomMarkdownComponents';
+import { ensureMathDelimiters } from '@/utils/latexFixer';
 
 const getYouTubeEmbedUrl = (url: string) => {
   if (!url) return '';
@@ -204,7 +210,7 @@ const InteractiveQuiz = ({ data, onPass }: { data: any, onPass: () => void }) =>
              </span>
          </div>
          <div className="prose prose-sm sm:prose-base prose-indigo max-w-none prose-p:my-0 font-bold leading-relaxed text-slate-700">
-            <ReactMarkdown components={appMarkdownComponents} remarkPlugins={[remarkPhysics, remarkBreaks]} rehypePlugins={[rehypeKatex, rehypeRaw]} urlTransform={(url) => url}>{cleanQuestion.replace(/^(?:\*\*)?Hướng\s+dẫn\s+giải:?(?:\*\*)?\s*/gim, '### 💡 Hướng dẫn giải chi tiết:\n\n')}</ReactMarkdown>
+            <ReactMarkdown components={appMarkdownComponents} remarkPlugins={[remarkMath, remarkBreaks, remarkGfm]} rehypePlugins={[rehypeKatex, rehypeRaw]} urlTransform={(url) => url}>{preprocessMarkdown(cleanQuestion).replace(/^(?:\*\*)?Hướng\s+dẫn\s+giải:?(?:\*\*)?\s*/gim, '### 💡 Hướng dẫn giải chi tiết:\n\n')}</ReactMarkdown>
             {/* Nội dung câu đã có sẵn ảnh markdown nào rồi thì thôi, đừng bày thêm ảnh
                 nữa. Bản cũ chỉ dò đúng hai nhãn "Hình vẽ" và "Bảng biến thiên", trong khi
                 đường AI tự cắt chèn nhãn "Hình minh họa" - nên câu vừa có ảnh trong nội
@@ -228,7 +234,7 @@ const InteractiveQuiz = ({ data, onPass }: { data: any, onPass: () => void }) =>
                   key={optIdx}
                   disabled={isChecked}
                   onClick={() => setSelectedOpt(optIdx)}
-                  className={`w-full flex-1 text-center font-bold py-4 px-6 rounded-2xl border-2 transition-all ${
+                  className={`w-full flex-1 text-center font-bold text-[15px] py-3 px-4 rounded-xl border-2 transition-all ${
                      isSelected && !isChecked ? 'border-indigo-500 bg-indigo-500 text-white shadow-[4px_4px_0px_0px_rgba(129,140,248,1)] transform -translate-y-1' : ''
                   } ${
                      !isSelected && !isChecked ? 'border-slate-200 text-slate-600 bg-white hover:border-indigo-300 hover:bg-indigo-50 hover:-translate-y-0.5 shadow-sm' : ''
@@ -240,7 +246,7 @@ const InteractiveQuiz = ({ data, onPass }: { data: any, onPass: () => void }) =>
                      isChecked && !isCorrect && !isWrong ? 'border-gray-200 bg-gray-50 text-gray-400 opacity-50' : ''
                   }`}
                >
-                  <ReactMarkdown urlTransform={chuyenDiaChiAnh} components={appMarkdownComponents} remarkPlugins={[remarkPhysics]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{String(text).replace(/^(\s*\d+)\.(?=\s|$)/, '$1\\.')}</ReactMarkdown>
+                  <ReactMarkdown urlTransform={chuyenDiaChiAnh} components={appMarkdownComponents} remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{String(text).replace(/^(\s*\d+)\.(?=\s|$)/, '$1\\.')}</ReactMarkdown>
                </button>
              );
           })}
@@ -259,7 +265,7 @@ const InteractiveQuiz = ({ data, onPass }: { data: any, onPass: () => void }) =>
                   key={idx}
                   disabled={isChecked}
                   onClick={() => setSelectedOpt(idx)}
-                  className={`text-left p-4 rounded-2xl border-2 transition-all flex items-start gap-4
+                  className={`text-left p-3 rounded-xl border-2 transition-all flex items-start gap-3
                      ${isSelected && !isChecked ? 'border-indigo-400 bg-indigo-50 shadow-[4px_4px_0px_0px_rgba(129,140,248,1)] transform -translate-y-1' : ''}
                      ${!isSelected && !isChecked ? 'border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30 hover:-translate-y-0.5 hover:shadow-sm' : ''}
                      ${isCorrect ? 'border-green-400 bg-green-50 shadow-[4px_4px_0px_0px_rgba(74,222,128,1)]' : ''}
@@ -275,8 +281,8 @@ const InteractiveQuiz = ({ data, onPass }: { data: any, onPass: () => void }) =>
                   `}>
                      {['A','B','C','D'][idx]}
                   </div>
-                  <div className="flex-1 min-w-0 prose prose-sm max-w-none text-gray-700 prose-p:my-0">
-                     <ReactMarkdown urlTransform={chuyenDiaChiAnh} components={appMarkdownComponents} remarkPlugins={[remarkPhysics]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{String(opt).replace(/^(\s*\d+)\.(?=\s|$)/, '$1\\.')}</ReactMarkdown>
+                  <div className="flex-1 min-w-0 prose prose-sm max-w-none text-gray-700 prose-p:my-0 text-[15px]">
+                     <ReactMarkdown urlTransform={chuyenDiaChiAnh} components={appMarkdownComponents} remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{String(opt).replace(/^(\s*\d+)\.(?=\s|$)/, '$1\\.')}</ReactMarkdown>
                   </div>
                </button>
              );
@@ -297,8 +303,8 @@ const InteractiveQuiz = ({ data, onPass }: { data: any, onPass: () => void }) =>
                   <div key={idx} className={`flex flex-col md:flex-row md:items-center justify-between p-4 rounded-xl border-2 transition-all gap-4 ${st}`}>
                      <div className="flex items-start gap-3">
                         <div className="font-bold text-gray-500 w-6">{['A','B','C','D'][idx] || 'A'}.</div>
-                        <div className="flex-1 min-w-0 prose prose-sm max-w-none text-gray-700 prose-p:my-0">
-                           <ReactMarkdown urlTransform={chuyenDiaChiAnh} components={appMarkdownComponents} remarkPlugins={[remarkPhysics]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{String(stmt.content || stmt.text || '').replace(/^(\s*\d+)\.(?=\s|$)/, '$1\\.')}</ReactMarkdown>
+                        <div className="flex-1 min-w-0 prose prose-sm max-w-none text-gray-700 prose-p:my-0 text-[15px]">
+                           <ReactMarkdown urlTransform={chuyenDiaChiAnh} components={appMarkdownComponents} remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex, rehypeRaw]}>{String(stmt.content || stmt.text || '').replace(/^(\s*\d+)\.(?=\s|$)/, '$1\\.')}</ReactMarkdown>
                         </div>
                      </div>
                      <div className="flex items-center gap-2 shrink-0 md:ml-auto">
@@ -357,7 +363,19 @@ const InteractiveQuiz = ({ data, onPass }: { data: any, onPass: () => void }) =>
          <div className={`mt-5 p-4 rounded-xl flex items-start gap-3 ${(normalizeAnswer(shortAnswerText || '') !== '' && normalizeAnswer(shortAnswerText || '') === normalizeAnswer(data.exactAnswer || data.correctAnswer || '')) ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
             {(normalizeAnswer(shortAnswerText || '') !== '' && normalizeAnswer(shortAnswerText || '') === normalizeAnswer(data.exactAnswer || data.correctAnswer || '')) ? <CheckCircle2 className="w-5 h-5 mt-0.5 shrink-0" /> : <XCircle className="w-5 h-5 mt-0.5 shrink-0" />}
             <div className="flex-1">
-               <p className="font-bold">{(normalizeAnswer(shortAnswerText || '') !== '' && normalizeAnswer(shortAnswerText || '') === normalizeAnswer(data.exactAnswer || data.correctAnswer || '')) ? 'Tuyệt vời! Bạn đã điền chính xác.' : `Chưa đúng rồi! Đáp án đúng là: ${data.exactAnswer || data.correctAnswer || 'Chưa cập nhật'}`}</p>
+               {(normalizeAnswer(shortAnswerText || '') !== '' && normalizeAnswer(shortAnswerText || '') === normalizeAnswer(data.exactAnswer || data.correctAnswer || '')) ? (
+                  <p className="font-bold">Tuyệt vời! Bạn đã điền chính xác.</p>
+               ) : (
+                  /* Render KaTeX để đáp án dạng công thức hiện đúng thay vì chuỗi LaTeX thô */
+                  <div className="font-bold flex items-center gap-1.5 flex-wrap">
+                     Chưa đúng rồi! Đáp án đúng là:
+                     <span className="[&_p]:m-0 [&_.katex]:text-[1.05em]">
+                        <ReactMarkdown urlTransform={chuyenDiaChiAnh} remarkPlugins={[remarkMath, remarkGfm]} rehypePlugins={[rehypeKatex]}>
+                           {ensureMathDelimiters(data.exactAnswer || data.correctAnswer) || 'Chưa cập nhật'}
+                        </ReactMarkdown>
+                     </span>
+                  </div>
+               )}
             </div>
             {normalizeAnswer(shortAnswerText || '') !== normalizeAnswer(data.exactAnswer || data.correctAnswer || '') && (
                <button onClick={() => { setIsChecked(false); setShortAnswerText(""); }} className="px-4 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 font-bold rounded-lg text-sm transition-colors shrink-0 shadow-sm">Làm lại</button>
@@ -463,28 +481,28 @@ const InteractiveFlipbook = ({ content }: { content: string }) => {
 
   if (pages.length === 0) return null;
 
+  // Trên điện thoại: bo góc nhỏ, bỏ đổ bóng dày và giảm lề để nhường bề rộng cho chữ.
+  // Từ tablet trở lên mới dùng lại kiểu thẻ nổi như cũ.
   return (
-    <div className="flex flex-col min-h-[50vh] bg-white rounded-[2.5rem] shadow-[12px_12px_0px_0px_rgba(203,213,225,0.4)] border-2 border-slate-200 p-6 sm:p-10 md:p-14">
+    <div className="flex flex-col min-h-[50vh] bg-white rounded-2xl sm:rounded-[2rem] border border-slate-200 sm:border-2 shadow-sm sm:shadow-[10px_10px_0px_0px_rgba(203,213,225,0.4)] px-4 py-6 sm:p-10 md:p-12">
       <div className="flex-1">
         {parts.map((p, idx) => {
            if (p.type === 'md') {
+               // Cỡ chữ nền theo chuẩn đọc trên thiết bị di động (16-18px). Các thẻ
+               // h1..h5, danh sách, bảng, thẻ nội dung đã tự lo kiểu dáng bên trong
+               // studentMarkdownComponents nên ở đây không đặt đè nữa.
+               // max-w-[72ch] giữ độ dài dòng trong khoảng dễ đọc (~50-75 ký tự).
                return (
-                 <div key={`md-${currentPage}-${idx}`} className="prose prose-lg prose-indigo max-w-none text-slate-800 leading-relaxed font-medium
-                    prose-h1:text-4xl prose-h1:font-black prose-h1:text-indigo-900 prose-h1:mb-10 prose-h1:text-center prose-h1:tracking-tight
-                    prose-h2:text-[1.5rem] prose-h2:font-black prose-h2:text-white prose-h2:bg-gradient-to-r prose-h2:from-indigo-600 prose-h2:via-blue-600 prose-h2:to-cyan-500 prose-h2:px-6 prose-h2:py-4 prose-h2:rounded-2xl prose-h2:mt-14 prose-h2:mb-8 prose-h2:uppercase prose-h2:tracking-wide prose-h2:shadow-[0_8px_30px_rgb(79,70,229,0.2)] prose-h2:border-l-8 prose-h2:border-l-yellow-400
-                    prose-h3:text-[1.2rem] prose-h3:font-bold prose-h3:text-white prose-h3:bg-gradient-to-r prose-h3:from-amber-500 prose-h3:to-orange-400 prose-h3:px-5 prose-h3:py-3 prose-h3:rounded-xl prose-h3:mt-10 prose-h3:mb-5 prose-h3:shadow-md
-                    prose-p:mb-6 prose-p:text-[1.1rem] prose-p:leading-[1.8] prose-p:text-gray-700
-                    prose-strong:text-indigo-800 prose-strong:font-black prose-strong:bg-indigo-50/50 prose-strong:px-1.5 prose-strong:py-0.5 prose-strong:rounded-md
-                    prose-li:mb-3 prose-ul:list-none prose-ul:pl-0 
+                 <div key={`md-${currentPage}-${idx}`} className="max-w-[62ch] mx-auto text-[17px] sm:text-[18px] leading-[1.7] text-slate-800
                     [&_code]:bg-amber-100 [&_code]:text-amber-800 [&_code]:px-2 [&_code]:py-0.5 [&_code]:rounded-lg [&_code]:border [&_code]:border-amber-200 [&_code]:font-bold [&_code]:text-[0.9em]
-                     [&_h2]:text-blue-700 [&_h2]:bg-blue-50 [&_h2]:px-4 [&_h2]:py-2 [&_h2]:rounded-xl [&_h2]:border-l-4 [&_h2]:border-blue-500 [&_h2]:block [&_h2]:w-fit [&_h2]:clear-both [&_h2]:shadow-sm [&_h2]:mb-4 [&_h2]:mt-8 [&_h3]:text-amber-700 [&_h3]:bg-amber-50 [&_h3]:px-3 [&_h3]:py-1.5 [&_h3]:rounded-lg [&_h3]:border-l-4 [&_h3]:border-amber-400 [&_h3]:block [&_h3]:w-fit [&_h3]:clear-both [&_h3]:shadow-sm [&_h3]:mt-6 [&_h3]:mb-3 [&_blockquote]:border-l-8 [&_blockquote]:border-dashed [&_blockquote]:border-amber-400 [&_blockquote]:bg-gradient-to-r [&_blockquote]:from-amber-50 [&_blockquote]:to-orange-50/30 [&_blockquote]:text-amber-900 [&_blockquote]:px-6 [&_blockquote]:py-5 [&_blockquote]:rounded-[2rem] [&_blockquote]:shadow-sm [&_blockquote]:my-8 [&_blockquote_p]:m-0 [&_blockquote_p]:font-bold [&_blockquote_p]:leading-relaxed
+                    [&_.katex-display]:overflow-x-auto [&_.katex-display]:overflow-y-hidden [&_.katex-display]:py-1
                  ">
                    <ReactMarkdown urlTransform={chuyenDiaChiAnh} 
-                      remarkPlugins={[remarkPhysics, remarkBreaks]} 
+                      remarkPlugins={[remarkMath, remarkBreaks, remarkGfm]} 
                       rehypePlugins={[rehypeKatex, rehypeRaw]}
                       components={appMarkdownComponents}
                    >
-                     {p.content.replace(/^(?:\*\*)?Hướng\s+dẫn\s+giải:?(?:\*\*)?\s*/gim, '### 💡 Hướng dẫn giải chi tiết:\n\n')}
+                     {preprocessMarkdown(p.content).replace(/^(?:\*\*)?Hướng\s+dẫn\s+giải:?(?:\*\*)?\s*/gim, '### 💡 Hướng dẫn giải chi tiết:\n\n')}
                    </ReactMarkdown>
                  </div>
                );
@@ -554,10 +572,17 @@ export default function StudentLessonPage() {
   useEffect(() => {
     async function load() {
       const { data: lessonData } = await supabase.from('lessons').select('*').eq('id', lessonId).single();
+      // Lớp của khoá học - dùng để Sổ tay công thức chỉ hiện công thức đúng lớp.
+      // Nhiều khoá đang để grade_level = 0 (chưa đặt), nên chỉ nhận giá trị thật sự có nghĩa.
+      let lopKhoa = '';
+      if (lessonData?.course_id) {
+        const { data: kh } = await supabase.from('courses').select('grade_level').eq('id', lessonData.course_id).single();
+        if (kh?.grade_level && Number(kh.grade_level) > 0) lopKhoa = String(kh.grade_level);
+      }
       const { data: modulesData } = await supabase.from('lesson_modules').select('*').eq('lesson_id', lessonId).order('order_index', { ascending: true });
       
       if (lessonData) {
-        setLesson({ ...lessonData, modules: modulesData || [] });
+        setLesson({ ...lessonData, modules: modulesData || [], lopKhoa });
         if (modulesData && modulesData.length > 0) {
           setActiveModuleId(modulesData[0].id);
         }
@@ -566,6 +591,41 @@ export default function StudentLessonPage() {
     }
     load();
   }, [lessonId, supabase]);
+
+  /* Thanh tiêu đề + tabs tự trượt lên khi cuộn xuống để nhường chỗ cho bài học,
+     cuộn ngược lên là hiện lại ngay. Trên điện thoại xoay ngang (cao 375px) ba
+     thanh cố định cũ chiếm tới ~43% màn hình, gần như không còn chỗ đọc. */
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [chromeHidden, setChromeHidden] = useState(false);
+  const [moChonDe, setMoChonDe] = useState(false);
+  const hopChonDe = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    let lastY = el.scrollTop;
+    const onScroll = () => {
+      const y = el.scrollTop;
+      const delta = y - lastY;
+      // Bỏ qua rung nhỏ để thanh không nhấp nháy khi cuộn nhẹ
+      if (Math.abs(delta) < 6) return;
+      // Luôn hiện lại khi đã cuộn gần đầu trang
+      if (y < 80) setChromeHidden(false);
+      else setChromeHidden(delta > 0);
+      lastY = y;
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, [loading]);
+
+  // Đóng menu chọn đề khi bấm ra ngoài - menu đè lên đề bài thì học sinh không đọc được
+  useEffect(() => {
+    if (!moChonDe) return;
+    const bamNgoai = (e: MouseEvent) => {
+      if (hopChonDe.current && !hopChonDe.current.contains(e.target as Node)) setMoChonDe(false);
+    };
+    document.addEventListener('mousedown', bamNgoai);
+    return () => document.removeEventListener('mousedown', bamNgoai);
+  }, [moChonDe]);
 
   if (loading) return <div className="flex justify-center items-center h-screen bg-gray-50"><Loader2 className="w-10 h-10 animate-spin text-indigo-600" /></div>;
   if (!lesson) return <div className="p-8 text-center text-red-500 bg-gray-50 h-screen">Không tìm thấy bài giảng.</div>;
@@ -582,59 +642,81 @@ export default function StudentLessonPage() {
   const containerClass = isPracticeModule ? "max-w-7xl" : "max-w-4xl";
 
   return (
-    <div className="w-full flex-1 h-screen overflow-y-auto bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] bg-slate-50 pb-20">
-      {/* Header */}
-      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
-         <div className={`${containerClass} mx-auto px-4 py-4 flex items-center gap-4 transition-all duration-500`}>
-            <Link href="/student/dashboard" className="p-2 hover:bg-gray-100 rounded-full transition-colors text-gray-500"><ArrowLeft className="w-5 h-5"/></Link>
-            <h1 className="font-extrabold text-xl text-gray-800 line-clamp-1">{lesson.title}</h1>
+    <div ref={scrollRef} className="w-full flex-1 h-[100dvh] overflow-y-auto bg-[radial-gradient(#cbd5e1_1px,transparent_1px)] [background-size:24px_24px] bg-slate-50 pb-20">
+      {/*
+        * KHUNG ĐIỀU HƯỚNG - MỘT hàng duy nhất.
+        *
+        * Đo trên máy học sinh thật (375x812): ba tầng cũ (tên bài / tabs / hàng chọn đề)
+        * chiếm 148px, cộng khối tiêu đề module lặp lại 123px và bảng tiến độ 237px là 508px
+        * - 63% màn hình đầu tiên, chưa đọc được câu nào. Khổ ngang còn tệ hơn: 292px trên
+        * 375px, tức 78%.
+        *
+        * Nay tên bài, tabs và nút chọn đề nằm CHUNG một hàng cao 52px. Hàng chọn đề vốn chỉ
+        * có vài lựa chọn, không đáng chiếm trọn một tầng - gói vào một nút xổ xuống.
+        */}
+      <div className={`sticky top-0 z-50 transition-transform duration-300 ease-out will-change-transform ${chromeHidden ? '-translate-y-full' : 'translate-y-0'}`}>
+         <div className="bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
+            <div className={`${containerClass} mx-auto px-2 sm:px-4 h-[52px] sm:h-16 [@media(max-height:500px)]:h-11 flex items-center gap-1.5 sm:gap-3`}>
+               <Link href="/student/dashboard" className="p-1.5 hover:bg-gray-100 rounded-full transition-colors text-gray-500 shrink-0"><ArrowLeft className="w-5 h-5"/></Link>
+
+               {/* Tên bài nhường chỗ cho tabs khi màn hẹp, nhưng không biến mất hẳn */}
+               <h1 className="font-extrabold text-sm sm:text-lg text-gray-800 truncate shrink min-w-0 max-w-[32%] sm:max-w-none">{lesson.title}</h1>
+
+               {lesson.modules && lesson.modules.length > 0 && (
+                 <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar ml-auto">
+                    {otherModules.map((mod: any) => (
+                      <button
+                        key={mod.id}
+                        onClick={() => setActiveModuleId(mod.id)}
+                        title={mod.title}
+                        className={`shrink-0 px-2.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all max-w-[110px] sm:max-w-[220px] truncate ${activeModuleId === mod.id ? 'bg-indigo-600 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                      >
+                        {mod.title}
+                      </button>
+                    ))}
+                    {practices.length > 0 && (
+                      <button
+                        onClick={() => setActiveModuleId(practices[0].id)}
+                        className={`shrink-0 px-2.5 sm:px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold transition-all ${isPracticeTabActive ? 'bg-orange-500 text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                      >
+                        🎯 Luyện tập
+                      </button>
+                    )}
+
+                    {/* Chọn đề: nút xổ xuống, chỉ hiện khi đang ở Luyện tập và có nhiều đề */}
+                    {isPracticeTabActive && practices.length > 1 && (
+                       <div className="relative shrink-0" ref={hopChonDe}>
+                          <button
+                             onClick={() => setMoChonDe(v => !v)}
+                             title={activeModule?.title}
+                             className="flex items-center gap-1 px-2.5 sm:px-3 py-1.5 rounded-full text-xs sm:text-sm font-bold bg-orange-50 border border-orange-200 text-orange-700 hover:bg-orange-100 transition-all max-w-[110px] sm:max-w-[260px]"
+                          >
+                             <span className="truncate">{activeModule?.title || 'Chọn đề'}</span>
+                             <ChevronDown className={`w-3.5 h-3.5 shrink-0 transition-transform ${moChonDe ? 'rotate-180' : ''}`} />
+                          </button>
+                          {moChonDe && (
+                             <div className="absolute right-0 top-full mt-1.5 w-64 max-h-[60vh] overflow-y-auto bg-white rounded-xl shadow-xl border border-gray-200 py-1 z-50">
+                                {practices.map((pr: any) => (
+                                   <button
+                                      key={pr.id}
+                                      onClick={() => { setActiveModuleId(pr.id); setMoChonDe(false); }}
+                                      className={`w-full text-left px-3 py-2 text-[13px] font-bold transition-colors ${activeModuleId === pr.id ? 'bg-orange-50 text-orange-700' : 'text-gray-600 hover:bg-gray-50'}`}
+                                   >
+                                      {pr.title}
+                                   </button>
+                                ))}
+                             </div>
+                          )}
+                       </div>
+                    )}
+                 </div>
+               )}
+            </div>
          </div>
       </div>
 
-      {/* TABS */}
-      {lesson.modules && lesson.modules.length > 0 && (
-        <div className="bg-white border-b border-gray-200 sticky top-[69px] z-40 overflow-x-auto no-scrollbar shadow-sm">
-          <div className={`${containerClass} mx-auto px-4 flex items-center gap-2 py-3 transition-all duration-500`}>
-             {otherModules.map((mod: any) => (
-               <button
-                 key={mod.id}
-                 onClick={() => setActiveModuleId(mod.id)}
-                 className={`shrink-0 px-5 py-2 rounded-full text-sm font-bold transition-all ${activeModuleId === mod.id ? 'bg-indigo-600 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-               >
-                 {mod.title}
-               </button>
-             ))}
-             {practices.length > 0 && (
-               <button
-                 onClick={() => setActiveModuleId(practices[0].id)}
-                 className={`shrink-0 px-5 py-2 rounded-full text-sm font-bold transition-all ${isPracticeTabActive ? 'bg-orange-500 text-white shadow-md' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-               >
-                 🎯 Luyện tập
-               </button>
-             )}
-          </div>
-        </div>
-      )}
-
-      {/* SUB-TABS CHO LUYỆN TẬP */}
-      {isPracticeTabActive && practices.length > 1 && (
-         <div className="bg-orange-50/50 border-b border-orange-100 sticky top-[125px] z-30 overflow-x-auto no-scrollbar">
-            <div className={`${containerClass} mx-auto px-4 flex items-center gap-2 py-2.5 transition-all duration-500`}>
-               {practices.map((p: any) => (
-                  <button
-                     key={p.id}
-                     onClick={() => setActiveModuleId(p.id)}
-                     className={`shrink-0 px-4 py-1.5 rounded-lg text-[13px] font-bold transition-all border ${activeModuleId === p.id ? 'bg-orange-100 border-orange-300 text-orange-700 shadow-sm' : 'bg-white border-transparent text-gray-500 hover:bg-gray-50 hover:border-gray-200'}`}
-                  >
-                     {p.title}
-                  </button>
-               ))}
-            </div>
-         </div>
-      )}
-
       {/* NỘI DUNG CHÍNH */}
-      <div className={`${containerClass} mx-auto px-4 py-10 transition-all duration-500`}>
+      <div className={`${containerClass} mx-auto px-2.5 sm:px-4 py-3 sm:py-8 [@media(max-height:500px)]:py-2`}>
          {/* Chỉ render content_markdown của lesson nếu KHÔNG có module nào (để hỗ trợ bài giảng cũ) */}
          {(!lesson.modules || lesson.modules.length === 0) && lesson.content_markdown && (
            <InteractiveFlipbook content={lesson.content_markdown} />
@@ -643,9 +725,11 @@ export default function StudentLessonPage() {
          {/* Render Active Module */}
          {activeModule && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-               <div className="flex items-center gap-2 mb-8">
-                 <span className={`w-2 h-8 rounded-full ${isPracticeModule ? 'bg-orange-500' : 'bg-indigo-600'}`}></span>
-                 <h2 className="text-2xl font-bold text-gray-800">{activeModule.title}</h2>
+               {/* Ẩn trên điện thoại: đúng tên này đã sáng ở tab ngay phía trên, lặp lại
+                   mà tốn 123px đo được. Máy tính giữ nhưng hạ cỡ chữ. */}
+               <div className="hidden md:flex [@media(max-height:500px)]:!hidden items-center gap-2 mb-4">
+                 <span className={`w-2 h-7 rounded-full ${isPracticeModule ? 'bg-orange-500' : 'bg-indigo-600'}`}></span>
+                 <h2 className="text-lg font-bold text-gray-800">{activeModule.title}</h2>
                </div>
                {(isVideoModule || isDocumentModule) ? (
                   <DocAndVideoUI content={activeModule.content_markdown || ""} />
@@ -653,7 +737,7 @@ export default function StudentLessonPage() {
                   // key theo mã đề: đổi sang đề luyện tập khác thì React DỰNG LẠI khung làm
                   // bài. Thiếu key thì React giữ nguyên khung cũ và chỉ thay nội dung, nên
                   // điểm, bài làm và trạng thái "đã nộp" của đề trước còn nguyên ở đề sau.
-                  <AzotaExamUI key={activeModule.id} content={activeModule.content_markdown || ""} title={activeModule.title} lessonId={lesson.id} moduleId={activeModule.id} />
+                  <AzotaExamUI key={activeModule.id} content={activeModule.content_markdown || ""} title={activeModule.title} lessonId={lesson.id} moduleId={activeModule.id} grade={lesson.lopKhoa} />
                ) : (
                   <InteractiveFlipbook content={activeModule.content_markdown || ""} />
                )}
