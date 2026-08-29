@@ -4,6 +4,8 @@ import { useState, useEffect, useRef } from "react";
 import { createClient } from "@/utils/supabase/client";
 import { BookOpen, Sparkles, UploadCloud, Plus, Edit2, Trash2, Library, ChevronRight, X, Save, Loader2 } from "lucide-react";
 import 'katex/dist/katex.min.css';
+import { doTrung, gomNhomTrung, locLoMoi, type CongThucGon } from "@/utils/trungCongThuc";
+import DonTrungCongThucModal from "@/components/admin/DonTrungCongThucModal";
 // react-katex xuat ra BlockMath (khong co BlockPhysics)
 import { BlockMath } from 'react-katex';
 
@@ -90,9 +92,63 @@ export default function AdminHandbook() {
     }
   };
 
+  /* Toan kho de do trung, va cac nhom dang trung san sang de don. */
+  const [toanKho, setToanKho] = useState<CongThucGon[]>([]);
+  const [nhomTrung, setNhomTrung] = useState<any[]>([]);
+  const [moDonTrung, setMoDonTrung] = useState(false);
+
+  /*
+   * Chuong dich khi SUA mot cong thuc. Thieu o nay nen truoc gio muon doi chuong chi con
+   * cach chep sang chuong moi roi xoa ban cu - lam tat thi thanh ra trung.
+   */
+  const [fChuong, setFChuong] = useState<string>("");
+
+  /* Bang formulas chua co cot thu tu; do mot lan roi an/hien nut mui ten cho dung. */
+  const [coCotThuTu, setCoCotThuTu] = useState(false);
+  useEffect(() => {
+    supabase.from('formulas').select('thu_tu').limit(1)
+      .then(({ error }: any) => setCoCotThuTu(!error));
+  }, []);
+
+  /**
+   * Nap TOAN KHO cong thuc de do trung, va gom san cac nhom dang trung.
+   *
+   * Phai la toan kho chu khong rieng chuong dang mo: do tren kho Toan thi 3/4 nhom trung
+   * nam khac chuong, bo loc cu (chi so trong chuong) khong the bat duoc.
+   */
+  const napToanKho = async () => {
+    const { data } = await supabase.from('formulas').select('id, title, latex_content, category_id');
+    setToanKho(data || []);
+    setNhomTrung(gomNhomTrung(data || []));
+    return data || [];
+  };
+
+  useEffect(() => { napToanKho(); }, []);
+
+  /**
+   * Doi cho mot cong thuc voi cong thuc lien ke - chi chay khi bang da co cot thu_tu.
+   */
+  const doiChoCongThuc = async (i: number, huong: -1 | 1) => {
+    const j = i + huong;
+    if (j < 0 || j >= formulas.length) return;
+    const a = formulas[i], b = formulas[j];
+    const tta = a.thu_tu ?? i, ttb = b.thu_tu ?? j;
+    const { error } = await supabase.from('formulas').upsert([
+      { id: a.id, thu_tu: ttb },
+      { id: b.id, thu_tu: tta },
+    ]);
+    if (error) { alert('Khong doi cho duoc: ' + error.message); return; }
+    if (selectedCategory) fetchFormulas(selectedCategory.id);
+  };
+
   const fetchFormulas = async (categoryId: string) => {
     const { data } = await supabase.from('formulas').select('*').eq('category_id', categoryId).order('created_at');
-    setFormulas(data || []);
+    /* Co cot thu_tu thi xep theo no truoc; ban chua danh so thi bam nguyen thu tu cu. */
+    const ds = (data || []).slice();
+    if (ds.some((f: any) => f.thu_tu != null)) {
+      ds.sort((x: any, y: any) => (x.thu_tu ?? 1e9) - (y.thu_tu ?? 1e9));
+    }
+    setFormulas(ds);
     setIsLoading(false);
   };
 
@@ -120,20 +176,24 @@ export default function AdminHandbook() {
 
       // Nhận được mảng công thức JSON, insert vào supabase
       if (Array.isArray(data) && data.length > 0) {
-        // Lọc trùng lặp bằng cách so sánh title hoặc latex_content với các công thức hiện tại
-        const existingTitles = formulas.map(f => f.title.toLowerCase());
-        const existingLatex = formulas.map(f => f.latex_content.replace(/\\s/g, ''));
-        
-        const formulasToInsert = data.filter((item: any) => {
-          const isTitleDup = existingTitles.includes(item.title.toLowerCase());
-          const isLatexDup = existingLatex.includes(item.latex_content.replace(/\\s/g, ''));
-          return !isTitleDup && !isLatexDup;
-        }).map((item: any) => ({
-          category_id: selectedCategory.id,
-          title: item.title,
-          latex_content: item.latex_content,
-          description: item.description
-        }));
+        /*
+         * Do trung tren TOAN KHO bang ham dung chung.
+         *
+         * Ban cu chuan hoa sai: bieu thuc do cat dung hai ky tu la dau nguoc va chu s,
+         * tuc bien lenh sin thanh "in", nen vua bo lot vua gop nham. No lai chi so trong
+         * chuong dang mo, ma nhom trung that thuong nam khac chuong.
+         */
+        const kho = await napToanKho();
+        const { giuLai } = locLoMoi(
+          data.map((item: any) => ({
+            category_id: selectedCategory.id,
+            title: item.title,
+            latex_content: item.latex_content,
+            description: item.description,
+          })),
+          kho,
+        );
+        const formulasToInsert = giuLai;
 
         if (formulasToInsert.length === 0) {
           alert('Tất cả công thức do AI sinh ra đều đã tồn tại trong danh mục này (Chống trùng lặp).');
@@ -211,6 +271,7 @@ export default function AdminHandbook() {
     setFLatex(formula.latex_content);
     setFDesc(formula.description || "");
     setFImageUrl(formula.image_url || "");
+    setFChuong(formula.category_id || "");
     setIsFormulaModalOpen(true);
   };
 
@@ -219,8 +280,10 @@ export default function AdminHandbook() {
     if (!fTitle || !fLatex || !selectedCategory) return;
     setIsSavingFormula(true);
 
+    /* Sua thi theo chuong Thay chon trong hop; them moi thi vao chuong dang mo. */
+    const chuongDich = (editingFormulaId && fChuong) ? fChuong : selectedCategory.id;
     const formulaData = {
-      category_id: selectedCategory.id,
+      category_id: chuongDich,
       title: fTitle,
       latex_content: fLatex,
       description: fDesc,
@@ -236,12 +299,29 @@ export default function AdminHandbook() {
         fetchFormulas(selectedCategory.id);
       }
     } else {
-      // Insert
+      /*
+       * Them tay TRUOC GIO KHONG KIEM GI CA - go lai mot cong thuc da co la kho lap tuc
+       * moc them ban trung. Nay co canh bao, va chi ro ban da co nam o chuong nao.
+       * Van cho luu neu Thay co co y (hai chuong that su can nhac lai cung cong thuc).
+       */
+      const kho = await napToanKho();
+      const kq = doTrung(formulaData, kho);
+      if (kq.trungVoi) {
+        const tenChuong = categories.find((c: any) => c.id === kq.trungVoi!.category_id)?.name || 'chương khác';
+        const dongY = confirm(
+          `Công thức này đã có trong Sổ tay rồi:\n\n` +
+          `   "${kq.trungVoi.title}"  -  ở chương: ${tenChuong}\n` +
+          `   (${kq.lyDo === 'latex' ? 'trùng công thức' : 'trùng tên'})\n\n` +
+          `Vẫn muốn thêm một bản nữa?`
+        );
+        if (!dongY) { setIsSavingFormula(false); return; }
+      }
       const { error } = await supabase.from('formulas').insert([formulaData]);
       if (error) alert("Lỗi: " + error.message);
       else {
         setIsFormulaModalOpen(false);
         fetchFormulas(selectedCategory.id);
+        napToanKho();
       }
     }
     setIsSavingFormula(false);
@@ -264,18 +344,17 @@ export default function AdminHandbook() {
       return;
     }
 
-    const { data: allFormulas } = await supabase.from('formulas').select('title, latex_content');
-    const existingTitles = (allFormulas || []).map(f => f.title.toLowerCase());
-    const existingLatex = (allFormulas || []).map(f => f.latex_content.replace(/\s/g, ''));
+    const kho = await napToanKho();
     
     const formulasToReview = data.map((item: any) => {
-      const isTitleDup = existingTitles.includes(item.title?.toLowerCase());
-      const isLatexDup = existingLatex.includes(item.latex_content?.replace(/\s/g, ''));
+      // Dung chung MOT ham do trung voi moi cho khac, va do tren TOAN kho
+      const kq = doTrung(item, kho);
       return {
         ...item,
         id: `TEMP_${Date.now()}_${Math.random().toString(36).substring(7)}`,
         category_id: item.category_id || selectedCategory?.id,
-        isDuplicate: isTitleDup || isLatexDup,
+        trungVoi: kq.trungVoi,
+        isDuplicate: !!kq.trungVoi,
         image_url: item.image_url || null,
         needs_image: item.needs_image || false
       };
@@ -558,6 +637,18 @@ export default function AdminHandbook() {
                   >
                     <Plus className="w-4 h-4" /> Soạn thủ công
                   </button>
+
+                  {/* Chi hien khi kho THAT SU dang co ban trung - khong bay mot nut vo viec */}
+                  {nhomTrung.length > 0 && (
+                    <button
+                      onClick={() => setMoDonTrung(true)}
+                      title="Kho đang có công thức bị nhập trùng - xem và dọn"
+                      className="bg-rose-50 border border-rose-300 text-rose-700 px-4 py-2 rounded-xl font-semibold hover:bg-rose-100 transition-all flex items-center gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" /> Dọn trùng
+                      <span className="bg-rose-600 text-white text-[11px] font-black rounded-full px-1.5">{nhomTrung.length}</span>
+                    </button>
+                  )}
                 </div>
               </div>
 
@@ -567,7 +658,7 @@ export default function AdminHandbook() {
                   <div className="p-12 text-center text-gray-400">Đang tải...</div>
                 ) : formulas.length > 0 ? (
                   <div className="divide-y divide-gray-100">
-                    {formulas.map(formula => (
+                    {formulas.map((formula, index) => (
                       <div key={formula.id} className="p-5 hover:bg-violet-50/30 transition-colors border-l-4 border-l-violet-300">
                         <div className="flex justify-between items-start gap-4">
                           <div className="flex-1 min-w-0">
@@ -596,6 +687,21 @@ export default function AdminHandbook() {
                             )}
                           </div>
                           <div className="flex items-center gap-1 shrink-0">
+                            {/* Chi hien khi bang da co cot thu_tu - xem scratch/them-cot-thutu-formulas.sql */}
+                            {coCotThuTu && (
+                              <div className="flex flex-col">
+                                <button onClick={() => doiChoCongThuc(index, -1)} disabled={index === 0}
+                                        title="Đưa lên trên"
+                                        className="px-1.5 text-gray-400 hover:text-orange-600 disabled:opacity-25 leading-none">
+                                  ▲
+                                </button>
+                                <button onClick={() => doiChoCongThuc(index, 1)} disabled={index === formulas.length - 1}
+                                        title="Đưa xuống dưới"
+                                        className="px-1.5 text-gray-400 hover:text-orange-600 disabled:opacity-25 leading-none">
+                                  ▼
+                                </button>
+                              </div>
+                            )}
                             <button 
                               onClick={() => openEditFormulaModal(formula)}
                               className="p-2 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
@@ -691,6 +797,24 @@ export default function AdminHandbook() {
             </div>
             <div className="p-6 overflow-y-auto flex-1">
               <form id="formulaForm" onSubmit={handleSaveFormula} className="space-y-4">
+                {/* CHUYEN SANG CHUONG KHAC - thieu o nay nen truoc gio phai chep roi xoa. */}
+                {editingFormulaId && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Thuộc chương</label>
+                    <select value={fChuong} onChange={e => setFChuong(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-orange-500 outline-none bg-white">
+                      {categories.map((c: any) => (
+                        <option key={c.id} value={c.id}>{c.name}</option>
+                      ))}
+                    </select>
+                    {fChuong && selectedCategory && fChuong !== selectedCategory.id && (
+                      <p className="text-[12px] text-amber-700 font-bold mt-1">
+                        Lưu xong công thức này sẽ CHUYỂN sang chương khác, không còn ở đây nữa.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Tên công thức</label>
                   <input required value={fTitle} onChange={e => setFTitle(e.target.value)} type="text" className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 outline-none" placeholder="VD: Cosin góc giữa hai vectơ..." />
@@ -1150,6 +1274,22 @@ export default function AdminHandbook() {
           </div>
         </div>
       )}
+
+      {/* Don cac cong thuc da lo nhap trung. KHONG tu xoa - bay ra cho Thay co chon giu
+          ban nao, dung cach da dung cho moi lan don du lieu truoc day. */}
+      <DonTrungCongThucModal
+        isOpen={moDonTrung}
+        onClose={() => setMoDonTrung(false)}
+        nhomTrung={nhomTrung}
+        tenChuong={(id) => categories.find((c: any) => c.id === id)?.name || 'Chưa xếp chương'}
+        onXoa={async (ids) => {
+          const { data, error } = await supabase.from('formulas').delete().in('id', ids).select('id');
+          if (error) throw error;
+          await napToanKho();
+          if (selectedCategory) fetchFormulas(selectedCategory.id);
+          return (data || []).length;
+        }}
+      />
     </div>
   );
 }
