@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { ArrowLeft, Users, UserPlus, Upload, Trash2, Loader2, Search, X, FileSpreadsheet, Download, Plus, Edit2, CheckSquare, DollarSign } from "lucide-react";
+import { ArrowLeft, Users, UserPlus, Upload, Trash2, Loader2, Search, X, FileSpreadsheet, Download, Plus, Edit2, CheckSquare, DollarSign, Dices, Trophy } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import {
@@ -12,6 +12,9 @@ import {
 import AttendanceTab from "./AttendanceTab";
 import TuitionTab from "./TuitionTab";
 import ScoresTab from "./ScoresTab";
+import TongKetThangTab from "./TongKetThangTab";
+import BangGoiTenVaDiem from "@/components/lop/BangGoiTenVaDiem";
+import SanKhauVinhDanh from "@/components/lop/SanKhauVinhDanh";
 
 export default function ClassDetailsPage() {
   const [classInfo, setClassInfo] = useState<any>(null);
@@ -21,7 +24,11 @@ export default function ClassDetailsPage() {
   const params = useParams();
   const router = useRouter();
   const classId = params.id as string;
-  const [activeTab, setActiveTab] = useState<'menu' | 'students' | 'attendance' | 'tuition' | 'scores'>('students');
+  const [activeTab, setActiveTab] = useState<'menu' | 'students' | 'attendance' | 'tuition' | 'scores' | 'tongket'>('students');
+  /* Gọi tên & Điểm mở thẳng từ đây - dùng được cả khi không chiếu bài nào. */
+  const [moGoiTen, setMoGoiTen] = useState(false);
+  /* Sân khấu vinh danh - chiếu tivi cuối tháng. */
+  const [moSanKhau, setMoSanKhau] = useState(false);
   useEffect(() => {
     if (window.innerWidth < 768) setActiveTab('menu');
   }, []);
@@ -229,6 +236,25 @@ export default function ClassDetailsPage() {
         </div>
       </div>
 
+      {/* Gọi tên & Điểm và Sân khấu vinh danh: khoá theo LỚP nên mở ở đâu cũng đúng
+          một mạch với lúc trình chiếu. */}
+      <div className="mb-4 flex flex-wrap gap-2">
+        <button
+          onClick={() => setMoGoiTen(true)}
+          className="bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-xl font-bold
+                     flex items-center gap-2 shadow-sm transition-colors"
+        >
+          <Dices className="w-4 h-4" /> Gọi tên & Điểm
+        </button>
+        <button
+          onClick={() => setMoSanKhau(true)}
+          className="bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-500 hover:to-yellow-600
+                     text-amber-950 px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-colors"
+        >
+          <Trophy className="w-4 h-4" /> Sân khấu vinh danh
+        </button>
+      </div>
+
       {/* TABS */}
       <div className="hidden md:flex gap-2 overflow-x-auto custom-scrollbar mb-6 pb-2 border-b border-gray-100">
         <button 
@@ -254,6 +280,12 @@ export default function ClassDetailsPage() {
           className={`flex items-center gap-2 px-5 py-3 font-bold rounded-t-xl transition-all border-b-2 ${activeTab === 'scores' ? 'border-orange-600 text-orange-700 bg-orange-50/50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
         >
           <CheckSquare size={18} /> Báo điểm
+        </button>
+        <button
+          onClick={() => setActiveTab('tongket')}
+          className={`flex items-center gap-2 px-5 py-3 font-bold rounded-t-xl transition-all border-b-2 ${activeTab === 'tongket' ? 'border-teal-600 text-teal-700 bg-teal-50/50' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'}`}
+        >
+          <Trophy size={18} /> Tổng kết tháng
         </button>
       </div>
 
@@ -388,6 +420,18 @@ export default function ClassDetailsPage() {
           </div>
           <div className="flex-1 overflow-y-auto custom-scrollbar md:overflow-visible md:h-auto p-3 md:p-0">
             <TuitionTab classId={classId} classInfo={classInfo} enrollments={enrollments} />
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'tongket' && (
+        <div className="fixed md:static inset-0 z-[100] md:z-auto bg-gray-50 md:bg-transparent flex flex-col h-[100dvh] md:h-auto overflow-hidden md:overflow-visible animate-in fade-in slide-in-from-bottom-2 duration-300">
+          <div className="md:hidden bg-white px-4 py-3 border-b border-gray-200 flex items-center gap-3 shrink-0 shadow-sm z-[110]">
+             <button onClick={() => setActiveTab('menu')} className="p-2 -ml-2 bg-gray-100 rounded-full text-gray-600"><ArrowLeft size={20}/></button>
+             <h2 className="font-bold text-lg text-gray-800">Tổng kết tháng · {classInfo?.name}</h2>
+          </div>
+          <div className="flex-1 overflow-y-auto custom-scrollbar md:overflow-visible md:h-auto p-3 md:p-0">
+            <TongKetThangTab classId={classId} classInfo={classInfo} />
           </div>
         </div>
       )}
@@ -660,6 +704,16 @@ export default function ClassDetailsPage() {
         </div>
       )}
 
+      <BangGoiTenVaDiem
+        isOpen={moGoiTen}
+        onClose={() => setMoGoiTen(false)}
+        lopGoiY={classId}
+      />
+      <SanKhauVinhDanh
+        isOpen={moSanKhau}
+        onClose={() => setMoSanKhau(false)}
+        lopId={classId}
+      />
     </div>
   );
 }
