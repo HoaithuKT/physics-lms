@@ -50,6 +50,7 @@ const MUC_HOC_SINH: MucHocSinh[] = [
   { tab: 'finance',  nhan: 'Tài chính',  Icon: DollarSign,    mau: 'bg-amber-50 text-amber-600' },
   { tab: 'info',     nhan: 'Hồ sơ',      Icon: User,          mau: 'bg-violet-50 text-violet-600' },
     { tab: 'diem',     nhan: 'Điểm thưởng', Icon: Trophy,       mau: 'bg-fuchsia-50 text-fuchsia-600' },
+{ tab: '',         nhan: 'Ôn tập',     Icon: ClipboardList, mau: 'bg-indigo-50 text-indigo-600', duong: '/student/on-tap' },
 { tab: '',         nhan: 'Sổ tay',     Icon: Library,       mau: 'bg-indigo-50 text-indigo-600', duong: '/student/handbook' },
 ];
 
@@ -309,6 +310,13 @@ export default function StudentDashboardPage() {
           >
             <DollarSign className={`w-5 h-5 ${activeTab === 'finance' ? 'text-white' : 'text-gray-400'}`} /> Tài chính & Điểm danh
           </button>
+
+          <Link
+            href="/student/on-tap"
+            className="flex-1 flex items-center justify-center gap-2 py-3.5 px-4 rounded-xl font-bold transition-all text-sm sm:text-base whitespace-nowrap text-gray-500 hover:bg-gray-50 hover:text-gray-800 border-l border-gray-200 ml-2 pl-6"
+          >
+            <ClipboardList className="w-5 h-5 text-indigo-500" /> Ôn tập &amp; Kiểm tra
+          </Link>
 
           <Link 
             href="/student/handbook" 
