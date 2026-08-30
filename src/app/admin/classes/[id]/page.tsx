@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { createClient } from "@/utils/supabase/client";
-import { ArrowLeft, Users, UserPlus, Upload, Trash2, Loader2, Search, X, FileSpreadsheet, Download, Plus, Edit2, CheckSquare, DollarSign, Dices, Trophy } from "lucide-react";
+import { ArrowLeft, Users, UserPlus, Upload, Trash2, Loader2, Search, X, FileSpreadsheet, Download, Plus, Edit2, CheckSquare, DollarSign, Dices, Trophy, HelpCircle } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import {
@@ -15,6 +15,7 @@ import ScoresTab from "./ScoresTab";
 import TongKetThangTab from "./TongKetThangTab";
 import BangGoiTenVaDiem from "@/components/lop/BangGoiTenVaDiem";
 import SanKhauVinhDanh from "@/components/lop/SanKhauVinhDanh";
+import HuongDanSoanBaiModal from "@/components/admin/HuongDanSoanBaiModal";
 
 export default function ClassDetailsPage() {
   const [classInfo, setClassInfo] = useState<any>(null);
@@ -29,6 +30,7 @@ export default function ClassDetailsPage() {
   const [moGoiTen, setMoGoiTen] = useState(false);
   /* Sân khấu vinh danh - chiếu tivi cuối tháng. */
   const [moSanKhau, setMoSanKhau] = useState(false);
+  const [moHuongDan, setMoHuongDan] = useState(false);
   useEffect(() => {
     if (window.innerWidth < 768) setActiveTab('menu');
   }, []);
@@ -252,6 +254,14 @@ export default function ClassDetailsPage() {
                      text-amber-950 px-4 py-2.5 rounded-xl font-bold flex items-center gap-2 shadow-sm transition-colors"
         >
           <Trophy className="w-4 h-4" /> Sân khấu vinh danh
+        </button>
+        <button
+          onClick={() => setMoHuongDan(true)}
+          title="Bảng tra lệnh: gọi tên, điểm thưởng, vinh danh, điện thoại"
+          className="bg-white border border-gray-300 text-gray-600 px-4 py-2.5 rounded-xl font-bold
+                     flex items-center gap-2 hover:bg-gray-50 transition-colors"
+        >
+          <HelpCircle className="w-4 h-4" /> Hướng dẫn
         </button>
       </div>
 
@@ -720,6 +730,7 @@ export default function ClassDetailsPage() {
         onClose={() => setMoSanKhau(false)}
         lopId={classId}
       />
+      <HuongDanSoanBaiModal isOpen={moHuongDan} onClose={() => setMoHuongDan(false)} />
     </div>
   );
 }

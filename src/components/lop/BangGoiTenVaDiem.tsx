@@ -26,7 +26,7 @@ import { NhacNen } from "@/utils/amThanhSanKhau";
 const NHO_LOP = 'lop-goi-ten-lan-truoc';
 
 export default function BangGoiTenVaDiem({
-  isOpen, onClose, lopGoiY, lessonId,
+  isOpen, onClose, lopGoiY, lessonId, lenhTuXa, onDoiTrangThai,
 }: {
   isOpen: boolean;
   onClose: () => void;
@@ -34,6 +34,13 @@ export default function BangGoiTenVaDiem({
   lopGoiY?: string;
   /** Chỉ để ghi nhớ đã gọi ở bài nào - không dùng để lọc */
   lessonId?: string;
+  /**
+   * Lệnh bấm từ ĐIỆN THOẠI. `dem` tăng mỗi lần bấm - nhờ đó bấm hai lần cùng một việc
+   * vẫn chạy hai lần, chứ so nội dung lệnh thì lần thứ hai bị bỏ qua.
+   */
+  lenhTuXa?: { viec: string; diem?: number; dem: number } | null;
+  /** Báo ngược lên để máy chiếu phát xuống điện thoại */
+  onDoiTrangThai?: (tt: { trungAi: string; tomTat: string }) => void;
 }) {
   const [dsCacLop, setDsCacLop] = React.useState<{ id: string; name: string }[]>([]);
   const [lopId, setLopId] = React.useState<string>('');
@@ -112,7 +119,6 @@ export default function BangGoiTenVaDiem({
     return () => document.removeEventListener('keydown', phim);
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
 
   /** Những em thật sự được đưa vào vòng quay lúc này. */
   const dsQuay: HocSinh[] = (trangThai?.conLai || []).filter(h => !vangHomNay.has(h.id));
@@ -258,6 +264,39 @@ export default function BangGoiTenVaDiem({
       : `Đã tải sẵn giọng cho ${xong}/${ds.length} em - cả buổi sẽ đọc ngay.`);
     setTimeout(() => setVuaCong(''), 6000);
   };
+
+  /* Nhận lệnh bấm từ điện thoại. Chỉ chạy khi số đếm đổi, nên bấm mấy lần chạy mấy lần. */
+  const demDaLam = React.useRef(0);
+  React.useEffect(() => {
+    if (!isOpen || !lenhTuXa || lenhTuXa.dem === demDaLam.current) return;
+    demDaLam.current = lenhTuXa.dem;
+    switch (lenhTuXa.viec) {
+      case 'quay': quay(); break;
+      case 'vang': danhDauVang(); break;
+      case 'bo-lai': boLaiVaoVong(); break;
+      case 'diem': cong(trungAi, lenhTuXa.diem ?? 1); break;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lenhTuXa, isOpen]);
+
+  /* Đổi gì thì báo lên để máy chiếu phát xuống điện thoại. */
+  React.useEffect(() => {
+    if (!isOpen || !trangThai) return;
+    onDoiTrangThai?.({
+      trungAi: trungAi?.ten || '',
+      tomTat: `Vòng ${trangThai.vong} · còn ${dsQuay.length}/${trangThai.caLop.length}`,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, trungAi, trangThai, vangHomNay]);
+
+  /*
+   * Thoát sớm phải nằm SAU HẾT MỌI HOOK.
+   *
+   * Bản trước đặt dòng này ở trên, rồi tôi thêm hai hook nhận lệnh từ điện thoại xuống
+   * dưới nó - React đếm số hook lệch giữa hai lần vẽ và ném "Rendered more hooks than
+   * during the previous render", vỡ trắng cả trang trình chiếu.
+   */
+  if (!isOpen) return null;
 
   const emDuocChon = trangThai?.caLop.find(h => h.id === emKhac) || null;
 
