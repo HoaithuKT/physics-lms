@@ -15,12 +15,19 @@ interface RichTextareaProps extends Omit<React.ComponentProps<typeof TextareaAut
   onValueChange?: (value: string) => void;
   collapsibleToolbar?: boolean;
   defaultToolbarExpanded?: boolean;
+  /**
+   * Chặn trước khi ô tự chèn ảnh dán vào.
+   *
+   * Trả về true nghĩa là bên ngoài đã xử lý xong tấm ảnh (ví dụ đọc nó thành câu hỏi),
+   * ô KHÔNG chèn ảnh nữa. Trả về false thì ô chèn ảnh như xưa nay vẫn làm.
+   */
+  xuLyAnhDan?: (file: File) => Promise<boolean>;
 }
 
 const wrapMultiLineSelection = (selectedText: string, wrapFn: (line: string) => string, stylePropToClean?: string) => {
   return selectedText.split('\n').map(line => {
     if (line.trim() === '') return line;
-    
+
     let processedLine = line;
     if (stylePropToClean) {
         const regex = new RegExp(`${stylePropToClean}\\s*:\\s*[^;"]+;?`, 'gi');
@@ -31,7 +38,7 @@ const wrapMultiLineSelection = (selectedText: string, wrapFn: (line: string) => 
     // This prevents breaking Markdown parsing (e.g., blockquotes, lists, headings)
     const prefixRegex = /^(\s*(?:(?:>\s*)+|#+\s+|[-*+]\s+|\d+\.\s+))(.*)$/;
     const match = processedLine.match(prefixRegex);
-    
+
     if (match) {
         return match[1] + wrapFn(match[2]);
     }
@@ -39,7 +46,7 @@ const wrapMultiLineSelection = (selectedText: string, wrapFn: (line: string) => 
   }).join('\n');
 };
 
-export default function RichTextarea({ value, onChange, onValueChange, className = "", collapsibleToolbar = true, defaultToolbarExpanded = true, viTriBanDau, ...props }: RichTextareaProps & { viTriBanDau?: number }) {
+export default function RichTextarea({ value, onChange, onValueChange, className = "", collapsibleToolbar = true, defaultToolbarExpanded = true, viTriBanDau, xuLyAnhDan, ...props }: RichTextareaProps & { viTriBanDau?: number }) {
   // Fallback: Nếu không truyền onChange, tạo handler tự động từ onValueChange
   const resolvedOnChange = React.useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     if (onChange) onChange(e);
@@ -52,7 +59,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
   const [lineHeight, setLineHeight] = useState<string>("1.5");
   const [isClient, setIsClient] = useState(false);
   const [isToolbarExpanded, setIsToolbarExpanded] = useState(defaultToolbarExpanded);
-  
+
   const [showIconMenu, setShowIconMenu] = useState(false);
   const [showLatexPalette, setShowLatexPalette] = useState(false);
   // Vị trí con trỏ, dùng để biết đang đứng trong công thức nào mà hiện xem trước
@@ -82,11 +89,11 @@ export default function RichTextarea({ value, onChange, onValueChange, className
   const handleApplySize = (e?: React.MouseEvent | React.FormEvent | null, sizeOverride?: string) => {
     if (e) e.preventDefault();
     if (!textareaRef.current) return;
-    
+
     const ta = textareaRef.current;
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
-    
+
     if (start === end) {
       alert("Vui lòng bôi đen đoạn văn bản hoặc công thức cần đổi cỡ chữ trước!");
       return;
@@ -146,11 +153,11 @@ export default function RichTextarea({ value, onChange, onValueChange, className
   const handleApplyColor = (e?: React.MouseEvent | React.FormEvent | null, colorOverride?: string) => {
     if (e) e.preventDefault();
     if (!textareaRef.current) return;
-    
+
     const ta = textareaRef.current;
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
-    
+
     if (start === end) {
       alert("Vui lòng bôi đen đoạn văn bản hoặc công thức cần đổi màu trước!");
       return;
@@ -177,11 +184,11 @@ export default function RichTextarea({ value, onChange, onValueChange, className
   const handleApplyLineSpacing = (e?: React.MouseEvent | React.FormEvent | null, lineHeightOverride?: string) => {
     if (e) e.preventDefault();
     if (!textareaRef.current) return;
-    
+
     const ta = textareaRef.current;
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
-    
+
     if (start === end) {
       alert("Vui lòng bôi đen đoạn văn bản cần giãn dòng trước!");
       return;
@@ -347,11 +354,11 @@ export default function RichTextarea({ value, onChange, onValueChange, className
   const handleApplyAlign = (align: 'left' | 'center' | 'right' | 'justify', e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     if (!textareaRef.current) return;
-    
+
     const ta = textareaRef.current;
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
-    
+
     if (start === end) {
       alert("Vui lòng bôi đen đoạn văn bản cần canh lề trước!");
       return;
@@ -377,11 +384,11 @@ export default function RichTextarea({ value, onChange, onValueChange, className
   const handleApplyBox = (e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     if (!textareaRef.current) return;
-    
+
     const ta = textareaRef.current;
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
-    
+
     if (start === end) {
       alert("Vui lòng bôi đen đoạn văn bản cần đóng khung trước!");
       return;
@@ -407,11 +414,11 @@ export default function RichTextarea({ value, onChange, onValueChange, className
   const handleFormat = (formatType: 'bold' | 'italic' | 'underline', e?: React.MouseEvent) => {
     if (e) e.preventDefault();
     if (!textareaRef.current) return;
-    
+
     const ta = textareaRef.current;
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
-    
+
     if (start === end) {
       alert("Vui lòng bôi đen văn bản cần định dạng!");
       return;
@@ -506,7 +513,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
 
     let lineStart = val.lastIndexOf('\n', start - 1) + 1;
     const newValue = val.substring(0, lineStart) + "&nbsp;" + val.substring(lineStart);
-    
+
     if (onValueChange) onValueChange(newValue);
     else {
       const event = { target: { value: newValue } } as React.ChangeEvent<HTMLTextAreaElement>;
@@ -518,7 +525,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (props.onKeyDown) props.onKeyDown(e);
-    
+
     const ta = e.currentTarget;
     const start = ta.selectionStart;
     const end = ta.selectionEnd;
@@ -544,7 +551,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
       handleInsertLatex(CURSOR_TOKEN);
       return;
     }
-    
+
     if (e.ctrlKey && e.altKey && e.key.toLowerCase() === 'i') {
       e.preventDefault();
       fileInputRef.current?.click();
@@ -609,17 +616,24 @@ export default function RichTextarea({ value, onChange, onValueChange, className
     }
   };
 
-  const uploadAndInsertImage = async (file: File) => {
+  /**
+   * @param viTri Chỗ chèn đã đo SẴN từ lúc dán.
+   *
+   * Cần tham số này vì đường "hỏi ảnh là gì rồi mới chèn": bấm nút trong hộp hỏi là ô
+   * soạn thảo đóng lại (OSuaTaiCho đóng khi bấm ra ngoài), textareaRef thành null, đọc
+   * vị trí lúc đó thì hàm lặng lẽ thoát ra và ảnh không bao giờ được chèn.
+   */
+  const uploadAndInsertImage = async (file: File, viTri?: { start: number; end: number }) => {
     const ta = textareaRef.current;
-    if (!ta) return;
-    const start = ta.selectionStart;
-    const end = ta.selectionEnd;
+    if (!ta && !viTri) return;
+    const start = viTri ? viTri.start : ta!.selectionStart;
+    const end = viTri ? viTri.end : ta!.selectionEnd;
     const beforeText = value.substring(0, start);
     const afterText = value.substring(end);
-    
+
     setIsUploading(true);
     const tempText = beforeText + "\n⏳ Đang tải ảnh lên...\n" + afterText;
-    
+
     if (onValueChange) onValueChange(tempText);
     else {
        const event = { target: { value: tempText } } as React.ChangeEvent<HTMLTextAreaElement>;
@@ -627,26 +641,20 @@ export default function RichTextarea({ value, onChange, onValueChange, className
     }
 
     try {
-       const { createClient } = await import("@/utils/supabase/client");
-       const supabase = createClient();
-       const fileName = `${Math.random().toString(36).substring(2, 15)}_${Date.now()}.jpg`;
-       const filePath = `editor_images/${fileName}`;
-       
-       const { error } = await supabase.storage.from('lesson_images').upload(filePath, file);
-       if (error) throw error;
-       
-       const { data: publicUrlData } = supabase.storage.from('lesson_images').getPublicUrl(filePath);
-       const publicUrl = publicUrlData.publicUrl;
-       
+       // Dùng chung lối tải với đường "dán ảnh ra câu hỏi" (utils/docCauHoiTuAnh)
+       // để hai bên cùng một kho, một kiểu đặt tên tệp.
+       const { taiAnhLenKho } = await import("@/utils/docCauHoiTuAnh");
+       const publicUrl = await taiAnhLenKho(file);
+
        const imgMd = `\n![Hình ảnh](${publicUrl})\n`;
        const newValue = beforeText + imgMd + afterText;
-       
+
        if (onValueChange) onValueChange(newValue);
        else {
           const ev = { target: { value: newValue } } as React.ChangeEvent<HTMLTextAreaElement>;
           resolvedOnChange(ev);
        }
-       
+
        datConTro(start + imgMd.length, start + imgMd.length);
     } catch(err) {
        alert("Lỗi tải ảnh lên!");
@@ -663,16 +671,25 @@ export default function RichTextarea({ value, onChange, onValueChange, className
   const handlePaste = async (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
     if (props.onPaste) props.onPaste(e);
     if (e.defaultPrevented) return;
-    
+
     const items = e.clipboardData?.items;
     if (!items) return;
     for (let i = 0; i < items.length; i++) {
       if (items[i].type.indexOf("image") !== -1) {
         const file = items[i].getAsFile();
         if (file) {
+          // preventDefault phải gọi NGAY, trước mọi await: chờ xong rồi mới gọi thì
+          // trình duyệt đã dán xong địa chỉ ảnh vào ô mất rồi.
           e.preventDefault();
           e.stopPropagation();
-          uploadAndInsertImage(file);
+          if (xuLyAnhDan) {
+            // Đo chỗ chèn NGAY BÂY GIỜ: hỏi xong thì ô soạn thảo có thể đã đóng.
+            const ta = textareaRef.current;
+            const viTri = { start: ta?.selectionStart ?? value.length, end: ta?.selectionEnd ?? value.length };
+            xuLyAnhDan(file).then(daXuLy => { if (!daXuLy) uploadAndInsertImage(file, viTri); });
+          } else {
+            uploadAndInsertImage(file);
+          }
         }
         break;
       }
@@ -735,7 +752,7 @@ export default function RichTextarea({ value, onChange, onValueChange, className
       )}
       {(!collapsibleToolbar || isToolbarExpanded) && (
       <div className="flex items-center gap-2 px-2 py-1 bg-slate-50 border-b border-gray-200 sticky top-0 z-40 overflow-x-auto scrollbar-hide whitespace-nowrap text-gray-700 shadow-sm shrink-0">
-        
+
         <select onChange={e => { handleApplyHeading(e.target.value ? parseInt(e.target.value) : ''); e.target.value = ""; }} className="border border-gray-200 rounded bg-white text-[11px] font-semibold py-0.5 px-1 outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer h-6 w-20">
           {/* Đặt tên theo việc chứ không theo H1..H5: bộ chữ của hệ thống đã tô sẵn màu
               và khung cho từng cấp, nên chỉ cần chọn ở đây, KHÔNG phải gõ thẻ span. */}
