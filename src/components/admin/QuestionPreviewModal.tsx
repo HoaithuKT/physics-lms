@@ -99,7 +99,12 @@ export default function QuestionPreviewModal({ isOpen, onClose, question }: Ques
 
           <div className="bg-amber-50 border border-amber-100 p-4 rounded-xl mb-4">
             <h4 className="font-bold text-amber-800 mb-1 text-sm">Đáp án đúng:</h4>
-            <p className="text-amber-700 font-black text-xl">{question.correct_answer}</p>
+            {/* Dựng công thức y như phần đề bài. Ô này trước đây đổ thẳng chuỗi thô nên đáp
+                án kèm đơn vị hiện ra là mã LaTeX, trong khi phần đề ngay trên đã dựng đẹp -
+                hai chỗ hiển thị khác nhau khiến thầy cô tưởng dữ liệu hỏng. */}
+            <div className="text-amber-700 font-black text-xl">
+              {renderContent(String(question.correct_answer ?? ''))}
+            </div>
           </div>
 
           {question.explanation && (() => {
