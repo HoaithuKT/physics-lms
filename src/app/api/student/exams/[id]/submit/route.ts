@@ -1,6 +1,4 @@
 import { NextResponse } from "next/server";
-import { getAllAIKeys } from '@/utils/aiKeys';
-import { goiGemini } from '@/utils/geminiRunner';
 import { createClient } from "@supabase/supabase-js";
 import { createClient as createServerClient } from "@/utils/supabase/server";
 
@@ -79,60 +77,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       }
     });
 
-    let aiFeedback = {};
-    
-    // Nếu có câu Tự luận -> Khởi động AI Gemini để chấm điểm dựa trên ảnh và văn bản HS gửi lên
-    if (essayTasks.length > 0) {
-       // Lấy cả khoá biến môi trường lẫn khoá thầy cô tự thêm ở Trạm kiểm soát Cổng A.I.
-       const keys = await getAllAIKeys();
-       if (keys.length > 0) {
-          try {
-             const systemPrompt = `
-Bạn là một giám khảo chấm thi cẩn thận. Dưới đây là các bài làm tự luận của học sinh. 
-Điểm tối đa mỗi câu là ${scorePerQuestion}.
-Hãy đọc bài làm của học sinh (đôi khi có đính kèm Hình Ảnh viết tay giải toán), so sánh với đáp án gốc (nếu có), đánh giá các bước giải và chấm điểm khách quan.
-TRẢ VỀ DUY NHẤT một chuỗi JSON (KHÔNG bọc trong \`\`\`json):
-[
-  { "qIndex": index_cau_hoi, "score": diem_so_thap_phan, "feedback": "Nhận xét ngắn gọn: Đúng/Sai bước nào, được bao nhiêu điểm" }
-]
-`;
-             const parts: any[] = [{ text: systemPrompt + "\n\nDanh sách bài làm:" }];
-             
-             essayTasks.forEach(task => {
-                let htmlAns = task.studentAnswer || "";
-                
-                // Trích xuất hình ảnh base64 từ bài làm (nếu học sinh paste ảnh vào editor) để gửi cho Gemini Vision
-                const imgRegex = /data:(image\/[^;]+);base64,([^"']+)/g;
-                let match;
-                while ((match = imgRegex.exec(htmlAns)) !== null) {
-                   parts.push({ inlineData: { data: match[2], mimeType: match[1] } });
-                   htmlAns = htmlAns.replace(match[0], "[HÌNH ẢNH BÀI LÀM ĐÍNH KÈM]");
-                }
-                parts.push({ text: `\nCâu hỏi Index: ${task.qIndex}\nĐề bài: ${task.question}\nĐáp án chuẩn: ${task.answerText}\nBài làm HS: ${htmlAns}` });
-             });
-
-             // Xoay khoá rồi xoay model - xem geminiRunner.ts
-             const kq = await goiGemini({
-                keys,
-                parts,
-                generationConfig: { responseMimeType: "application/json" },
-             });
-             console.log(`[Chấm tự luận] Dùng model ${kq.model}`);
-
-             {
-                const parsed = JSON.parse(kq.text);
-                parsed.forEach((res: any) => {
-                   correctPoints += Number(res.score) || 0;
-                   (aiFeedback as any)[res.qIndex] = res.feedback;
-                });
-             }
-          } catch(e) {
-             console.error("Lỗi AI chấm bài tự luận:", e);
-             // Nếu AI quá tải lỗi hoàn toàn, bỏ qua phần điểm tự luận (GV sẽ chấm tay sau)
-             (aiFeedback as any).globalError = "Hệ thống AI quá tải, chưa chấm xong tự luận.";
-          }
-       }
-    }
+    /*
+     * KHÔNG gọi AI chấm tự luận ở đây nữa.
+     *
+     * Đây từng là cửa học sinh tiêu khoá API: cứ nộp một bài có tự luận là một lượt gọi.
+     * Google cho 20 lượt/ngày mỗi khoá, nên một buổi của một lớp là đủ đốt sạch hạn mức.
+     *
+     * Nay bài có câu tự luận DỪNG Ở "SUBMITTED" (chờ thầy cô chấm), điểm hiện ra là điểm
+     * phần máy chấm được. Thầy cô chấm xong ở màn chấm tay thì điểm tự luận mới được CỘNG
+     * THÊM vào và bài mới chuyển sang "GRADED". Điểm cộng cũng chỉ tính khi ấy.
+     */
+    const soCauTuLuan = essayTasks.length;
 
     const finalScore = Math.round(correctPoints * 100) / 100;
     // Đếm số lần thi để xác định là thi lần đầu hay thi lại
@@ -141,15 +96,24 @@ TRẢ VỀ DUY NHẤT một chuỗi JSON (KHÔNG bọc trong \`\`\`json):
       .select('*', { count: 'exact', head: true })
       .eq('exam_id', id)
       .eq('student_id', user.id);
-      
-    const nextStatus = (count && count > 1) ? 'PUBLISHED' : 'GRADED';
+
+    /* Còn câu tự luận thì bài chưa chấm xong - để nguyên SUBMITTED cho vào hàng chờ. */
+    const nextStatus = soCauTuLuan > 0 ? 'SUBMITTED'
+                     : (count && count > 1) ? 'PUBLISHED' : 'GRADED';
 
     const { error: updateError } = await supabaseAdmin
       .from('online_exam_submissions')
       .update({
         status: nextStatus,
         score: finalScore,
-        answers: { ...answers, aiFeedback: aiFeedback, submitted_time: new Date().toISOString() } // Lưu cả nhận xét của AI vào JSON
+        answers: {
+          ...answers,
+          submitted_time: new Date().toISOString(),
+          /* Điểm phần máy chấm được, chốt ngay lúc nộp. Màn chấm tay CỘNG THÊM điểm tự
+             luận vào đây chứ không tính lại. */
+          _diemMayCham: Math.round(correctPoints * 100) / 100,
+          _soCauTuLuan: soCauTuLuan,
+        }
       })
       .eq('id', submission_id)
       .eq('student_id', user.id);

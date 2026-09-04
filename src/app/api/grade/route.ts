@@ -1,10 +1,18 @@
 import { NextResponse } from 'next/server';
 import { goiGemini } from '@/utils/geminiRunner';
-import { requireUser } from '@/utils/auth/guard';
+import { requireStaff } from '@/utils/auth/guard';
 import { getAllAIKeys } from '@/utils/aiKeys';
 
 export async function POST(request: Request) {
-  const guard = await requireUser();
+    /*
+     * CHỈ nhân viên được gọi, không phải "ai đăng nhập cũng được".
+     *
+     * Đây từng là cửa học sinh tiêu khoá API: khu Luyện tập gọi MỖI CÂU TỰ LUẬN một lượt.
+     * Hạn mức miễn phí của Google là 20 lượt/ngày mỗi khoá, nên một lớp làm một khối bài
+     * là cháy sạch hạn mức, rồi chính thầy cô không bóc được câu, không soạn được đề.
+     * Nay tự luận chuyển sang thầy cô chấm tay.
+     */
+  const guard = await requireStaff();
   if (!guard.ok) return guard.response;
 
   try {

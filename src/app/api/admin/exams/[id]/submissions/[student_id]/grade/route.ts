@@ -14,11 +14,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
   try {
     const { id, student_id } = await params;
     const body = await req.json();
-    const { score, answers } = body;
+    const { score, answers, xongTuLuan } = body;
+
+    /* Chấm đủ mọi câu tự luận thì bài mới rời hàng chờ. Bản cũ chỉ ghi điểm mà không đụng
+       status, nên không phân biệt được bài đã chấm xong với bài mới chấm dở. */
+    const capNhat: Record<string, any> = { score, answers };
+    if (xongTuLuan) capNhat.status = 'GRADED';
 
     const { error } = await supabaseAdmin
       .from('online_exam_submissions')
-      .update({ score, answers })
+      .update(capNhat)
       .eq('exam_id', id)
       .eq('student_id', student_id);
 
