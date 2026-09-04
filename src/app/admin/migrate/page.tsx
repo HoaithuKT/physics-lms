@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import { createClient } from "@/utils/supabase/client";
 import * as XLSX from "xlsx";
 import { Database, UploadCloud, Loader2 } from "lucide-react";
+import { baoDamCoDongDanhMuc } from "@/utils/questionBankSave";
 
 export default function MigratePage() {
   const supabase = createClient();
@@ -83,6 +84,10 @@ export default function MigratePage() {
         setProgress(successCount);
       }
       
+      /* Nạp từ Excel cũng phải có dòng danh mục cho mọi tổ hợp - không thì câu vào kho
+         mà cây chọn dạng ở trang ra đề không hiện. */
+      if (successCount > 0) await baoDamCoDongDanhMuc(supabase, questionsToInsert);
+
       if (firstError) {
         alert(`Đồng bộ xong ${successCount}/${questionsToInsert.length} câu. Có lỗi xảy ra: ${firstError}`);
       } else {
