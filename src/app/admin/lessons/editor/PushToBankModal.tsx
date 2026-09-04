@@ -853,10 +853,19 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
           throw new Error(canhBao.length ? canhBao.join('\n') : 'AI không trả về kết quả nào.');
         }
 
+        /*
+         * Tính XONG rồi mới đặt state, KHÔNG gom kết quả phụ bên trong hàm cập nhật.
+         *
+         * Bản cũ điền deXuatDangMoi ngay trong setQuestions(prev => ...). React chạy hàm
+         * đó lúc dựng lại giao diện chứ không phải ngay tại chỗ, nên dòng ngay sau đọc
+         * deXuatDangMoi thì nó vẫn rỗng - khung cam "AI đề xuất Dạng mới" không bao giờ
+         * hiện. Bảng soát lại đếm thẳng từ xepDuoc nên vẫn báo có dạng mới chờ duyệt,
+         * thành ra máy báo có mà đóng bảng ra thì không thấy đâu mà duyệt.
+         */
         const deXuatDangMoi: Record<string, string> = {};
         let soXep = 0;
 
-        setQuestions(prev => prev.map(q => {
+        const cauSauKhiXep = questions.map(q => {
           const kq = xepDuoc.find(x => x.id === q.id);
           if (!kq) return q;
           soXep++;
@@ -864,12 +873,15 @@ export default function PushToBankModal({ isOpen, onClose, blocks, courseContext
           // đường cũ. Gán thẳng là danh mục mọc thêm dạng mà thầy cô chưa hề xem.
           // Phân môn lấy theo từng câu, vì đề có thể trải trên nhiều phân môn
           const nhanh = { subject: kq.subject, topic: kq.topic, lesson: kq.lesson, difficulty: kq.difficulty };
-          if (kq.dangMoi) {
-            deXuatDangMoi[q.id] = kq.math_form;
+          const tenDangMoi = String(kq.math_form || '').trim();
+          if (kq.dangMoi && tenDangMoi) {
+            deXuatDangMoi[q.id] = tenDangMoi;
             return { ...q, ...nhanh };
           }
           return { ...q, ...nhanh, math_form: kq.math_form };
-        }));
+        });
+
+        setQuestions(cauSauKhiXep);
 
         if (Object.keys(deXuatDangMoi).length > 0) {
           setPendingFormSuggestions(prev => ({ ...prev, ...deXuatDangMoi }));
