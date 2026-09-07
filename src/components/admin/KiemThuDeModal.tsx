@@ -45,11 +45,18 @@ function ThanhDiem({ diem }: { diem: number }) {
 }
 
 export default function KiemThuDeModal({
-  mo, onDong, cacPhan, chiTieu, diemPhan, tenKhuon, dongMaTran,
+  mo, onDong, cacPhan, chiTieu, diemPhan, tenKhuon, dongMaTran, luuThayThe,
 }: {
   mo: boolean;
   onDong: () => void;
   cacPhan: PhanDeThi[];
+  /**
+   * Đường ghi khác thay cho ghi thẳng vào ngân hàng câu hỏi.
+   *
+   * Khu soạn bài (ôn tập / kiểm tra) giữ câu trong khối `quiz` của bài chứ không ở bảng
+   * `questions`, nên phải tự đắp bản vá về đúng khối. Xem SuaLoiModal.
+   */
+  luuThayThe?: (cauId: string, va: BanVa) => void | Promise<void>;
   chiTieu?: Partial<Record<BankType, ChiTieuLoaiSoat>>;
   diemPhan?: Record<string, number>;
   tenKhuon?: string;
@@ -410,6 +417,7 @@ export default function KiemThuDeModal({
         ghiChu={banVa?.ghiChu || []}
         onDong={() => setBanVa(null)}
         onDaLuu={daLuuXong}
+        luuThayThe={luuThayThe}
       />
 
       {dsHangLoat && (
@@ -417,6 +425,7 @@ export default function KiemThuDeModal({
           ds={dsHangLoat}
           onDong={() => { setDsHangLoat(null); setDsTick(new Set()); }}
           onDaLuu={daLuuXong}
+          luuThayThe={luuThayThe}
         />
       )}
     </div>
