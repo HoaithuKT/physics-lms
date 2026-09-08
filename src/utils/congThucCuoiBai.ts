@@ -46,8 +46,27 @@ export function rutCongThucCuoiBai(noiDung: string): CongThucRut[] {
     const d = dong.trim();
     if (!d.startsWith('-') && !d.startsWith('*')) continue;
 
-    // Tách theo dấu | : tên | công thức | dùng khi nào
-    const phan = d.replace(/^[-*]\s*/, '').split('|').map(x => x.trim());
+    /* Tách theo dấu | : tên | công thức | dùng khi nào
+     *
+     * NHƯNG dấu | còn là GIÁ TRỊ TUYỆT ĐỐI trong công thức. Bản đầu cứ split('|') nên
+     * $\int \frac{1}{x}dx = \ln|x| + C$ bị cắt làm ba, công thức cụt còn "\ln" và chữ
+     * "x" rơi sang cột mô tả. Đo trên app: 4/21 công thức đang hỏng vì chuyện này, toàn
+     * công thức hay dùng - quãng đường $\int|v(t)|dt$, diện tích $\int|f(x)|dx$.
+     *
+     * Nên chỉ cắt ở dấu | NẰM NGOÀI cặp $…$: đi từng ký tự, gặp $ thì lật cờ trong/ngoài
+     * công thức, chỉ cắt khi đang ở ngoài. */
+    const cat = (s: string): string[] => {
+      const ra: string[] = [];
+      let dem = '', trongCongThuc = false;
+      for (const c of s) {
+        if (c === '$') trongCongThuc = !trongCongThuc;
+        if (c === '|' && !trongCongThuc) { ra.push(dem); dem = ''; continue; }
+        dem += c;
+      }
+      ra.push(dem);
+      return ra;
+    };
+    const phan = cat(d.replace(/^[-*]\s*/, '')).map(x => x.trim());
     if (phan.length < 2) continue;
 
     const ten = phan[0].replace(/\*\*/g, '').trim();
@@ -69,7 +88,7 @@ export function rutCongThucCuoiBai(noiDung: string): CongThucRut[] {
  * Trả về đúng khuôn dòng như trên để dùng chung một đường đọc, khỏi viết hai bộ đọc.
  */
 export function dungPromptRutCongThuc(noiDungBai: string): string {
-  return `Bạn là giáo viên Vật lí. Dưới đây là một bài giảng. Hãy rút ra các CÔNG THỨC TRỌNG TÂM
+  return `Bạn là giáo viên Toán. Dưới đây là một bài giảng. Hãy rút ra các CÔNG THỨC TRỌNG TÂM
 mà bài này thực sự có dùng.
 
 QUY TẮC:
@@ -77,9 +96,8 @@ QUY TẮC:
    công thức "cho đủ bộ".
 2. Mỗi công thức viết ĐÚNG một dòng, đúng khuôn sau, không thêm bớt gì:
    - **Tên công thức** | $công thức LaTeX$ | dùng khi nào
-3. Tên công thức phải gọi đúng tên vật lí (VD "Định luật II Newton", "Chu kì con lắc đơn"),
-   không đặt tên chung chung như "Công thức 1".
-   Giữ ĐÚNG ký hiệu đại lượng chuẩn Vật lí, không tự đổi sang chữ khác.
+3. Tên công thức phải gọi đúng tên toán học (VD "Định lý Cosin", "Diện tích tam giác theo
+   hai cạnh và góc xen giữa"), không đặt tên chung chung như "Công thức 1".
 4. Phần "dùng khi nào" viết ngắn, dưới 15 từ, nói rõ dùng trong tình huống nào.
 5. Chỉ trả về các dòng đó, không lời dẫn, không tiêu đề.
 
