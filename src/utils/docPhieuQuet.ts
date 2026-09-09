@@ -333,10 +333,36 @@ function doO(xam: Float32Array, rong: number, cao: number,
 
 /* ===================== ĐỌC MỘT PHIẾU ===================== */
 
-/** Ô coi là ĐÃ TÔ khi độ đậm vượt mức này (0 = trắng giấy, 1 = mực in đặc). */
+/** Mức trần: đậm tới đây thì chắc chắn là đã tô, khỏi bàn. */
 const MUC_DA_TO = 0.42;
+/**
+ * Sàn nghi có vết: dưới mức này coi như giấy trắng thật, học sinh bỏ trống.
+ *
+ * Khoảng giữa sàn và ngưỡng quyết định là VÙNG NGỜ - có vết nhưng chưa đủ chắc. Trước
+ * đây vùng này bị lặng lẽ tính là bỏ trống, không một dòng cảnh báo; thầy cô nhìn bảng
+ * chỉ thấy "(bỏ trống)" và 0 điểm, không biết là máy đọc hụt hay em ấy không làm.
+ */
+const SAN_NGHI_TO = 0.18;
 /** Ô đậm nhì phải kém ô đậm nhất ít nhất chừng này, không thì coi như tô hai ô. */
 const CACH_BIET = 0.18;
+
+/**
+ * SÀN của một tờ: dưới mức này thì dù đậm hơn các ô cùng câu vẫn coi là vết bẩn.
+ *
+ * Vì sao không dùng một con số cứng: đo trên phiếu thật của học sinh, có em tô bút chì
+ * nhạt tới mức MỌI nét đều nằm trong 0,30-0,52, không nét nào vượt 0,6. Ngưỡng cứng 0,42
+ * cắt đúng giữa cụm nét tô của em ấy - đọc được sáu câu, sáu câu còn lại rơi im lặng.
+ *
+ * Sàn lấy theo NỬA mức tô điển hình của chính tờ ấy (trung vị của ô đậm nhất mỗi câu).
+ */
+function sanCuaTo(damNhatMoiCau: number[]): number {
+  const co = damNhatMoiCau.filter(d => d >= SAN_NGHI_TO).sort((a, b) => a - b);
+  if (co.length < 3) return SAN_NGHI_TO;
+  const giua = co[Math.floor(co.length / 2)];
+  /* Nửa mức tô điển hình: bút chì nhạt thì sàn tụt theo, bút đậm thì sàn nâng lên nên
+     một vết bẩn mờ không lọt. Không bao giờ thấp hơn sàn nghi có vết. */
+  return Math.max(SAN_NGHI_TO, giua * 0.5);
+}
 
 export function docPhieuQuet(anh: AnhTho, luoi: BanDoLuoi): KetQuaDocPhieu {
   const { width: rong, height: cao } = anh;
@@ -411,19 +437,44 @@ export function docPhieuQuet(anh: AnhTho, luoi: BanDoLuoi): KetQuaDocPhieu {
   const khongChac: KetQuaDocPhieu['khongChac'] = [];
   const chonTrongNhom = new Map<string, string | null>();
 
+  /* Ô đậm nhất của từng câu - vừa để chọn đáp án, vừa để biết mức tô điển hình của tờ. */
+  const xepCua = new Map<string, { nhan: string; dam: number }[]>();
   for (const [khoa, ds] of nhom) {
-    const xep = ds.map(x => ({ nhan: x.nhan, dam: damCua.get(x.ma) ?? 0 }))
-                  .sort((a, b) => b.dam - a.dam);
+    xepCua.set(khoa, ds.map(x => ({ nhan: x.nhan, dam: damCua.get(x.ma) ?? 0 }))
+                       .sort((a, b) => b.dam - a.dam));
+  }
+  const san = sanCuaTo([...xepCua.values()].map(x => x[0]?.dam ?? 0));
+
+  /*
+   * Quyết định theo TƯƠNG PHẢN TRONG CHÍNH CÂU ĐÓ, không theo một mức đậm tuyệt đối.
+   *
+   * Học sinh tô bốn ô của một câu bằng cùng cây bút, cùng lực tay - nên ô đã tô bao giờ
+   * cũng đậm hơn hẳn ba ô để trắng bên cạnh, dù cây bút ấy nhạt cỡ nào. Đo trên phiếu
+   * thật: có em mọi nét chỉ 0,30-0,52; ngưỡng tuyệt đối 0,42 cắt đúng giữa cụm nét của
+   * em ấy, đọc được sáu câu và đánh rơi sáu câu. So tương phản thì cả mười hai câu đều
+   * rõ ràng.
+   *
+   * Sàn vẫn giữ để một vết bẩn lẻ trên tờ để trắng không thành đáp án.
+   */
+  for (const [khoa, xep] of xepCua) {
     const nhat = xep[0], nhi = xep[1];
-    if (!nhat || nhat.dam < MUC_DA_TO) { chonTrongNhom.set(khoa, null); continue; }
-    if (nhi && nhi.dam >= MUC_DA_TO && nhat.dam - nhi.dam < CACH_BIET) {
+    if (!nhat || nhat.dam < san) {
       chonTrongNhom.set(khoa, null);
-      khongChac.push({ ma: khoa, viSao: `tô hơn một ô (${nhat.nhan} và ${nhi.nhan})` });
+      /* Có vết mà chưa tới sàn thì PHẢI báo. Im lặng bỏ qua là kiểu hỏng tệ nhất: bảng
+         điểm hiện "(bỏ trống)" y như em không làm bài, thầy cô không có cách nào biết. */
+      if (nhat && nhat.dam >= SAN_NGHI_TO) {
+        khongChac.push({ ma: khoa, viSao: `có vết mờ ở ${nhat.nhan} nhưng chưa đủ đậm để chắc - Thầy cô nhìn giúp` });
+      }
       continue;
     }
     if (nhi && nhat.dam - nhi.dam < CACH_BIET) {
       chonTrongNhom.set(khoa, null);
-      khongChac.push({ ma: khoa, viSao: 'nét tô quá mờ, không phân biệt được' });
+      khongChac.push({
+        ma: khoa,
+        viSao: nhi.dam >= san
+          ? `tô hơn một ô (${nhat.nhan} và ${nhi.nhan})`
+          : 'nét tô quá mờ, không phân biệt được',
+      });
       continue;
     }
     chonTrongNhom.set(khoa, nhat.nhan);
