@@ -37,7 +37,7 @@ import {
   FileText, Image as ImageIcon, ListChecks, Trash2, Pencil, Crop, EyeOff, ShieldCheck, Columns2,
 } from "lucide-react";
 import DuplicateCompareModal from "@/components/admin/DuplicateCompareModal";
-import { doiVeTenChuan } from "@/utils/phanLoaiCauHoi";
+import { doiVeTenChuan, doiVeTenDangChuan} from "@/utils/phanLoaiCauHoi";
 import { boSungYeuCauCanDat } from "@/utils/yeuCauCanDat";
 
 // ===== Kiểu dữ liệu nội bộ =====
@@ -535,7 +535,11 @@ export default function BatchQueuePage() {
         const dsCoSan = categories
           .filter((c) => String(c.grade) === String(sample.grade) && c.subject === sample.subject)
           .map((c) => String((c as any)[proposal.level] || '')).filter(Boolean);
-        const tenCu = doiVeTenChuan(String((sample as any)[proposal.level] || ''), dsCoSan);
+        /* Chỉ TÊN DẠNG mới được dọn - xem chú thích trong phanLoaiCauHoi.ts */
+        const tenGoc = String((sample as any)[proposal.level] || '');
+        const tenCu = proposal.level === 'math_form'
+          ? doiVeTenDangChuan(tenGoc, dsCoSan)
+          : doiVeTenChuan(tenGoc, dsCoSan);
         if (tenCu) {
           for (const w of affected) (w.q as any)[proposal.level] = tenCu;
         } else {
