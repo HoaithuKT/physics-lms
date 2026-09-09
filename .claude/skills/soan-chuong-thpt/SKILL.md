@@ -1,6 +1,6 @@
 ---
 name: soan-chuong-thpt
-description: Soạn trọn một chương Vật lý THPT (lớp 10, 11, 12) trong app physics-lms - lý thuyết và phân dạng, bài tập tự luyện rút từ ngân hàng câu hỏi, năm đề ôn tập cuối chương, bảng tổng hợp công thức, rồi xuất tài liệu Word bản giáo viên. Dùng skill này bất cứ khi nào thầy cô nhắc tới soạn cả một chương, dựng bài tập tự luyện cho một bài, làm đề ôn tập cuối chương, rút câu từ ngân hàng vào bài học, kiểm tra một chương đã đủ dạng chưa, hay xuất chương ra Word - kể cả khi họ chỉ nói ngắn gọn kiểu "làm chương 5 đi", "soạn tiếp bài 2", "xuất chương này ra Word", hoặc "chương này thiếu dạng nào không".
+description: Soạn trọn một chương Toán THPT (lớp 10, 11, 12) trong app math-lms - lý thuyết và phân dạng, bài tập tự luyện rút từ ngân hàng câu hỏi, năm đề ôn tập cuối chương, bảng tổng hợp công thức, rồi xuất tài liệu Word bản giáo viên. Dùng skill này bất cứ khi nào thầy cô nhắc tới soạn cả một chương, dựng bài tập tự luyện cho một bài, làm đề ôn tập cuối chương, rút câu từ ngân hàng vào bài học, kiểm tra một chương đã đủ dạng chưa, hay xuất chương ra Word - kể cả khi họ chỉ nói ngắn gọn kiểu "làm chương 5 đi", "soạn tiếp bài 2", "xuất chương này ra Word", hoặc "chương này thiếu dạng nào không".
 ---
 
 # Soạn trọn một chương THPT
@@ -59,6 +59,7 @@ Mỗi bài cần đủ các dạng mà kho đang có. Mỗi dạng gồm:
 ### 🛠 Phương pháp giải
 #### Bước 1: ...
 #### Bước 2: ...
+### 🖩 Bấm máy Casio fx-580VN X   ← chỉ những dạng bấm được, xem tài liệu riêng
 ---
 > ### 📌 Ví dụ mẫu
 > đề bài
@@ -68,6 +69,16 @@ Mỗi bài cần đủ các dạng mà kho đang có. Mỗi dạng gồm:
 
 ```quiz   ← hai câu tương tác RÚT TỪ KHO, có answerIndex và sourceQuestionId
 ```
+
+**Kĩ năng bấm máy** — đọc [references/ky-nang-casio-fx580.md](references/ky-nang-casio-fx580.md).
+Ở đó có tổ hợp phím, cú pháp, và quan trọng nhất là **giới hạn** của từng công cụ (SOLVE
+không giải nổi phương trình có `Σ`, TABLE không nhận công thức truy hồi, PreAns bay sạch khi
+đổi phương thức) — mấy chỗ ấy máy không báo gì cho ra hồn, học sinh chỉ thấy sai mà không
+hiểu vì sao.
+
+Tài liệu ấy cũng nói rõ **khi nào KHÔNG được ghi mục bấm máy**: dạng chứng minh, dạng hỏi
+điều kiện đúng với mọi $n$, và dạng bấm máy còn lâu hơn làm tay. Nhét mục bấm máy vào dạng
+chứng minh là dạy học sinh thay lời giải bằng vài số hạng đầu.
 
 Mỗi dạng ít nhất hai câu tương tác, xếp từ dễ đến khó. Câu phải giải được bằng **đúng**
 phương pháp vừa trình bày, và phải tính ra con số cụ thể — hỏi lý thuyết suông thì học
