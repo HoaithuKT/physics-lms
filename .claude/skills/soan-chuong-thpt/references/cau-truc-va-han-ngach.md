@@ -5,6 +5,12 @@ Số liệu ở đây là quy ước của thầy, đã chốt qua nhiều vòng
 > **Lưu ý cho app Lý:** mấy con số này được chốt khi soạn các chương **Toán**. Cấu trúc đề
 > tốt nghiệp môn Lý cũng gồm ba phần NLC / Đúng-Sai / Trả lời ngắn nên khuôn dùng lại được,
 > nhưng **hỏi thầy xác nhận số câu từng loại** trước khi rút hàng loạt cho một chương Lý.
+>
+> Chương 3 Vật lí 12 (soạn 11/9/2026) đã dùng: **bài tập tự luyện 20 NLC + 4 DS + 6 TLN**
+> (như Toán) và **đề ôn tập 18 NLC + 4 DS + 6 TLN = 28 câu** theo đúng đề tốt nghiệp môn Lý
+> (Toán là 12/4/6). Kho Lý **không có câu mức 4**, phần 25% mức 4 tự bù bằng mức 3. Thầy chưa
+> xác nhận riêng hai con số này — nếu thầy đổi, sửa `HAN_NGACH` trong `tu-luyen-*.mjs` và
+> `KHUON` trong `de-ontap-*.mjs`.
 
 ## Mã loại câu trong kho
 
