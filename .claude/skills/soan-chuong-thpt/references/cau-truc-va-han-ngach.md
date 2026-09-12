@@ -2,16 +2,6 @@
 
 Số liệu ở đây là quy ước của thầy, đã chốt qua nhiều vòng sửa. Đừng suy diễn lại từ đầu.
 
-> **Lưu ý cho app Lý:** mấy con số này được chốt khi soạn các chương **Toán**. Cấu trúc đề
-> tốt nghiệp môn Lý cũng gồm ba phần NLC / Đúng-Sai / Trả lời ngắn nên khuôn dùng lại được,
-> nhưng **hỏi thầy xác nhận số câu từng loại** trước khi rút hàng loạt cho một chương Lý.
->
-> Chương 3 Vật lí 12 (soạn 11/9/2026) đã dùng: **bài tập tự luyện 20 NLC + 4 DS + 6 TLN**
-> (như Toán) và **đề ôn tập 18 NLC + 4 DS + 6 TLN = 28 câu** theo đúng đề tốt nghiệp môn Lý
-> (Toán là 12/4/6). Kho Lý **không có câu mức 4**, phần 25% mức 4 tự bù bằng mức 3. Thầy chưa
-> xác nhận riêng hai con số này — nếu thầy đổi, sửa `HAN_NGACH` trong `tu-luyen-*.mjs` và
-> `KHUON` trong `de-ontap-*.mjs`.
-
 ## Mã loại câu trong kho
 
 Cột `question_type` của bảng `questions` lưu mã ngắn, không lưu tên đầy đủ:
@@ -82,3 +72,29 @@ và **không có dấu hiệu gì** — từng dính 19 khối, chỉ lộ khi b
 
 Câu rút từ kho phải kèm `sourceQuestionId` — đây là sợi dây để về sau xuất Word lấy lại
 được bản ghi đầy đủ (lời giải, ảnh, barem) và để truy ngược khi câu trong kho được sửa.
+
+Khuôn đầy đủ của một khối (trắc nghiệm):
+
+```json
+{
+  "type": "multiple_choice",
+  "question": "đề, ảnh/bảng nằm NGAY TRONG đề dưới dạng markdown hoặc $$\\begin{array}…$$",
+  "options": ["…", "…", "…", "…"],
+  "answerIndex": 2,
+  "phuong_phap_giai": "một câu nêu cách làm",
+  "cac_buoc_thuc_hien": ["Bước 1 …", "Bước 2 …", "Kết luận …"],
+  "sourceQuestionId": "uuid trong kho",
+  "maCauHoi": "CH_…"
+}
+```
+
+- `phuong_phap_giai` + `cac_buoc_thuc_hien` là **bắt buộc**: app bày từng bước đánh số
+  tròn khi bấm "Xem lời giải"; thiếu thì nút ấy không ra gì. Lấy từ `explanation` của kho
+  (khuôn "Phương pháp giải:\n…\n\nLời giải:\n…"), mỗi dòng lời giải một bước.
+- Ảnh để trong `question` (markdown), **không** để ở trường `imageUrl` riêng: hai màn hình
+  từng đọc hai tên trường khác nhau, màn chiếu bỏ sót ảnh, câu "cho ở bảng sau" hiện ra
+  không có bảng.
+- Bảng số liệu viết bằng `$$\begin{array}{|c|c|} \hline … \end{array}$$`, không dùng ảnh
+  cắt (xem SKILL.md, Bước 2).
+- Đúng/Sai: `type: "true_false_cluster"`, `options: [{content, isTrue}]`. Trả lời ngắn:
+  `type: "short_answer"`, `exactAnswer`.
