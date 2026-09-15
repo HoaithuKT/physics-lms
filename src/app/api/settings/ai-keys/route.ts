@@ -1,31 +1,48 @@
 import { NextResponse } from 'next/server';
-import { requireAdmin } from '@/utils/auth/guard';
-import { getAllAIKeys, getCustomKeys, saveCustomKeys } from '@/utils/aiKeys';
+import { getAllAIKeys, getCustomKeys, saveCustomKeys, getEnvKeysMasked, importEnvKeysToDb } from '@/utils/aiKeys';
+import { requireAdmin, requireUser } from '@/utils/auth/guard';
 
 export async function GET(req: Request) {
-  const guard = await requireAdmin();
-  if (!guard.ok) return guard.response;
-
   const url = new URL(req.url);
   const action = url.searchParams.get('action');
 
   if (action === 'totalCount') {
-    // Trả về tổng số Cổng AI đang khả dụng (Cả .env và json) để Học Sinh chọn
+    // Chỉ trả về SỐ LƯỢNG cổng AI khả dụng - mọi tài khoản đã đăng nhập đều xem được
+    const countGuard = await requireUser();
+    if (!countGuard.ok) return countGuard.response;
+
     const allKeys = await getAllAIKeys();
     return NextResponse.json({ count: allKeys.length });
   }
 
-  // Mặc định trả về Danh sách các Khóa Tuỳ chỉnh của Admin (ẩn đi một phần cho an toàn nếu cần, nhưng Admin thì cho xem)
-  const customKeys = await getCustomKeys();
-  return NextResponse.json({ customKeys });
-}
-
-export async function POST(req: Request) {
+  // Danh sách Key thật chỉ dành cho Quản trị viên
   const guard = await requireAdmin();
   if (!guard.ok) return guard.response;
 
+  const customKeys = await getCustomKeys();
+  // Khoá lõi chỉ bày bản đã che - đủ để thầy đối chiếu xem khoá nào đang nằm ở biến môi trường
+  return NextResponse.json({ customKeys, coreKeys: getEnvKeysMasked() });
+}
+
+export async function POST(req: Request) {
   try {
+    const guard = await requireAdmin();
+    if (!guard.ok) return guard.response;
+
     const body = await req.json();
+
+    // Chép khoá lõi (biến môi trường của bản đang chạy) vào CSDL để quản lý một chỗ
+    if (body?.action === 'importEnv') {
+      const kq = await importEnvKeysToDb();
+      if (kq.loi) return NextResponse.json({ error: `Lỗi chép khoá lõi: ${kq.loi}` }, { status: 500 });
+      return NextResponse.json({
+        message: kq.them > 0
+          ? `Đã chép ${kq.them} khoá lõi vào cơ sở dữ liệu (${kq.daCo} khoá đã có sẵn).`
+          : `Không có khoá lõi nào mới: ${kq.daCo} khoá đều đã nằm trong cơ sở dữ liệu.`,
+        ...kq,
+      });
+    }
+
     const { keys } = body; // mảng các chuỗi API Key
 
     if (!Array.isArray(keys)) {
@@ -34,7 +51,8 @@ export async function POST(req: Request) {
 
     const success = await saveCustomKeys(keys);
     if (success) {
-      return NextResponse.json({ message: 'Đã lưu Cổng Máy chủ Trí tuệ Nhân tạo thành công!' });
+      const soKhoa = (await getCustomKeys()).length;
+      return NextResponse.json({ message: `Đã lưu ${soKhoa} Cổng Máy chủ Trí tuệ Nhân tạo vào cơ sở dữ liệu!` });
     } else {
       return NextResponse.json({ error: 'Lỗi ghi dữ liệu xuống Máy chủ.' }, { status: 500 });
     }
