@@ -3,6 +3,9 @@ name: nap-bai-tap-vao-kho
 description: Đưa bài tập từ tài liệu thầy để sẵn trong một thư mục (PDF quét, PDF chữ, Word, ảnh chụp sách bài tập, đề kiểm tra) vào Ngân hàng câu hỏi của app - đọc từng câu, chép lại thành LaTeX, xếp vào đúng chương/bài/dạng đang có trong danh mục, gắn mức độ, viết lời giải, cắt hình vẽ, soát trùng rồi ghi vào kho có sao lưu. Dùng khi thầy cô nói "nạp bài tập vào kho", "đưa tài liệu này vào ngân hàng câu hỏi", "bóc câu từ sách bài tập", "kho chương này chưa có câu, lấy từ tệp trong thư mục X", hoặc chỉ tay vào một thư mục tài liệu và bảo làm.
 ---
 
+> Script chạy bằng launcher `npm run -s skill -- <đường dẫn> …` (skill nằm ở ổ G qua junction,
+> `node …` trực tiếp không thấy node_modules) — xem README.md ở thư mục skills.
+
 # Nạp bài tập từ tài liệu vào ngân hàng câu hỏi
 
 Việc này là **chép đúng và xếp đúng** — không sáng tác. Câu nào trong tài liệu thì vào kho câu ấy,
@@ -35,7 +38,7 @@ Kho là tài sản thầy gom nhiều năm, một câu sai đáp án lọt vào 
 ### 1. Kê tài liệu
 
 ```bash
-node .claude/skills/nap-bai-tap-vao-kho/scripts/liet-ke-tai-lieu.mjs "<thư mục thầy để tài liệu>"
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/liet-ke-tai-lieu.mjs "<thư mục thầy để tài liệu>"
 ```
 
 PDF được dựng thành ảnh từng trang ở `scratch/nap-kho/<tên>/trang-NN.png`; nếu PDF có lớp chữ
@@ -46,7 +49,7 @@ Word thành `<tên>.md` kèm ảnh trích sẵn. Tài liệu quét không có ch
 thường hỏng mã và ảnh từng trang gần như trống. Nén lại rồi mới đọc:
 
 ```bash
-node .claude/skills/nap-bai-tap-vao-kho/scripts/nen-trang.mjs scratch/nap-kho/<tên> 333 347 bai15
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/nen-trang.mjs scratch/nap-kho/<tên> 333 347 bai15
 ```
 
 Ra `scratch/nap-kho/nen/bai15-<k>.png`: bỏ dòng chấm và khoảng trắng, ghép nhiều trang thành
@@ -56,7 +59,7 @@ Ra `scratch/nap-kho/nen/bai15-<k>.png`: bỏ dòng chấm và khoảng trắng, 
 ### 2. Tải danh mục của khối
 
 ```bash
-node .claude/skills/nap-bai-tap-vao-kho/scripts/tai-danh-muc.mjs --lop 12 --chuong "Từ trường"
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/tai-danh-muc.mjs --lop 9 --chuong "Đường tròn"
 ```
 
 Ra `scratch/nap-kho/danh-muc-lop9.md`: từng dạng kèm **yêu cầu cần đạt** và số câu đang có.
@@ -70,13 +73,13 @@ dễ soát:
 
 ```json
 {
-  "grade": "12",
-  "subject": "Vật lí",
-  "nguon": "SBT Vật lí 12 KNTT tập 1, tr. 96–99",
+  "grade": "9",
+  "subject": "Hình học",
+  "nguon": "SBT Toán 9 KNTT tập 1, tr. 96–99",
   "cau": [
     {
       "topic": "Chương 5. Đường tròn",
-      "lesson": "Bài 13. Mở đầu về đường tròn",
+      "lesson": "Bài 1. Mở đầu về đường tròn",
       "math_form": "Sự xác định đường tròn, chứng minh các điểm cùng thuộc một đường tròn",
       "question_type": "NLC",
       "difficulty": "2",
@@ -102,12 +105,13 @@ Quy ước chép (đúng lối kho đang dùng, xem vài câu cùng bài trướ
 | Đề nhiều ý a) b) c) | Với TL giữ nguyên trong `content`; với TLN/NLC tách mỗi ý thành một câu, chép lại đủ giả thiết |
 
 Xếp dạng theo **yêu cầu cần đạt** chứ không theo chữ trùng trong tên. Bài tập tổng hợp cuối
-chương thì vào dạng "Bài tập tổng hợp chương N" của bài "Ôn tập chương N".
+chương thì vào dạng "Bài tập tổng hợp chương N" của bài "Bài K. Ôn tập chương" (K = số bài + 1).
+Tên bài đánh số **từ 1 trong mỗi chương** (không đánh liên tục theo SGK).
 
 ### 4. Soát
 
 ```bash
-node .claude/skills/nap-bai-tap-vao-kho/scripts/kiem-cau.mjs scratch/nap-kho/<tên>.cau.json
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/kiem-cau.mjs scratch/nap-kho/<tên>.cau.json
 ```
 
 `✗` là lỗi phải sửa (danh mục sai tên, thiếu phương án, đáp án sai khuôn, dấu `$` lẻ, trùng
@@ -117,8 +121,8 @@ hệt câu trong kho, trùng trong tệp). `⚠` là cảnh báo: *rất giống
 ### 5. Ghi
 
 ```bash
-node .claude/skills/nap-bai-tap-vao-kho/scripts/ghi-cau.mjs scratch/nap-kho/<tên>.cau.json       # thử
-node .claude/skills/nap-bai-tap-vao-kho/scripts/ghi-cau.mjs scratch/nap-kho/<tên>.cau.json ghi   # ghi
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/ghi-cau.mjs scratch/nap-kho/<tên>.cau.json       # thử
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/ghi-cau.mjs scratch/nap-kho/<tên>.cau.json ghi   # ghi
 ```
 
 Script tự chạy lại bộ soát và từ chối nếu còn lỗi. Ghi xong in ra lệnh rút lại:
@@ -126,7 +130,16 @@ Script tự chạy lại bộ soát và từ chối nếu còn lỗi. Ghi xong i
 
 ### 6. Đo lại và báo
 
-Chạy lại `tai-danh-muc.mjs` để thấy số câu từng dạng sau khi nạp. Báo cho thầy theo khuôn:
+Chạy lại `tai-danh-muc.mjs` để thấy số câu từng dạng sau khi nạp, rồi kiểm cây danh mục:
+
+```bash
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/kiem-danh-muc.mjs
+```
+
+Phải về **0 ✗** (quy ước ở [docs/quy-uoc-danh-muc.md](../../../docs/quy-uoc-danh-muc.md):
+`Chương N. Tên`, `Bài N. Tên` đánh lại từ 1 mỗi chương, `Bài K. Ôn tập chương`, bốn phân
+môn). Chương/bài mới không có trong cây chuẩn thì báo thầy, được duyệt mới `--cap-nhat`.
+Báo cho thầy theo khuôn:
 
 - Nạp bao nhiêu câu, từ tài liệu nào, vào bài/dạng nào (bảng số câu theo dạng)
 - Cơ cấu loại và mức
@@ -141,12 +154,12 @@ Chạy lại `tai-danh-muc.mjs` để thấy số câu từng dạng sau khi n�
 
 ```bash
 # 1. in mọi dạng + mọi câu của một chương ra để đọc bằng mắt (ghi ra tệp cho dễ lật)
-node .claude/skills/nap-bai-tap-vao-kho/scripts/soi-dang-chuong.mjs --lop 8 --chuong 1 > scratch/soi-dang/lop8-c1.txt
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/soi-dang-chuong.mjs --lop 8 --chuong 1 > scratch/soi-dang/lop8-c1.txt
 # 2. viết kế hoạch scratch/soi-dang/lop8-c1.ke-hoach.json (thường sinh bằng một tệp .chuyen.mjs), chạy thử rồi ghi
-node .claude/skills/nap-bai-tap-vao-kho/scripts/ap-ke-hoach-dang.mjs scratch/soi-dang/lop8-c1.ke-hoach.json      # thử
-node .claude/skills/nap-bai-tap-vao-kho/scripts/ap-ke-hoach-dang.mjs scratch/soi-dang/lop8-c1.ke-hoach.json ghi  # ghi + sao lưu
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/ap-ke-hoach-dang.mjs scratch/soi-dang/lop8-c1.ke-hoach.json      # thử
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/ap-ke-hoach-dang.mjs scratch/soi-dang/lop8-c1.ke-hoach.json ghi  # ghi + sao lưu
 # 3. câu lạc sang CHƯƠNG khác (ap-ke-hoach chỉ đổi bài/dạng trong một chương)
-node .claude/skills/nap-bai-tap-vao-kho/scripts/chuyen-cau-khac-chuong.mjs scratch/soi-dang/lop9-khac-chuong.json ghi
+npm run -s skill -- .claude/skills/nap-bai-tap-vao-kho/scripts/chuyen-cau-khac-chuong.mjs scratch/soi-dang/lop9-khac-chuong.json ghi
 ```
 
 Kế hoạch: `dang` là danh sách dạng ĐÍCH đầy đủ của chương (`cu` tên cũ hoặc `null` nếu
