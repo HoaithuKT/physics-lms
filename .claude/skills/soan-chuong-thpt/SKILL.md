@@ -261,6 +261,15 @@ Cả hai script soi **cả bản trình chiếu** (`presentation_markdown`) — 
 hai bản, màn chiếu ưu tiên bản trình chiếu, sửa mỗi bản nội dung thì trên lớp vẫn thấy
 bản cũ. Nhãn "(trình chiếu)" sau tên module là đang nói bản ấy.
 
+Kiểm luôn cây danh mục — soạn chương hay đụng tên bài, tên dạng:
+
+```bash
+node .claude/skills/nap-bai-tap-vao-kho/scripts/kiem-danh-muc.mjs
+```
+
+Phải về 0 ✗ theo [docs/quy-uoc-danh-muc.md](../../../docs/quy-uoc-danh-muc.md). Tên bài trong
+khoá học phải trùng từng chữ với tên bài trong kho, bài ôn tập là `Bài K. Ôn tập chương`.
+
 Xong máy rồi thì **mở app** (thầy đăng nhập Chrome, đi qua Claude in Chrome) bấm từng
 câu tương tác trên màn chiếu: bảng có đọc được từ cuối lớp không, "Xem lời giải" có ra
 từng bước không, diễn giải có chỗ nào nói sai kiến thức không. Chỉ khi nhìn thấy bằng
@@ -271,8 +280,8 @@ toàn màn hình. Bản chạy cục bộ (`npm run dev`) đòi đăng nhập m�
 khẩu, nên sửa mã app thì **đẩy lên Vercel rồi xem qua Chrome của thầy**. Đừng đổi cỡ cửa
 sổ Chrome giữa chừng: slide lệch khung cho tới khi tải lại trang.
 
-Tham số `--lop` của mọi script trong skill so khớp `ilike` với tên khoá học: ghi đủ tên
-khoá như trong bảng `courses` (bên Toán từng ghi `--lop 10` là trúng "TOÁN CHUYÊN VÀO 10").
+Tham số `--lop` của mọi script trong skill so khớp `ilike` với tên khoá học: phải ghi
+`--lop "TOÁN 10"`, ghi `--lop 10` là trúng "TOÁN CHUYÊN VÀO 10".
 
 ## Bước 8 — Rà lại tính đúng đắn của từng câu hỏi
 
@@ -316,6 +325,31 @@ chạy lại `kiem-giao-an.mjs` và xuất lại Word.
 
 Khi báo thầy, nói rõ **đã rà bao nhiêu câu, sửa câu nào, vì sao** — không nói "đã kiểm"
 chung chung.
+
+Ba kiểu sai nữa bắt được ở Toán 9 chương IV (19/9/2026, 106 câu, sửa 17):
+
+- **Kiến thức ngoài chương trình**: kho Toán 9 có câu giải bằng $AB^2 = BH \cdot BC$,
+  $OH^2 = MH \cdot HN$ (hệ thức cạnh – đường cao, chương trình **cũ**; Toán 9 mới chỉ học tỉ số
+  lượng giác), có câu dùng $\sin 120^\circ$ (góc tù). Giải lại bằng kiến thức đang dạy, hoặc
+  loại câu.
+- **Nhầm phần thập phân của độ thành phút**: $\tan^{-1} 1{,}667 = 59{,}04^\circ$ ghi thành
+  $59^\circ 04'$ (đúng là $59^\circ 2'$). Cứ thấy số phút trùng hai chữ số sau dấu phẩy là nghi.
+- **Trùng đề khác lời văn** giữa các module: "AB = 5, AC = 12" và "AB = 5 cm, AC = 12 cm,
+  tính TSLG góc B" là một bài, vân tay chữ của app không bắt được, hai câu lọt vào hai đề.
+  Chống bằng **vân tay số liệu** (dạng + bộ số trong đề, nhớ quy `2{,}5` về `2,5` trước) — xem
+  `scratch/l9c4/rut-tu-luyen.mjs`. Khi rút lại, danh sách "câu đã dùng" chỉ tính module lý
+  thuyết, không tính module đang dựng lại (tính vào là tự loại chính mình).
+- **`correct_answer` của câu tự luận chứa nguyên lời giải** (4/181 câu): Word in "Đáp án:"
+  cả trang rồi "Lời giải" thêm lần nữa. Thay bằng đáp số ngắn.
+
+## THCS: bài ôn tập nằm ngay trong chương
+
+Toán 9 không có chuyên đề ôn tập riêng như THPT: bài cuối chương là `Bài K. Ôn tập chương`
+**trong** chương, module lý thuyết của nó là bảng công thức, hai module `Luyện tập 1`,
+`Luyện tập 2` là đề. `xuat-chuong-word.mjs --cuoi "Bài 3. Ôn tập chương"` đã hiểu lối này:
+tìm trong chương khi không thấy ở chuyên đề ôn tập, và không xuất bài ấy như bài thường.
+Thầy đặt hạn ngạch riêng cho THCS (Toán 9 C4: mỗi bài **20 câu tự luận**, ưu tiên thông
+hiểu — 14 TH · 3 NB · 3 VD) thay cho khuôn 20 NLC + 4 DS + 6 TLN + 4 TL của THPT.
 
 ## Chạy script Node đụng vào mã của app
 
