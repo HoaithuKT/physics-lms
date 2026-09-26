@@ -1,0 +1,131 @@
+
+> physics-lms@0.1.0 build
+> node node_modules/next/dist/bin/next build
+
+⚠ `eslint` configuration in next.config.ts is no longer supported. See more info here: https://nextjs.org/docs/app/api-reference/cli/next#next-lint-options
+⚠ Invalid next.config.ts options detected: 
+⚠     Unrecognized key(s) in object: 'eslint'
+⚠ See more info here: https://nextjs.org/docs/messages/invalid-next-config
+▲ Next.js 16.2.7 (Turbopack)
+- Environments: .env.local
+
+⚠ The "middleware" file convention is deprecated. Please use "proxy" instead. Learn more: https://nextjs.org/docs/messages/middleware-to-proxy
+  Creating an optimized production build ...
+✓ Compiled successfully in 15.6s
+  Skipping validation of types
+  Finished TypeScript config validation in 11ms ...
+  Collecting page data using 11 workers ...
+  Generating static pages using 11 workers (0/75) ...
+  Generating static pages using 11 workers (18/75) 
+  Generating static pages using 11 workers (37/75) 
+  Generating static pages using 11 workers (56/75) 
+✓ Generating static pages using 11 workers (75/75) in 1043ms
+  Finalizing page optimization ...
+
+Route (app)
+┌ ○ /
+├ ○ /_not-found
+├ ○ /admin/categories
+├ ○ /admin/cham-quet
+├ ○ /admin/cho-cham
+├ ○ /admin/classes
+├ ƒ /admin/classes/[id]
+├ ○ /admin/courses
+├ ƒ /admin/courses/[id]/edit
+├ ƒ /admin/courses/[id]/lessons
+├ ○ /admin/courses/new
+├ ○ /admin/dashboard
+├ ○ /admin/dieu-khien
+├ ƒ /admin/dieu-khien/[ma]
+├ ○ /admin/exam-results
+├ ○ /admin/exams
+├ ○ /admin/exams/select
+├ ○ /admin/finance
+├ ○ /admin/handbook
+├ ○ /admin/lessons/editor
+├ ○ /admin/migrate
+├ ○ /admin/on-tap
+├ ○ /admin/online-exam-results
+├ ○ /admin/online-exams
+├ ƒ /admin/online-exams/[id]/edit
+├ ƒ /admin/online-exams/[id]/monitor
+├ ƒ /admin/online-exams/[id]/submissions/[student_id]
+├ ○ /admin/online-exams/new
+├ ○ /admin/questions
+├ ○ /admin/questions/batch-queue
+├ ○ /admin/questions/editor
+├ ○ /admin/questions/generator
+├ ○ /admin/questions/similar-generator
+├ ○ /admin/settings
+├ ○ /admin/settings/ai-keys
+├ ○ /admin/teachers
+├ ƒ /admin/users
+├ ƒ /api/admin/ai-models
+├ ƒ /api/admin/ban-nhap
+├ ƒ /api/admin/bo-de
+├ ƒ /api/admin/cho-cham
+├ ƒ /api/admin/classes/import-students
+├ ƒ /api/admin/courses/[id]/upload-schedule
+├ ƒ /api/admin/create-remedial
+├ ƒ /api/admin/delete-exam-result
+├ ƒ /api/admin/detect-forms
+├ ƒ /api/admin/exams
+├ ƒ /api/admin/exams/[id]
+├ ƒ /api/admin/exams/[id]/publish-results
+├ ƒ /api/admin/exams/[id]/submissions
+├ ƒ /api/admin/exams/[id]/submissions/[student_id]
+├ ƒ /api/admin/exams/[id]/submissions/[student_id]/grade
+├ ƒ /api/admin/gemini-key
+├ ƒ /api/admin/grade-manual
+├ ƒ /api/admin/import-students
+├ ƒ /api/admin/import-students/template
+├ ƒ /api/admin/khuon-de
+├ ƒ /api/admin/ma-tran-mau
+├ ƒ /api/admin/phan-bo-cau-hoi
+├ ƒ /api/admin/students
+├ ƒ /api/admin/update-exam-result
+├ ƒ /api/admin/users
+├ ƒ /api/admin/users/[id]
+├ ƒ /api/admin/users/toggle-active
+├ ƒ /api/auth/register
+├ ƒ /api/exams/fix-latex
+├ ƒ /api/exams/generate-similar
+├ ƒ /api/exams/parse
+├ ƒ /api/formulas/extract
+├ ƒ /api/formulas/fix
+├ ƒ /api/formulas/generate
+├ ƒ /api/formulas/keys
+├ ƒ /api/formulas/save
+├ ƒ /api/grade
+├ ƒ /api/settings/ai-keys
+├ ƒ /api/student/exams
+├ ƒ /api/student/exams/[id]/cheat
+├ ƒ /api/student/exams/[id]/review/[submission_id]
+├ ƒ /api/student/exams/[id]/save
+├ ƒ /api/student/exams/[id]/start
+├ ƒ /api/student/exams/[id]/submit
+├ ƒ /api/student/get-progress
+├ ƒ /api/student/my-course
+├ ƒ /api/student/save-progress
+├ ƒ /api/student/save-score
+├ ƒ /api/student/submit-remedial
+├ ƒ /courses
+├ ○ /huong-dan
+├ ○ /pending-approval
+├ ƒ /present/[id]
+├ ƒ /register
+├ ○ /student/dashboard
+├ ○ /student/handbook
+├ ƒ /student/lessons/[id]
+├ ○ /student/on-tap
+├ ○ /student/online-exams
+├ ƒ /student/online-exams/[id]
+├ ƒ /student/online-exams/[id]/review/[submission_id]
+└ ƒ /student/remedial/[id]
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+

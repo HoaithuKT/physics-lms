@@ -1,0 +1,656 @@
+[
+ {
+  "id": "fca691c6-0fd6-445a-88f4-176db09f5f09",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 1. Cấu trúc của chất. Sự chuyển thể",
+  "math_form": "Lý thuyết về mô hình động học phân tử"
+ },
+ {
+  "id": "d2329b1c-a341-4045-905b-d51bb6cd8c0a",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 1. Cấu trúc của chất. Sự chuyển thể",
+  "math_form": "Phân biệt các thể và hiện tượng thực tế"
+ },
+ {
+  "id": "dda05b80-7a32-455d-a184-7b00bfbc6d91",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 1. Cấu trúc của chất. Sự chuyển thể",
+  "math_form": "Phân tích đồ thị và sơ đồ chuyển thể"
+ },
+ {
+  "id": "562e400e-37e3-4896-8e1d-a1156f554b4a",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 1. Cấu trúc của chất. Sự chuyển thể",
+  "math_form": "Tự suy luận"
+ },
+ {
+  "id": "640ae884-7669-47a2-a909-26872af93881",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 2. Nội năng. Định luật I của nhiệt động lực học",
+  "math_form": "Bài toán hiệu suất động cơ nhiệt"
+ },
+ {
+  "id": "e2b6554d-5954-4462-8bd4-cd322652ae8a",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 2. Nội năng. Định luật I của nhiệt động lực học",
+  "math_form": "Đọc đồ thị p - V"
+ },
+ {
+  "id": "e0333707-dceb-488c-803f-f64398aa5dd0",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 2. Nội năng. Định luật I của nhiệt động lực học",
+  "math_form": "Tính công của chất khí"
+ },
+ {
+  "id": "4043e36e-8d40-4943-b930-cb9184da8772",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 2. Nội năng. Định luật I của nhiệt động lực học",
+  "math_form": "Tính toán cơ bản về nhiệt lượng"
+ },
+ {
+  "id": "08596c77-d266-43f9-a4a1-facaf96df154",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 2. Nội năng. Định luật I của nhiệt động lực học",
+  "math_form": "Tự suy luận"
+ },
+ {
+  "id": "aa9456ca-55a5-4241-815c-9d59adf93b2d",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 2. Nội năng. Định luật I của nhiệt động lực học",
+  "math_form": "Vận dụng công thức định luật I Nhiệt động lực học ($\\Delta U = A + Q$)"
+ },
+ {
+  "id": "6d53f0da-161a-4eb1-8c7f-d2692067bc14",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 3. Nhiệt độ. Thang nhiệt độ - Nhiệt kế",
+  "math_form": "Nguyên lý hoạt động của nhiệt kế"
+ },
+ {
+  "id": "53e41eb5-30e1-4a20-9679-c028f8713e57",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 3. Nhiệt độ. Thang nhiệt độ - Nhiệt kế",
+  "math_form": "Quy đổi thang nhiệt độ"
+ },
+ {
+  "id": "e37655f0-1c4d-4b10-9624-a65f6334d17e",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 3. Nhiệt độ. Thang nhiệt độ - Nhiệt kế",
+  "math_form": "Tính độ chênh lệch nhiệt độ"
+ },
+ {
+  "id": "80674ee8-32fc-4e21-a2da-852f02e33de6",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 3. Nhiệt độ. Thang nhiệt độ - Nhiệt kế",
+  "math_form": "Tự suy luận"
+ },
+ {
+  "id": "644c6229-a00a-424a-b45c-fb5989160295",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 3. Nhiệt độ. Thang nhiệt độ - Nhiệt kế",
+  "math_form": "Vật lý tổng hợp"
+ },
+ {
+  "id": "c5b3c955-3476-4d0b-8415-05e87ab18ad2",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 4. Nhiệt dung riêng",
+  "math_form": "Bài toán phương trình cân bằng nhiệt"
+ },
+ {
+  "id": "a38fb6f9-a4a3-4da8-9bfb-760b079af7b6",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 4. Nhiệt dung riêng",
+  "math_form": "Tính toán cơ bản về nhiệt lượng"
+ },
+ {
+  "id": "33fde770-d045-40af-bb5d-886fc7a4209b",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 4. Nhiệt dung riêng",
+  "math_form": "Tự suy luận"
+ },
+ {
+  "id": "a13b083f-fe29-4631-867a-f988e1af0ec4",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 4. Nhiệt dung riêng",
+  "math_form": "Xử lý số liệu thí nghiệm đo nhiệt dung riêng"
+ },
+ {
+  "id": "7b960cb6-8bb5-4567-b6ae-0e1d2a42280d",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 5. Nhiệt nóng chảy riêng",
+  "math_form": "Bài toán biến đổi nhiệt đa giai đoạn"
+ },
+ {
+  "id": "69b6cb7b-1627-45d0-8744-db49406ae468",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 5. Nhiệt nóng chảy riêng",
+  "math_form": "Bài toán thực nghiệm"
+ },
+ {
+  "id": "cad70de3-84b4-4167-9e6b-ce420422111b",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 5. Nhiệt nóng chảy riêng",
+  "math_form": "Tính nhiệt lượng nóng chảy"
+ },
+ {
+  "id": "e525d2e6-266c-4522-8cd8-083ba5a4d124",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 5. Nhiệt nóng chảy riêng",
+  "math_form": "Vật lý tổng hợp"
+ },
+ {
+  "id": "195194f5-c41d-4150-aaa4-5765b6e206aa",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 6. Nhiệt hoá hơi riêng",
+  "math_form": "Bài toán kết hợp đun nóng và hoá hơi"
+ },
+ {
+  "id": "49499985-9190-49ac-8348-d7efd7221fe9",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 6. Nhiệt hoá hơi riêng",
+  "math_form": "Tính nhiệt lượng hoá hơi"
+ },
+ {
+  "id": "f8a82723-3574-4f3c-82e0-103a6589c7bd",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 6. Nhiệt hoá hơi riêng",
+  "math_form": "Vật lý tổng hợp"
+ },
+ {
+  "id": "238f7628-8bb2-4838-9da9-e9fd976a565c",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Bài 6. Nhiệt hoá hơi riêng",
+  "math_form": "Xử lý số liệu thí nghiệm đo nhiệt hoá hơi riêng"
+ },
+ {
+  "id": "e7250104-3d36-4dec-8af5-6e71493b35b4",
+  "topic": "Chương 1. Vật lí nhiệt",
+  "lesson": "Ôn tập chương",
+  "math_form": "Vật lý tổng hợp"
+ },
+ {
+  "id": "c5b51c1b-23e8-4d59-9182-d3a87fa20e90",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 10. Định luật Charles",
+  "math_form": "Bài toán giọt nước/thủy ngân trong ống mao dẫn nằm ngang thông khí quyển."
+ },
+ {
+  "id": "bec1885b-b768-4b62-a062-61d025d2cd61",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 10. Định luật Charles",
+  "math_form": "Bài toán pittong di chuyển tự do trong xilanh"
+ },
+ {
+  "id": "fb9adafe-3ae2-463f-80bd-348a81d10008",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 10. Định luật Charles",
+  "math_form": "Đọc và so sánh các đường đẳng áp trên các hệ trục tọa độ $(V - T), (p - V), (p - T)$."
+ },
+ {
+  "id": "d1441507-d791-4591-9e7d-9c04ad639e80",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 10. Định luật Charles",
+  "math_form": "Vận dụng trực tiếp định luật Charles tính thể tích và nhiệt độ tuyệt đối; bài toán tăng/giảm tỉ lệ phần trăm thể tích."
+ },
+ {
+  "id": "24f250fb-3a17-42c8-9b8c-12fb91f2c8a0",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 11. Phương trình trạng thái của khí lí tưởng",
+  "math_form": "Bài toán biến đổi trạng thái tổng quát khi cả 3 thông số $(p, V, T)$ thay đổi"
+ },
+ {
+  "id": "d02e1fc6-3560-4675-9437-75bb7e484749",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 11. Phương trình trạng thái của khí lí tưởng",
+  "math_form": "Bài toán chu trình nhiệt động lực học và chuyển đổi đồ thị giữa các hệ trục $(p - V), (V - T), (p - T)$."
+ },
+ {
+  "id": "2fded94f-6a6a-42bc-b202-81a9cdfebc73",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 11. Phương trình trạng thái của khí lí tưởng",
+  "math_form": "Bài toán khí thoát ra khỏi bình khi đun nóng bình hở miệng"
+ },
+ {
+  "id": "f3807978-9820-4904-a025-45e820f31767",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 11. Phương trình trạng thái của khí lí tưởng",
+  "math_form": "Quá trình đẳng tích"
+ },
+ {
+  "id": "052cac59-254d-4f07-8084-07a62a3a5af5",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 11. Phương trình trạng thái của khí lí tưởng",
+  "math_form": "Vận dụng phương trình Clapeyron – Mendeleev"
+ },
+ {
+  "id": "ea31943d-2016-478f-a1c8-c15d2d206ad2",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 12. Áp suất khí theo mô hình động học phân tử. Quan hệ giữa động năng phân tử và nhiệt độ",
+  "math_form": "Tính áp suất chất khí từ mật độ phân tử $\\mu$, khối lượng $m$, tốc độ $\\sqrt{\\overline{v^2}}$ hoặc khối lượng riêng $\\rho$"
+ },
+ {
+  "id": "e5c806c7-a5d5-4b40-9083-764574401f65",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 12. Áp suất khí theo mô hình động học phân tử. Quan hệ giữa động năng phân tử và nhiệt độ",
+  "math_form": "Tính động năng tịnh tiến trung bình $\\overline{E_d}$ ở nhiệt độ $T$ bất kì"
+ },
+ {
+  "id": "f357d482-f2c9-4fc5-8b23-5e30397ffd0c",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 12. Áp suất khí theo mô hình động học phân tử. Quan hệ giữa động năng phân tử và nhiệt độ",
+  "math_form": "Tính và so sánh tốc độ căn quân phương"
+ },
+ {
+  "id": "783f3098-5076-458d-b58b-500790e68f72",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 12. Áp suất khí theo mô hình động học phân tử. Quan hệ giữa động năng phân tử và nhiệt độ",
+  "math_form": "Tự suy luận"
+ },
+ {
+  "id": "c785912d-97ba-4c1a-89af-7c7e823ac5e7",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 12. Áp suất khí theo mô hình động học phân tử. Quan hệ giữa động năng phân tử và nhiệt độ",
+  "math_form": "Vận dụng hệ thức $p = \\mu k T$ và tính nội năng $U$ của khối khí."
+ },
+ {
+  "id": "5de0f1c7-2fff-4ca1-8781-7e08061c836d",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 13. Bài tập về khí lí tưởng",
+  "math_form": "Đồ thị biến đổi tuyến tính & Cực trị nhiệt độ $T_{max}$"
+ },
+ {
+  "id": "eda7a87c-7263-4a4c-9f6e-e8f5bbe13203",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 13. Bài tập về khí lí tưởng",
+  "math_form": "Hỗn hợp khí và bình thông nhau"
+ },
+ {
+  "id": "7cafc3b2-b403-4baa-94d0-841eee9fa96d",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 13. Bài tập về khí lí tưởng",
+  "math_form": "Khinh khí cầu / Bóng thám không & Lực đẩy Ác-si-mét"
+ },
+ {
+  "id": "7929c091-fcb1-4473-9fa5-cc9c530be067",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 8. Mô hình động học phân tử chất khí",
+  "math_form": "Câu hỏi định tính về cấu trúc chất rắn, lỏng, khí và chuyển động Brown"
+ },
+ {
+  "id": "38843911-6d36-4c43-8b76-ccdb0aaad9ce",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 8. Mô hình động học phân tử chất khí",
+  "math_form": "Đặc điểm của mô hình khí lí tưởng và so sánh với khí thực"
+ },
+ {
+  "id": "5f9b5b96-4aea-4083-ab6b-de3341f91791",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 8. Mô hình động học phân tử chất khí",
+  "math_form": "Tính số phân tử $N$, số mol $n$, khối lượng 1 phân tử $m_0 = \\frac{M}{N_A}$, mật độ phân tử $\\mu = \\frac{N}{V}$."
+ },
+ {
+  "id": "d62fe479-e824-435d-86ba-36bfb0303f05",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 9. Định luật Boyle",
+  "math_form": "Bài toán bơm khí vào bình / hút khí ra khỏi bình"
+ },
+ {
+  "id": "26bbb466-0721-4b09-bafa-c9f1d2c0d572",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 9. Định luật Boyle",
+  "math_form": "Bài toán bọt khí nổi từ đáy nước lên mặt nước"
+ },
+ {
+  "id": "0495ee5d-9ff0-4c67-be21-ad2f2ae17680",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 9. Định luật Boyle",
+  "math_form": "Nhận dạng, đọc giá trị và so sánh nhiệt độ trên đồ thị đẳng nhiệt ($T_2 > T_1$)"
+ },
+ {
+  "id": "126d6831-ec51-4bad-9440-f6f78fd07840",
+  "topic": "Chương 2. Khí lí tưởng",
+  "lesson": "Bài 9. Định luật Boyle",
+  "math_form": "Vận dụng trực tiếp định luật Boyle tính $p, V$ khi $T$ không đổi"
+ },
+ {
+  "id": "3028d882-8a12-434a-aa16-7b90fb669598",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 14. Từ trường",
+  "math_form": "Bản chất và ứng dụng từ trường Trái Đất"
+ },
+ {
+  "id": "e3c3949d-e1b0-44e1-8c5e-28da7107bf06",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 14. Từ trường",
+  "math_form": "Chiều đường sức từ và quy tắc nắm tay phải"
+ },
+ {
+  "id": "25ccac2f-ab15-4a6f-bb22-68ecf41be76a",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 14. Từ trường",
+  "math_form": "Định hướng nam châm thử"
+ },
+ {
+  "id": "90a39597-3fd6-4c1f-9e9c-8c3f0417b76f",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 14. Từ trường",
+  "math_form": "Nhận biết tương tác từ và tính chất từ trường"
+ },
+ {
+  "id": "7789e4c6-8657-4d43-be56-4e1fe5a0eebe",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 15. Lực từ tác dụng lên dây dẫn mang dòng điện. Cảm ứng từ",
+  "math_form": "Cân bằng đoạn dây mang dòng điện"
+ },
+ {
+  "id": "2fc66d20-f9e3-4a27-b50a-6bc1f69d3b33",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 15. Lực từ tác dụng lên dây dẫn mang dòng điện. Cảm ứng từ",
+  "math_form": "Moment ngẫu lực từ tác dụng lên khung dây"
+ },
+ {
+  "id": "03df66be-baaa-4cd7-aa2a-ca54f4d56322",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 15. Lực từ tác dụng lên dây dẫn mang dòng điện. Cảm ứng từ",
+  "math_form": "Quy tắc bàn tay trái xác định F, B, I"
+ },
+ {
+  "id": "4e7c12c8-2970-4904-bfee-c75c4a27c71c",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 15. Lực từ tác dụng lên dây dẫn mang dòng điện. Cảm ứng từ",
+  "math_form": "Thí nghiệm cân dòng điện đo B"
+ },
+ {
+  "id": "5601ef13-114b-4ed0-862d-0a68f34e19f2",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 15. Lực từ tác dụng lên dây dẫn mang dòng điện. Cảm ứng từ",
+  "math_form": "Tính lực từ F và cảm ứng từ B"
+ },
+ {
+  "id": "5d085320-4e0d-4829-8901-48848bc1875c",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 16. Từ thông. Hiện tượng cảm ứng điện từ",
+  "math_form": "Định luật Faraday tính suất điện động e, dòng điện I, điện lượng q"
+ },
+ {
+  "id": "0ec74530-8726-4b1c-a30f-f8f7f44f2c83",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 16. Từ thông. Hiện tượng cảm ứng điện từ",
+  "math_form": "Khai thác đồ thị từ thông – thời gian, cảm ứng từ - thời gian"
+ },
+ {
+  "id": "c749cd65-c166-40dc-9f9b-3df63c3beed2",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 16. Từ thông. Hiện tượng cảm ứng điện từ",
+  "math_form": "Suất điện động trong thanh dẫn chuyển động"
+ },
+ {
+  "id": "89fc372d-e7fc-486a-89a4-e55eda862017",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 16. Từ thông. Hiện tượng cảm ứng điện từ",
+  "math_form": "Tính từ thông qua khung dây"
+ },
+ {
+  "id": "033ce138-06ec-41a6-a925-b00347e9d401",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 16. Từ thông. Hiện tượng cảm ứng điện từ",
+  "math_form": "Xác định chiều dòng điện cảm ứng"
+ },
+ {
+  "id": "c117331e-2c2b-4c6f-8293-1458b2931291",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 17. Máy phát điện xoay chiều",
+  "math_form": "Hệ thức vuông pha giữa từ thông và suất điện động"
+ },
+ {
+  "id": "06d63ca9-283a-4ce3-bbb0-d34856e62797",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 17. Máy phát điện xoay chiều",
+  "math_form": "Máy phát 1 pha và tần số dòng điện f = np"
+ },
+ {
+  "id": "77648685-3779-490e-a2c6-915ec90cb053",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 17. Máy phát điện xoay chiều",
+  "math_form": "Phân tích đồ thị hình sin"
+ },
+ {
+  "id": "7935f986-ba67-4e7d-a2f2-2d7af1885841",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 17. Máy phát điện xoay chiều",
+  "math_form": "Tính công suất tỏa nhiệt và giá trị hiệu dụng"
+ },
+ {
+  "id": "c9b8ae16-5dec-4d8e-a6b9-60a716ecfea0",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 17. Máy phát điện xoay chiều",
+  "math_form": "Xác định thông số từ phương trình u, i, e"
+ },
+ {
+  "id": "ef446578-c2e3-4637-a7d2-b3ba9074fe4e",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 18. Ứng dụng hiện tượng cảm ứng điện từ",
+  "math_form": "Giải thích hiện tượng thực tế Foucault, guitar điện"
+ },
+ {
+  "id": "957a29a3-e295-47cc-9f85-67a9398eb738",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 18. Ứng dụng hiện tượng cảm ứng điện từ",
+  "math_form": "Tính toán thông số Máy biến áp lí tưởng và thực tế"
+ },
+ {
+  "id": "76f7cb97-23db-4411-a108-0d1e95a138cd",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 18. Ứng dụng hiện tượng cảm ứng điện từ",
+  "math_form": "Truyền tải điện năng và tối ưu hóa hao phí"
+ },
+ {
+  "id": "524abeee-1856-4332-965f-b7b09596ba72",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 18. Ứng dụng hiện tượng cảm ứng điện từ",
+  "math_form": "Truyền tải với công suất tiêu thụ không đổi"
+ },
+ {
+  "id": "2d0d5f36-d966-461b-bdc3-88255ef35f5a",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 19. Điện từ trường. Mô hình sóng điện từ",
+  "math_form": "Phân loại thang sóng vô tuyến và truyền thông tin"
+ },
+ {
+  "id": "db1bc072-ed3b-4187-bd94-b932186554b4",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 19. Điện từ trường. Mô hình sóng điện từ",
+  "math_form": "Phương chiều tam diện thuận E, B, v và tính đồng pha"
+ },
+ {
+  "id": "c02ee780-a56b-443f-9569-d84ebce3a0b8",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 19. Điện từ trường. Mô hình sóng điện từ",
+  "math_form": "Thuyết Maxwell và điện trường xoáy"
+ },
+ {
+  "id": "8704d6f1-6069-4a25-932d-5f6ef02ba18d",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 19. Điện từ trường. Mô hình sóng điện từ",
+  "math_form": "Tính bước sóng và tần số trong các môi trường"
+ },
+ {
+  "id": "44ac8f59-afea-439d-a038-12295c1d162b",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Bài 19. Điện từ trường. Mô hình sóng điện từ",
+  "math_form": "Vật lý tổng hợp"
+ },
+ {
+  "id": "eec46918-271d-4bd3-9bbc-497cf94b2aca",
+  "topic": "Chương 3. Từ trường",
+  "lesson": "Ôn tập chương",
+  "math_form": "Vật lý tổng hợp"
+ },
+ {
+  "id": "2f696780-9c0b-4021-9b7e-6a3ea3eb9916",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 21. Cấu trúc hạt nhân",
+  "math_form": "Cấu tạo hạt nhân (proton, neutron, nucleon), kí hiệu hạt nhân và đồng vị"
+ },
+ {
+  "id": "ab64391f-23c0-4c98-8133-92ec9dc2bb5d",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 21. Cấu trúc hạt nhân",
+  "math_form": "Độ hụt khối và năng lượng liên kết hạt nhân (E_lk = Δm . c^2)"
+ },
+ {
+  "id": "04af89e5-2dbf-4cd9-b9ee-30e2a39f218e",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 21. Cấu trúc hạt nhân",
+  "math_form": "Kích thước hạt nhân, bán kính hạt nhân và khối lượng hạt nhân (đơn vị amu, u)"
+ },
+ {
+  "id": "6aaf95d9-c37d-4ebe-928b-fb42d97783cb",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 21. Cấu trúc hạt nhân",
+  "math_form": "Lực hạt nhân (lực tương tác mạnh) và bán kính tác dụng"
+ },
+ {
+  "id": "7bee3d2d-455d-42cc-a3e0-afb99b8e0dd5",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 21. Cấu trúc hạt nhân",
+  "math_form": "Mật độ điện tích và khối lượng riêng của hạt nhân"
+ },
+ {
+  "id": "c75658d2-dbc5-4557-abe1-7b749de5abb6",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 22. Phản ứng hạt nhân và năng lượng liên kết",
+  "math_form": "Độ hụt khối và năng lượng liên kết hạt nhân (E_lk = Δm . c^2)"
+ },
+ {
+  "id": "c15b7196-8add-48e7-996a-14a457448baa",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 22. Phản ứng hạt nhân và năng lượng liên kết",
+  "math_form": "Hệ thức Einstein về khối lượng và năng lượng (E = mc^2, năng lượng nghỉ, động năng tương đối tính)"
+ },
+ {
+  "id": "b7d3ef46-bc6e-42cd-b8b0-e74d6d1051dc",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 22. Phản ứng hạt nhân và năng lượng liên kết",
+  "math_form": "Năng lượng liên kết riêng và mức độ bền vững của hạt nhân"
+ },
+ {
+  "id": "b2e3fe56-be1e-468d-aee6-c1b1996dfe76",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 22. Phản ứng hạt nhân và năng lượng liên kết",
+  "math_form": "Phản ứng phân hạch và phản ứng nhiệt hạch (tổng hợp hạt nhân): điều kiện, đặc điểm và năng lượng tỏa ra"
+ },
+ {
+  "id": "da7f42b4-0bf1-422d-add6-218a008cac92",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 22. Phản ứng hạt nhân và năng lượng liên kết",
+  "math_form": "Tính năng lượng tỏa ra hoặc thu vào trong phản ứng hạt nhân"
+ },
+ {
+  "id": "5f08aaf1-9d9b-4401-b5ea-6dfa054f491f",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 22. Phản ứng hạt nhân và năng lượng liên kết",
+  "math_form": "Vận dụng định luật bảo toàn động lượng trong phản ứng hạt nhân"
+ },
+ {
+  "id": "df825217-0ac5-4904-b9a6-dec0c1733ac3",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 22. Phản ứng hạt nhân và năng lượng liên kết",
+  "math_form": "Viết phương trình phản ứng hạt nhân và áp dụng các định luật bảo toàn (số khối A, điện tích Z)"
+ },
+ {
+  "id": "5d00b54d-fac9-4829-9a40-b4040dd9994c",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 23. Hiện tượng phóng xạ",
+  "math_form": "Bài toán tổng hợp về phóng xạ: số hạt phân rã, số hạt nhân con tạo thành, tỉ số giữa số hạt nhân con và hạt nhân mẹ"
+ },
+ {
+  "id": "3eea65bc-c51b-4758-9733-b57227320eef",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 23. Hiện tượng phóng xạ",
+  "math_form": "Bản chất, quy luật và phương trình của các dạng phóng xạ (alpha, beta-, beta+, gamma)"
+ },
+ {
+  "id": "d02da0f4-b12b-4460-95c3-f46ae246292e",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 23. Hiện tượng phóng xạ",
+  "math_form": "Định luật phóng xạ: chu kì bán rã, hằng số phóng xạ, số hạt và khối lượng còn lại / bị phân rã theo thời gian"
+ },
+ {
+  "id": "bba52ea2-7f74-4e1a-a2d9-b2eb1987c6f4",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 23. Hiện tượng phóng xạ",
+  "math_form": "Định tuổi cổ vật, mẫu địa chất bằng phương pháp định tuổi đồng vị phóng xạ (C-14, U-238, Pb-206)"
+ },
+ {
+  "id": "4ac40035-56d0-4ea2-9440-3ae60fb9df83",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 23. Hiện tượng phóng xạ",
+  "math_form": "Độ phóng xạ (H = λN) và các đơn vị Becquerel (Bq), Curie (Ci)"
+ },
+ {
+  "id": "5b42e257-aaee-46c8-856e-ad3bd48e4f98",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 23. Hiện tượng phóng xạ",
+  "math_form": "Đọc và phân tích đồ thị phóng xạ (đồ thị hàm mũ, đồ thị bán logarit biểu diễn số hạt/khối lượng/độ phóng xạ)"
+ },
+ {
+  "id": "350d6762-29c1-4e36-86cd-e968c4fccc78",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 23. Hiện tượng phóng xạ",
+  "math_form": "Ứng dụng của đồng vị phóng xạ trong y học, công nghiệp, nông nghiệp và đời sống"
+ },
+ {
+  "id": "95ab8edc-d497-40e6-a367-6dd79c8a7b1d",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 24. Công nghiệp hạt nhân",
+  "math_form": "Nguyên tắc hoạt động và cấu tạo cơ bản của nhà máy điện hạt nhân"
+ },
+ {
+  "id": "37d2bfa6-3c76-4012-aa98-172c0f582c6e",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 24. Công nghiệp hạt nhân",
+  "math_form": "Phản ứng phân hạch và phản ứng nhiệt hạch (tổng hợp hạt nhân): điều kiện, đặc điểm và năng lượng tỏa ra"
+ },
+ {
+  "id": "cc5c611b-6d4d-453e-90a3-60f6101c24c6",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 24. Công nghiệp hạt nhân",
+  "math_form": "Tác hại sinh học của bức xạ ion hoá, các quy tắc an toàn bức xạ và phương pháp xử lí chất thải hạt nhân"
+ },
+ {
+  "id": "3cc5c2eb-2065-403f-99a1-337c9bf9566d",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 24. Công nghiệp hạt nhân",
+  "math_form": "Tự suy luận"
+ },
+ {
+  "id": "ba4aa33c-9f52-414d-874c-a0519bb2371b",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 24. Công nghiệp hạt nhân",
+  "math_form": "Vai trò, lợi ích kinh tế và những thách thức trong phát triển công nghiệp hạt nhân"
+ },
+ {
+  "id": "f8368c82-e1d6-47b0-9486-ecbc999416ce",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 25. Bài tập về vật lí hạt nhân",
+  "math_form": "Bài toán bảo toàn động lượng và năng lượng trong phân rã và phản ứng hạt nhân (góc lệch, vận tốc, động năng các hạt)"
+ },
+ {
+  "id": "3144d503-599e-4c46-971b-17879d76d913",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 25. Bài tập về vật lí hạt nhân",
+  "math_form": "Bài toán thực tế về năng lượng hạt nhân, công suất lò phản ứng và hiệu suất phát điện"
+ },
+ {
+  "id": "f986a6ac-4b7e-4038-87da-9452dbd3ffe8",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 25. Bài tập về vật lí hạt nhân",
+  "math_form": "Bài toán tổng hợp năng lượng liên kết, độ hụt khối và năng lượng phản ứng hạt nhân"
+ },
+ {
+  "id": "d791dab2-a8fc-467b-8e9c-dc9ad2897f03",
+  "topic": "Chương 4. Vật lí hạt nhân",
+  "lesson": "Bài 25. Bài tập về vật lí hạt nhân",
+  "math_form": "Bài toán tổng hợp về phóng xạ: số hạt phân rã, số hạt nhân con tạo thành, tỉ số giữa số hạt nhân con và hạt nhân mẹ"
+ }
+]

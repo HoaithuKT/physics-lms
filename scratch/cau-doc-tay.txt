@@ -1,0 +1,346 @@
+=== DANH MỤC CHƯƠNG 1 (đích để gán) ===
+  Bài 1. Cấu trúc của chất. Sự chuyển thể | Lý thuyết về mô hình động học phân tử
+  Bài 1. Cấu trúc của chất. Sự chuyển thể | Phân biệt các thể và hiện tượng thực tế
+  Bài 1. Cấu trúc của chất. Sự chuyển thể | Phân tích đồ thị và sơ đồ chuyển thể
+  Bài 1. Cấu trúc của chất. Sự chuyển thể | Tự suy luận
+  Bài 2. Nội năng. Định luật I của nhiệt động lực học | Bài toán hiệu suất động cơ nhiệt
+  Bài 2. Nội năng. Định luật I của nhiệt động lực học | Đọc đồ thị p - V
+  Bài 2. Nội năng. Định luật I của nhiệt động lực học | Tính công của chất khí
+  Bài 2. Nội năng. Định luật I của nhiệt động lực học | Tính toán cơ bản về nhiệt lượng
+  Bài 2. Nội năng. Định luật I của nhiệt động lực học | Tự suy luận
+  Bài 2. Nội năng. Định luật I của nhiệt động lực học | Vận dụng công thức định luật I Nhiệt động lực học ($\Delta U = A + Q$)
+  Bài 3. Nhiệt độ. Thang nhiệt độ - Nhiệt kế | Nguyên lý hoạt động của nhiệt kế
+  Bài 3. Nhiệt độ. Thang nhiệt độ - Nhiệt kế | Quy đổi thang nhiệt độ
+  Bài 3. Nhiệt độ. Thang nhiệt độ - Nhiệt kế | Tính độ chênh lệch nhiệt độ
+  Bài 3. Nhiệt độ. Thang nhiệt độ - Nhiệt kế | Tự suy luận
+  Bài 3. Nhiệt độ. Thang nhiệt độ - Nhiệt kế | Vật lý tổng hợp
+  Bài 4. Nhiệt dung riêng | Bài toán phương trình cân bằng nhiệt
+  Bài 4. Nhiệt dung riêng | Tính toán cơ bản về nhiệt lượng
+  Bài 4. Nhiệt dung riêng | Tự suy luận
+  Bài 4. Nhiệt dung riêng | Xử lý số liệu thí nghiệm đo nhiệt dung riêng
+  Bài 5. Nhiệt nóng chảy riêng | Bài toán biến đổi nhiệt đa giai đoạn
+  Bài 5. Nhiệt nóng chảy riêng | Bài toán thực nghiệm
+  Bài 5. Nhiệt nóng chảy riêng | Tính nhiệt lượng nóng chảy
+  Bài 5. Nhiệt nóng chảy riêng | Vật lý tổng hợp
+  Bài 6. Nhiệt hoá hơi riêng | Bài toán kết hợp đun nóng và hoá hơi
+  Bài 6. Nhiệt hoá hơi riêng | Tính nhiệt lượng hoá hơi
+  Bài 6. Nhiệt hoá hơi riêng | Vật lý tổng hợp
+  Bài 6. Nhiệt hoá hơi riêng | Xử lý số liệu thí nghiệm đo nhiệt hoá hơi riêng
+  (không bài) | Bài toán biến đổi nhiệt đa giai đoạn
+  (không bài) | Bài toán kết hợp đun nóng và hoá hơi
+  (không bài) | Bài toán phương trình cân bằng nhiệt
+  (không bài) | Dạng bài tổng hợp
+  (không bài) | Lý thuyết về mô hình động học phân tử
+  (không bài) | Vật lý tổng hợp
+  Ôn tập chương | Vật lý tổng hợp
+  (không bài) | Phân biệt các thể và hiện tượng thực tế
+  (không bài) | Phân tích đồ thị và sơ đồ chuyển thể
+  (không bài) | Quy đổi thang nhiệt độ
+  (không bài) | Tính nhiệt lượng hoá hơi
+  (không bài) | Tính nhiệt lượng nóng chảy
+  (không bài) | Vận dụng công thức định luật I Nhiệt động lực học ($\Delta U = A + Q$)
+  (không bài) | Xử lý số liệu thí nghiệm đo nhiệt dung riêng
+
+=== LÔ NHIỆT KẾ SAI CHƯƠNG: 47 câu ===
+
+[CH_1787939701509_cpzx] NLC m2 · đang: Chương 2./Bài 10.
+  (SBT CTST) Người ta sử dụng một nhiệt kế thủy ngân dùng thang nhiệt độ Celsius, đo được khoảng cách từ vạch $20\ ^\circ$ C đến vạch $32\ ^\circ$ C là $1,5$ cm. Khoảng cách từ vạch $14\ ^\circ$ C đến vạch $50\ ^\circ$ C trên nhiệt kế này xấp xỉ bằng
+  A. $0,1$ cm. | B. $1,8$ cm.
+
+[CH_1787939701508_gcf1] NLC m2 · đang: Chương 2./Bài 9. 
+  Hình bên dưới là sơ đồ nguyên lý hoạt động của một máy làm nóng nước [ảnh] Nước lạnh có nhiệt độ $20,2\ ^\circ$ C được đưa vào máy từ ống dẫn nước lạnh với lưu lượng $2,5$ lít/phút. Khi đi qua máy làm nóng nước, nhiệt độ của nước là $36,7\ ^\circ$ C. Nhiệt độ 
+  A. $309,7$ K. | B. $16,5$ K.
+
+[CH_1787939701508_i7bi] NLC m1 · đang: Chương 4./Bài 23.
+  Theo thang nhiệt độ Celsius, khoảng từ nhiệt độ đông đặc đến nhiệt độ sôi của nước tinh khiết ở áp suất $1$ atm được chia thành
+  A. $100$ phần bằng nhau, mỗi phần ứng với $1\ ^\circ$ C. | B. $10$ phần bằng nhau, mỗi phần ứng với $10$ K.
+
+[CH_1787939701508_mtma] NLC m2 · đang: Chương 4./Bài 23.
+  Tại sao bảng chia độ của nhiệt kế y tế lại không có nhiệt độ dưới $34\ ^\circ$ C và trên $42\ ^\circ$ C? [ảnh]
+  A. Nhiệt độ thân nhiệt của người nằm trong khoảng từ $34\ ^\circ$ C đến $ | B. Tiết kiệm chi phí làm nhiệt kế.
+
+[CH_1787939701510_5sz3] TL m4 · đang: Chương 2./Bài 9. 
+  Giả sử một học sinh tạo ra một nhiệt kế sử dụng một thang nhiệt độ mới cho riêng mình, gọi là nhiệt độ Z, có đơn vị là $^\circ$ Z. Trong đó nhiệt độ của nước đá đang tan ở 1 atm là $-5\ ^\circ$ Z và nhiệt độ nước đang sôi ở 1 atm là $105\ ^\circ$ Z. a) Thiết l
+
+[CH_1787939701510_rd9s] TL m4 · đang: Chương 4./Bài 23.
+  Chiều cao của cột thủy ngân trong nhiệt kế tương ứng với điểm nước đá tinh khiết đang tan ở 1 atm và điểm sôi của nước tinh khiết ở 1 atm lần lượt là $50$ mm và $70$ mm. Biết chiều cao của cột thủy ngân là hàm bậc nhất của nhiệt độ. Khi dùng nhiệt kế này để đo
+
+[CH_1787939701509_2btp] NLC m3 · đang: Chương 2./Bài 8. 
+  Một thước cm được đặt dọc theo một nhiệt kế thủy ngân chưa được chia vạch như hình bên dưới [ảnh] . Trên nhiệt kế chỉ đánh dấu điểm đóng băng và điểm sôi của nước tinh khiết ở áp suất tiêu chuẩn. Giá trị nhiệt độ đang hiển thị trên kế là bao nhiêu?
+  A. $44\ ^\circ$ C. | B. $56\ ^\circ$ C.
+
+[CH_1787939701508_pg9b] NLC m2 · đang: Chương 4./Bài 23.
+  Giới hạn đo và độ chia nhỏ nhất theo thang nhiệt độ Celsius của nhiệt kế như hình bên dưới lần lượt là [ảnh]
+  A. $120\ ^\circ$ F và $2\ ^\circ$ F. | B. $50\ ^\circ$ C và $1\ ^\circ$ C.
+
+[CH_1787939701509_a5pb] NLC m3 · đang: Chương 4./Bài 23.
+  Một thang nhiệt độ P có đơn vị đo là $^\circ$ P được xây dựng sao cho nhiệt độ nước tinh khiết đông đặc và sôi ở áp suất $1$ atm lần lượt là $-15\ ^\circ$ P và $60\ ^\circ$ P. Biết thang nhiệt độ Fahrenheit có nhiệt độ đông đặc và sôi của nước tinh khiết ở áp 
+  A. $-62,4\ ^\circ$ F. | B. $162,4\ ^\circ$ F.
+
+[CH_1787939701509_ekiz] NLC m3 · đang: Chương 2./Bài 9. 
+  Một thang nhiệt độ X có đơn vị đo là $^\circ$ X được xây dựng sao cho nhiệt độ nước tinh khiết đông đặc và sôi ở áp suất $1$ atm lần lượt là $-10\ ^\circ$ X và $90\ ^\circ$ X. Nếu nhiệt độ của một vật đọc được theo thang nhiệt độ Celsius là $40\ ^\circ$ C thì 
+  A. $20\ ^\circ$ X. | B. $30\ ^\circ$ X.
+
+[CH_1787939701509_gbn4] NLC m3 · đang: Chương 4./Bài 24.
+  Một nhiệt kế thủy ngân có chiều dài của cột thủy ngân là $2$ cm khi ở $0\ ^\circ$ C và $22$ cm khi ở $100\ ^\circ$ C. Biết rằng nhiệt độ đo được $t\ (^\circ$ C) là hàm bậc nhất theo chiều dài cột thủy ngân $\ell\ ($ cm). Khi chiều dài cột thủy ngân là $18$ cm 
+  A. $90\ ^\circ$ C. | B. $80\ ^\circ$ C.
+
+[CH_1787939701509_raad] NLC m3 · đang: Chương 2./Bài 8. 
+  Hình bên mô tả mối liên hệ giữa hai thang nhiệt độ X và Y [ảnh] . Nhiệt độ của vật là 20 X tương ứng với nhiệt độ trên thang nhiệt độ Y là
+  A. $28$ Y. | B. $42$ Y.
+
+[CH_1787939701510_y4ho] TLN m4 · đang: Chương 2./Bài 9. 
+  Sử dụng các thông tin sau: Người ta sử dụng một nhiệt kế thủy ngân dùng thang nhiệt độ Kelvin đo được độ dài của cột thủy ngân ứng với nhiệt độ nước đá tinh khiết đang tan và đang sôi ở 1 atm lần lượt là $3,00$ cm và $15,00$ cm. Nếu chiều dài cột thủy ngân tro
+
+[CH_1787939701510_o078] TLN m4 · đang: Chương 2./Bài 9. 
+  Sử dụng các thông tin sau: Chiều dài của cột thủy ngân trong nhiệt kế sử dụng thang nhiệt độ Celsius tại thời điểm nước tinh khiết đóng đặc và sôi ở áp suất 1 atm lần lượt là 2 cm và 22 cm. Ở nhiệt độ $50\ ^\circ$ C, chiều dài của cột thủy ngân là bao nhiêu cm
+
+[CH_1787939701508_x173] NLC m1 · đang: Chương 2./Bài 11.
+  Nhiệt độ không tuyệt đối là nhiệt độ tại đó
+  A. nước bắt đầu đông đặc. | B. tất cả các chất khí bắt đầu hóa lỏng.
+
+[CH_1787939701508_50el] NLC m1 · đang: Chương 2./Bài 10.
+  Nhiệt độ của nước tinh khiết khi đông đặc và khi sôi ở áp suất $1$ atm theo thang nhiệt độ Kelvin lần lượt là
+  A. $0$ K và $100$ K. | B. $273$ K và $373$ K.
+
+[CH_1787939701508_o6fw] NLC m1 · đang: Chương 2./Bài 10.
+  Khi nhiệt độ tuyệt đối tăng thêm $6$ K thì nhiệt độ Celsius
+  A. tăng thêm hơn $6\ ^\circ$ C. | B. tăng thêm $279\ ^\circ$ C.
+
+[CH_1787939701508_q5n2] NLC m1 · đang: Chương 4./Bài 23.
+  Người ta thả ba miếng đồng, nhôm, chì có cùng khối lượng vào một cốc nước nóng. Nhận định nào sau đây đúng khi so sánh nhiệt độ cuối cùng của ba miếng kim loại?
+  A. Nhiệt độ của miếng chì cao nhất, rồi đến miếng đồng, sau đó là miếng n | B. Nhiệt độ miếng đồng cao nhất, rồi đến miếng nhôm, sau đó là miếng chì.
+
+[CH_1787939701508_9kfz] NLC m1 · đang: Chương 4./Bài 23.
+  Hình vẽ nào bên dưới phù hợp với trường hợp nhiệt kế 1 được đặt vào một chậu đựng nước nóng, còn nhiệt kế 2 được đặt vào một chậu đựng nước lạnh? [ảnh]
+  A. Hình $H_1$. | B. Hình $H_2$.
+
+[CH_1787939701508_dan5] NLC m1 · đang: Chương 2./Bài 10.
+  Khi hai vật có nhiệt độ khác nhau tiếp xúc trực tiếp với nhau, nhiệt năng sẽ truyền từ vật có
+  A. khối lượng lớn hơn sang vật có khối lượng nhỏ hơn. | B. nhiệt độ cao hơn sang vật có nhiệt độ thấp hơn.
+
+[CH_1787939701508_tgdk] NLC m1 · đang: Chương 4./Bài 24.
+  Cơ chế của sự dẫn nhiệt là sự truyền [ảnh]
+  A. nhiệt độ từ vật này sang vật khác. | B. động năng từ vật này sang vật khác.
+
+[CH_1787939701508_0lpd] NLC m1 · đang: Chương 2./Bài 8. 
+  Chọn phát biểu đúng khi so sánh nhiệt độ của một vật nóng với nhiệt độ của một vật lạnh.
+  A. Vật lạnh có nhiệt độ cao gấp đôi nhiệt độ của vật nóng. | B. Vật lạnh có nhiệt độ thấp hơn nhiệt độ của vật nóng.
+
+[CH_1787939701508_kijb] NLC m2 · đang: Chương 4./Bài 24.
+  Nhiệt kế nào sau đây hoạt động dựa trên hiện tượng giãn nở vì nhiệt của chất lỏng?
+  A. Nhiệt kế thủy ngân. | B. Nhiệt kế kim loại.
+
+[CH_1787939701508_fuf0] NLC m2 · đang: Chương 4./Bài 24.
+  Cho các bước sau: (1) Thực hiện phép đo nhiệt độ. (2) Ước lượng nhiệt độ của vật. (3) Hiệu chỉnh nhiệt kế. (4) Lựa chọn nhiệt kế phù hợp. (5) Đọc và ghi kết quả đo. Thứ tự đúng của các bước khi thực hiện phép đo nhiệt độ của một vật là
+  A. (2), (4), (3), (1), (5). | B. (1), (4), (2), (3), (5).
+
+[CH_1787939701508_p93f] NLC m2 · đang: Chương 4./Bài 23.
+  Khi dùng nhiệt kế để đo nhiệt độ của chính cơ thể mình, người ta phải thực hiện các thao tác sau (chưa được sắp xếp theo đúng thứ tự): a) Đặt nhiệt kế vào nách trái, rồi kẹp cánh tay lại để giữ nhiệt kế. b) Lấy nhiệt kế ra khỏi nách để đọc nhiệt kế. c) Dùng bô
+  A. a, b, c, d. | B. d, c, a, b.
+
+[CH_1787939701508_ynta] NLC m1 · đang: Chương 2./Bài 10.
+  Trong thang nhiệt độ Celsius, nhiệt độ của nước tinh khiết đang sôi ở áp suất $1$ atm là
+  A. $373\ ^\circ$ C. | B. $100\ ^\circ$ C.
+
+[CH_1787939701508_b0h1] NLC m2 · đang: Chương 2./Bài 8. 
+  Trong hệ thống làm mát của động cơ nhiệt, động cơ làm mát nhờ dòng chảy tuần hoàn của nước đi vào các chi tiết cần làm mát hấp thụ nhiệt và đi ra các ống làm mát để giảm nhiệt độ. Cho rằng nhiệt độ của dòng nước khi đi ra khỏi các chi tiết cần làm mát là $56\ 
+  A. $91$ K. | B. $364$ K.
+
+[CH_1787939701508_p7lp] NLC m2 · đang: Chương 2./Bài 9. 
+  Nhiệt độ khí trơ trong bóng đèn sợi đốt khi đèn không sáng là $27\ ^\circ$ C, khi đèn sáng là $327\ ^\circ$ C. Áp suất khí trơ trong đèn này khi đèn sáng gấp mấy lần khi đèn không sáng? Biết áp suất của khí tỉ lệ thuận với nhiệt độ trên thang Kelvin. [ảnh]
+  A. $2$ lần. | B. $3$ lần.
+
+[CH_1787939701509_dold] NLC m2 · đang: Chương 4./Bài 23.
+  Sự phụ thuộc của bước sóng điện từ vào nhiệt độ theo định luật Wien ($T \cdot \lambda_{\max} = 2900\ \mu$ m $\cdot$ K) được ứng dụng trong chế tạo các loại nhiệt kế như nhiệt kế hồng ngoại, cũng như các thiết bị đo nhiệt độ trong thiên văn học để xác định nhiệ
+  A. $9,4\ \mu$ m. | B. $79\ \mu$ m.
+
+[CH_1787939701508_rjzj] NLC m2 · đang: Chương 2./Bài 9. 
+  Giá trị nhiệt độ đo được theo thang nhiệt độ Kelvin là $293$ K. Theo thang nhiệt độ Celsius, nhiệt độ đó có giá trị là bao nhiêu $^\circ$ C?
+  A. $566\ ^\circ$ C. | B. $20\ ^\circ$ C.
+
+[CH_1787939701508_u7v1] NLC m2 · đang: Chương 4./Bài 23.
+  Nhiệt độ vào một ngày mùa hè ở Hà Nội là $35\ ^\circ$ C. Nhiệt độ đó tương ứng với bao nhiêu Kelvin?
+  A. $35$ K. | B. $135$ K.
+
+[CH_1787939701508_aqef] NLC m2 · đang: Chương 4./Bài 23.
+  Một vật được làm lạnh từ nhiệt độ $100\ ^\circ$ C xuống còn $30\ ^\circ$ C. Nhiệt độ của vật khi đó đã giảm đi bao nhiêu Kelvin (K) theo thang nhiệt độ Kelvin?
+  A. $343$ K. | B. $203$ K.
+
+[CH_1787939701509_kvk9] NLC m3 · đang: Chương 4./Bài 23.
+  Một nhiệt kế thủy ngân dùng để đo nhiệt độ không khí ngoài trời, nhưng một số vạch chia trên thân nhiệt kế đã bị mất và không thể quan sát được. Biết rằng khoảng cách từ vạch $0\ ^\circ$ C đến vạch $50\ ^\circ$ C trên nhiệt kế là $6,25$ cm. Khi đo nhiệt độ khô
+  A. $41\ ^\circ$ C. | B. $36\ ^\circ$ C.
+
+[CH_1787939701509_qh0w] NLC m3 · đang: Chương 2./Bài 10.
+  Chiều cao của cột thủy ngân trong nhiệt kế theo thang nhiệt độ Celsius tương ứng với điểm nước đá tinh khiết đang tan ở $1$ atm và điểm sôi của nước tinh khiết ở $1$ atm lần lượt là $20$ mm và $120$ mm. Khoảng cách giữa hai vạch lệch nhau $1\ ^\circ$ C liên ti
+  A. $1$ mm. | B. $2$ mm.
+
+[CH_1787939701509_twl0] NLC m2 · đang: Chương 2./Bài 9. 
+  Trong phạm vi từ $0\ ^\circ$ C đến $600\ ^\circ$ C thì điện trở của một dây platin (bạch kim) phụ thuộc vào nhiệt độ theo hệ thức: $R = 10 \cdot (1 + 2t + 4t^2)$ ($t$ đo bằng $^\circ$ C, $R$ đo bằng $\Omega$). Nếu điện trở của dây platin bằng $4210\ \Omega$ th
+  A. $4210\ ^\circ$ C. | B. $10\ ^\circ$ C.
+
+[CH_1787939701509_plg9] NLC m3 · đang: Chương 2./Bài 10.
+  (SBT CTST) Người ta sử dụng một nhiệt kế thủy ngân dùng thang nhiệt độ Kelvin và đo được khoảng cách từ vạch ứng với nhiệt độ nước đá tinh khiết đang tan ở $1$ atm đến vạch ứng với nước tinh khiết đang sôi ở $1$ atm là $12$ cm. Khoảng cách giữa hai vạch lệch n
+  A. $8,33$ mm. | B. $0,12$ cm.
+
+[CH_1787939701509_ckm5] NLC m3 · đang: Chương 2./Bài 9. 
+  Một bạn học sinh tìm thấy một tài liệu khoa học cũ mô tả một thang đo nhiệt độ gọi là thang nhiệt độ Z. Trên thang nhiệt độ này, nhiệt độ sôi và nhiệt độ đóng băng của nước tinh khiết ở áp suất $1$ atm lần lượt là $65,0\ ^\circ$ Z và $-14,0\ ^\circ$ Z. Hỏi ở n
+  A. $575,9\ ^\circ$ F. | B. $100,6\ ^\circ$ F.
+
+[CH_1787939701509_h6vg] NLC m3 · đang: Chương 2./Bài 9. 
+  Xét một nhiệt kế sử dụng hai thang nhiệt độ khác nhau với cách chọn mốc như sau: Thang nhiệt độ Celsius (đơn vị $^\circ$ C) chỉ vạch $0\ ^\circ$ C ứng với điểm nước đá tinh khiết đang tan ở áp suất $1$ atm và chỉ $100\ ^\circ$ C ứng với điểm nước tinh khiết đa
+  A. $10\ ^\circ$ C. | B. $20\ ^\circ$ C.
+
+[CH_1787939701509_d2qv] NLC m3 · đang: Chương 4./Bài 24.
+  (SGK CD) Thế giới từng ghi nhận sự thay đổi nhiệt độ rất lớn diễn ra ở Spearfish, South Dakota vào ngày 22/01/1943. Lúc 7h30 sáng, nhiệt độ ngoài trời là $-20\ ^\circ$ C. Hai phút sau, nhiệt độ ngoài trời tăng lên đến $7,2\ ^\circ$ C. Tốc độ tăng nhiệt độ trun
+  A. $13,6$ K/s. | B. $2,5$ K/s.
+
+[CH_1787939701510_1qr3] TLN m4 · đang: Chương 2./Bài 10.
+  Sử dụng các thông tin sau: Người ta sử dụng một nhiệt kế thủy ngân dùng thang nhiệt độ Kelvin đo được độ dài của cột thủy ngân ứng với nhiệt độ nước đá tinh khiết đang tan và đang sôi ở 1 atm lần lượt là $3,00$ cm và $15,00$ cm. Khoảng cách giữa hai vạch lệch 
+
+[CH_1787939701509_hghf] TLN m3 · đang: Chương 3./Bài 17.
+  Một bạn học sinh dùng nhiệt kế để đo nhiệt độ của không khí trong lớp học và thu được kết quả là $27\ ^\circ$ C. Giá trị nhiệt độ này tương ứng bao nhiêu kelvin (K)?
+
+[CH_1787939701510_w1gg] TLN m4 · đang: Chương 2./Bài 10.
+  Người ta sử dụng một nhiệt kế thủy ngân dùng thang nhiệt độ Kelvin đo được khoảng cách từ vạch ứng với nhiệt độ nước đá tinh khiết đang tan ở 1 atm đến vạch ứng với nước tinh khiết sôi ở 1 atm là 12 cm. Khoảng cách giữa hai vạch lệch nhau 1 K liên tiếp trên nh
+
+[CH_1787939701510_481z] TLN m4 · đang: Chương 2./Bài 9. 
+  Sử dụng các thông tin sau: Chiều dài của cột thủy ngân trong nhiệt kế sử dụng thang nhiệt độ Celsius tại thời điểm nước tinh khiết đóng đặc và sôi ở áp suất 1 atm lần lượt là 2 cm và 22 cm. Nếu chiều dài của cột thủy ngân là 8 cm thì nhiệt độ tương ứng là bao 
+
+[CH_1787939701510_zou9] TLN m4 · đang: Chương 4./Bài 23.
+  Sử dụng các thông tin sau: Một nhiệt kế khí có thể tích không đổi. Biết, áp suất khí đo được ở nhiệt độ $0\ ^\circ$ C và $100\ ^\circ$ C lần lượt là $50$ cmHg và $90$ cmHg. Biết nhiệt độ đo được là hàm bậc nhất theo áp suất. Khi nhiệt độ đo được là $-5\ ^\circ
+
+[CH_1787939701510_2fya] TLN m4 · đang: Chương 4./Bài 23.
+  Sử dụng các thông tin sau: Một nhiệt kế khí có thể tích không đổi. Biết, áp suất khí đo được ở nhiệt độ $0\ ^\circ$ C và $100\ ^\circ$ C lần lượt là $50$ cmHg và $90$ cmHg. Biết nhiệt độ đo được là hàm bậc nhất theo áp suất. Khi áp suất khí là $60$ cmHg thì nh
+
+[CH_1787939701510_rc1h] TL m4 · đang: Chương 4./Bài 23.
+  Xác định các giá trị còn thiếu (?) trên biểu đồ ở hình bên dưới. [ảnh]
+
+[CH_1787939701510_me8u] TL m4 · đang: Chương 2./Bài 10.
+  Người ta sử dụng một nhiệt kế thủy ngân dùng thang nhiệt độ Celsius đo được khoảng cách từ vạch $20\ ^\circ$ C đến vạch $32\ ^\circ$ C là $1,5$ cm. Tính khoảng cách từ vạch $14\ ^\circ$ C đến vạch $50\ ^\circ$ C trên nhiệt kế này theo đơn vị cm. (Làm tròn kết 
+
+=== CHƯA CÓ BÀI: 28 câu ===
+
+[CH_1787069619016_uzpb] NLC m1 · dạng đang gắn: Lý thuyết về mô hình động học phân tử
+  Đại lượng vật lý cho biết xu hướng truyền năng lượng nhiệt giữa các vật là
+  A. nhiệt năng.
+
+[CH_1787069619016_3oid] TLN m4 · dạng đang gắn: Bài toán kết hợp đun nóng và hoá hơi
+  Để hoá hơi hoàn toàn $5$ kg nước ở $50^\circ$ C cần cung cấp nhiệt lượng là $11{,}9\cdot 10^6$ J. Nhiệt hóa hơi riêng của nước ở $50^\circ$ C là $L = X\cdot 10^6$ J/kg. Tìm X?
+
+[CH_1787069619016_r17j] NLC m1 · dạng đang gắn: Phân tích đồ thị và sơ đồ chuyển thể
+  Vào lúc $8$ giờ sáng, Bạn X ra khu phố Bờ kè sông Đăk Bla (phường Kon Tum) uống café thì nhận thấy gió từ sông thổi vào đất liền. Nguyên nhân chính là do
+  A. nước bay hơi.
+
+[CH_1787069619016_btur] NLC m1 · dạng đang gắn: Xử lý số liệu thí nghiệm đo nhiệt dung riêng
+  J/(kg $\cdot$ K) là đơn vị của
+  A. nhiệt năng.
+
+[CH_1787069619016_ixah] NLC m1 · dạng đang gắn: Lý thuyết về mô hình động học phân tử
+  Chọn phát biểu đúng về lực tương tác giữa các phân tử.
+  A. Giữa các phân tử chỉ có lực hút hoặc lực đẩy.
+
+[CH_1787069619016_zbiv] NLC m1 · dạng đang gắn: Tính nhiệt lượng nóng chảy
+  Nhiệt lượng cần để làm cho $1$ kg chất X nóng chảy hoàn toàn ở nhiệt độ nóng chảy là
+  A. nhiệt độ nóng chảy riêng của chất X.
+
+[CH_1787069619016_wrl7] NLC m2 · dạng đang gắn: Phân tích đồ thị và sơ đồ chuyển thể
+  Chó nghiệp vụ có thể "đánh hơi" được nơi cất giấu ma túy không chỉ vì khứu giác nhạy bén của nó mà còn vì
+  A. kích thước phân tử rất nhỏ.
+
+[CH_1787069619016_lne5] NLC m2 · dạng đang gắn: Quy đổi thang nhiệt độ
+  Đơn vị đo nhiệt độ trong thang nhiệt Celsius là
+  A. $^\circ$ C
+
+[CH_1787069619016_pf1q] NLC m2 · dạng đang gắn: Phân tích đồ thị và sơ đồ chuyển thể
+  Khi nhiệt độ của vật tăng lên thì
+  A. thế năng của các phân tử cấu tạo nên vật tăng.
+
+[CH_1787069619016_182n] NLC m2 · dạng đang gắn: Bài toán kết hợp đun nóng và hoá hơi
+  Bảng bên dưới là nhiệt nóng chảy riêng của một số chất [ảnh] Gọi $Q_1, Q_2, Q_3$ lần lượt là nhiệt lượng cần cung cấp để nóng chảy đồng, bạc, nhôm ở nhiệt độ nóng chảy, với cùng một khối lượng. Kết luận nào sau đây là đúng?
+  A. $Q_1 > Q_3 > Q_2$
+
+[CH_1787069619016_ct11] NLC m3 · dạng đang gắn: Bài toán kết hợp đun nóng và hoá hơi
+  Ở điều kiện thường, I-ốt là chất rắn dạng tinh thể màu đen tím. Khi đun nóng, I-ốt có sự thăng hoa. Vậy sự thăng hoa của I-ốt là sự chuyển trạng thái từ thể
+  A. khí sang rắn.
+
+[CH_1787069619016_fkjm] NLC m3 · dạng đang gắn: Vận dụng công thức định luật I Nhiệt động lực học ($\Delta U = A + Q$)
+  Công thức mô tả đúng định lí I của nhiệt động lực học là:
+  A. $\Delta U = A + Q$
+
+[CH_1787069619016_7kf6] NLC m3 · dạng đang gắn: Vận dụng công thức định luật I Nhiệt động lực học ($\Delta U = A + Q$)
+  Gọi $t_2$ là nhiệt độ lúc sau, $t_1$ là nhiệt độ lúc đầu của vật. Công thức tính nhiệt lượng mà vật thu vào trong quá trình truyền nhiệt là:
+  A. $Q = mc$
+
+[CH_1787069619016_cob7] NLC m3 · dạng đang gắn: Lý thuyết về mô hình động học phân tử
+  Độ không tuyệt đối là nhiệt độ tại đó
+  A. tất cả các chất khí hóa lỏng.
+
+[CH_1787069619016_jk32] DS m3 · dạng đang gắn: Dạng bài tổng hợp
+  Cho các phát biểu dưới đây. Phát biểu nào đúng, phát biểu nào sai?
+  A. Nội năng của một vật phụ thuộc vào nhiệt độ, áp suất và thể tích của v
+
+[CH_1787069619016_lkdp] TLN m3 · dạng đang gắn: Phân biệt các thể và hiện tượng thực tế
+  Một lượng khí nhận nhiệt lượng $35{,}4$ kJ do được đun nóng, khí giãn nở ra và thực hiện một công $20$ kJ. Nội năng của khối khí này đã biến thiên một lượng bao nhiêu kilôjun (kJ)?
+
+[CH_1787069619016_hdkd] TL m4 · dạng đang gắn: Bài toán biến đổi nhiệt đa giai đoạn
+  Một khối nước đá có khối lượng $5$ kg ở nhiệt độ $-3^\circ$ C, áp suất chuẩn. Tìm nhiệt lượng cần cung cấp cho khối nước đá trên để nó chuyển hoá hoàn toàn thành nước lỏng $0^\circ$ C?
+
+[CH_1787069619016_d9un] NLC m1 · dạng đang gắn: Tính nhiệt lượng hoá hơi
+  Trong quá trình sôi với $m$ là khối lượng phần chất lỏng hóa hơi, $L$ là nhiệt hóa hơi riêng của chất lỏng. Nhiệt lượng $Q$ cung cấp cho phần chất lỏng hoá hơi là:
+  A. $Q = \frac{L}{m}$
+
+[CH_1787069619016_ipd4] NLC m2 · dạng đang gắn: Lý thuyết về mô hình động học phân tử
+  Hình vẽ bên [ảnh] là đồ thị sự thay đổi nhiệt độ của một khối chất rắn khi được làm nóng chảy. Trong khoảng thời gian từ $t_a$ đến $t_b$ thì
+  A. chất rắn đang nóng chảy.
+
+[CH_1787069619016_9jws] DS m3 · dạng đang gắn: Dạng bài tổng hợp
+  Người ta dùng một lò nung điện có công suất không đổi để nấu chảy một khối thiếc $25^\circ$ C ở điều kiện áp suất tiêu chuẩn. Cho rằng sự hao phí toả nhiệt cho môi trường không đáng kể. Sự thay đổi nhiệt độ của khối thiếc khi bật và khi tắt lò nung được ghi lạ
+  A. Giai đoạn BC khối kim loại không nhận thêm nhiệt lượng từ lò nung.
+
+[CH_1787069619016_swhg] DS m3 · dạng đang gắn: Dạng bài tổng hợp
+  Khi thực hành trong phòng thí nghiệm, một học sinh dùng ống dẫn cho một luồng hơi nước ở $100^\circ$ C ngưng tụ trong một nhiệt lượng kế kín chứa $0{,}2$ kg nước ở $30^\circ$ C. Kết quả là nhiệt độ của nước tăng lên đến giá trị $48^\circ$ C và khối lượng cả bì
+  A. Nhiệt lượng mà hơi nước được dẫn vào đã tỏa ra là $40320$ J.
+
+[CH_1787069619016_1l8q] TLN m4 · dạng đang gắn: Lý thuyết về mô hình động học phân tử
+  Một bạn thiết lập thang nhiệt độ có đơn vị $^\circ$ D tương ứng với nhiệt kế chế tạo. Bạn chọn điểm đóng băng và điểm sôi của nước ở áp suất tiêu chuẩn lần lượt là $50^\circ$ D và $250^\circ$ D. Bạn sử dụng nhiệt kế đã chế tạo đo nhiệt độ của nước trong cốc th
+
+[CH_1787069619016_z4z7] TLN m4 · dạng đang gắn: Lý thuyết về mô hình động học phân tử
+  Theo dõi sự thay đổi nhiệt độ theo thời gian của chất A ban đầu ở thể khí. Một học sinh vẽ được biểu diễn như hình bên [ảnh] . Tính từ thời điểm khảo sát đến phút thứ 16, khoảng thời gian mà chất A có tồn tại ở dạng thể rắn là bao nhiêu phút?
+
+[CH_1787069619016_lkts] DS m3 · dạng đang gắn: Dạng bài tổng hợp
+  Có hai nhiệt kế thuỷ ngân (1) và (2) giống nhau, ban đầu đều chỉ cùng một nhiệt độ. Sau đó nhúng chúng vào hai cốc A và B, cùng chứa $1{,}5$ kg nước như nhau. Sau một thời gian, mức thuỷ ngân ở nhiệt kế (2) cao hơn so với (1) như hình vẽ bên [ảnh] . Cho nhiệt 
+  A. Các phân tử nước trong cốc A chuyển động chậm hơn so với trong cốc B.
+
+[CH_1787069619016_tfe1] NLC m1 · dạng đang gắn: Phân biệt các thể và hiện tượng thực tế
+  Nhiệt độ của nước được đun nóng tăng từ $20^\circ$ C đến $100^\circ$ C, theo thang Kelvin thì nhiệt độ của nước đã tăng thêm một lượng là
+  A. $80$ K.
+
+[CH_1787069619016_5e9c] NLC m2 · dạng đang gắn: Phân biệt các thể và hiện tượng thực tế
+  Người ta truyền cho khí trong xilanh nhiệt lượng $100$ J. Khí nở ra thực hiện công $70$ J đẩy pittông lên. Độ biến thiên nội năng của khí là
+  A. $200$ J.
+
+[CH_1787069619016_5k3a] NLC m2 · dạng đang gắn: Vận dụng công thức định luật I Nhiệt động lực học ($\Delta U = A + Q$)
+  Định luật I của nhiệt động lực học là vận dụng định luật nào sau đây?
+  A. Các định luật Niu-tơn.
+
+[CH_1787069619016_bz05] TL m4 · dạng đang gắn: Bài toán phương trình cân bằng nhiệt
+  Cho khối nước đá ($5$ kg ở $-3^\circ$ C) vào bình nhôm chứa nước ở $40^\circ$ C. Sau khi cân bằng nhiệt ta thấy còn $200$ g đá chưa tan hết. Tính khối lượng nước đã có trong bình? Biết bình nhôm có khối lượng $0{,}5$ kg, nhiệt dung riêng của nước đá, nước và n
+
+=== CẶP TRÙNG ĐANG DÙNG ===
+
+  Cho các phát biểu sau về sóng điện từ, phát biểu nào đúng, phát biểu nào sai?
+     CH_1787451043205_0pik · Bài 19.  · dùng ở: Bài 19. Điện/Lý thuyết & Phương pháp giải (Bài giảng tương tác)
+     CH_1787451505837_wiwz · Ôn tập c · dùng ở: Bài 20. Bài /Lý thuyết & Phương pháp giải (Bài giảng tương tác)
+
+  Câu nào dưới đây nói về từ thông là **không đúng**?
+     CH_1787318177586_jhd3 · Bài 16.  · dùng ở: Cuối chương /ĐỀ 1
+     CH_1787318243676_bzur · Bài 16.  · dùng ở: Cuối chương /ĐỀ 2
+
+  Sóng điện từ và sóng cơ học
+     CH_1787450713397_a25h · Bài 19.  · dùng ở: Bài 19. Điện/Lý thuyết & Phương pháp giải (Bài giảng tương tác)
+     CH_1787450713397_77mg · Ôn tập c · dùng ở: Bài 20. Bài /Lý thuyết & Phương pháp giải (Bài giảng tương tác)
+
+  Sóng âm và sóng điện từ đều
+     CH_1787450713397_gr2s · Bài 19.  · dùng ở: Bài 20. Bài /Lý thuyết & Phương pháp giải (Bài giảng tương tác)
+     CH_1787450713397_ulq8 · Ôn tập c · dùng ở: Bài 20. Bài /Bài tập tự luyện

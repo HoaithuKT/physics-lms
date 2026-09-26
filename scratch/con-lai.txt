@@ -1,0 +1,161 @@
+════ 1. NHẮC HÌNH MÀ KHÔNG CÓ ẢNH (kiểm cả phương án) ════
+  CH_1787296302216_zgt9 · ảnh trong phương án: 4 · Hình vẽ nào dưới đây xác định **đúng** hướng của véc tơ cảm ứng từ tại
+  CH_1787314580014_6ykw · ảnh trong phương án: 4 · Hình nào biểu diễn đúng hướng lực từ tác dụng lên một đoạn dây dẫn thẳ
+  CH_1787315042689_0v5a · ảnh trong phương án: 4 · Hình nào biểu diễn đúng hướng lực từ tác dụng lên một đoạn dây dẫn thẳ
+  CH_1787211971494_0mtq · ảnh trong phương án: 4 · Trong các hình vẽ sau, hình vẽ nào biểu diễn không đúng các đường sức 
+  CH_1787211971494_jjj7 · ảnh trong phương án: 4 · Hình vẽ nào dưới đây xác định sai hướng của véc tơ cảm ứng từ tại M gâ
+  CH_1787221224480_o5lj · ảnh trong phương án: 4 · Trong các hình vẽ sau, hình vẽ nào biểu diễn **sai** hướng của véc tơ 
+  CH_1787221224480_kr8x · ảnh trong phương án: 4 · Trong các hình vẽ sau, hình vẽ nào biểu diễn **đúng** hướng của đường 
+  CH_1787228738002_unew · ảnh trong phương án: 4 · Hình nào sau đây biểu diễn không đúng vectơ lực từ tác dụng lên đoạn d
+  CH_1787228755547_8q2m · ảnh trong phương án: 4 · Hình nào biểu diễn đúng hướng lực từ tác dụng lên một đoạn dây dẫn thẳ
+  CH_1787229243591_rfyg · ảnh trong phương án: 4 · Hình nào biểu diễn đúng hướng lực từ tác dụng lên một đoạn dây dẫn thẳ
+  CH_1787230095242_kaec · ảnh trong phương án: 4 · Hình nào biểu diễn đúng hướng lực từ tác dụng lên một đoạn dây dẫn thẳ
+  CH_1787230247501_k6eu · ảnh trong phương án: 4 · Hình nào biểu diễn đúng hướng lực từ tác dụng lên một đoạn dây dẫn thẳ
+  CH_1787240037655_jfpk · ảnh trong phương án: 4 · Trong hình vẽ nào sau đây, từ thông gửi qua diện tích của khung dây dẫ
+  CH_1787241105000_7hlx · ảnh trong phương án: 4 · Khi cho nam châm dịch chuyển lại gần hoặc ra xa vòng dây kín thì hình 
+  CH_1787241403463_di23 · ảnh trong phương án: 4 · Hình vẽ nào sau đây xác định **đúng** chiều dòng điện cảm ứng khi cho 
+  CH_1787242233722_hxa6 · ảnh trong phương án: 4 · Hình vẽ nào sau đây xác định đúng chiều dòng điện cảm ứng khi cho nam 
+  CH_1787242238545_2jeb · ảnh trong phương án: 4 · Một nam châm đặt dựng thẳng đứng trên bàn, trong một vòng dây kín. Nga
+  CH_1787319905948_jdt0 · ảnh trong phương án: 4 · Hình vẽ nào sau đây xác định **đúng** chiều dòng điện cảm ứng khi cho 
+
+[CH_1787296302216_zgt9] NLC m2 · Bài 14.  · Chiều đường sức từ và quy tắc nắm tay phải
+  ĐỀ: Hình vẽ nào dưới đây xác định **đúng** hướng của véc tơ cảm ứng từ tại M gây bởi dòng điện trong dây dẫn thẳng dài vô hạn?
+  A. ![Hình ảnh](https://xnnwrymrcuaqyfxhsmer.supabase.co/storage/v1/object/public/lesson_images/editor_images/3frppfby48k_1787296148731.jpg)
+  B. ![Hình ảnh](https://xnnwrymrcuaqyfxhsmer.supabase.co/storage/v1/object/public/lesson_images/editor_images/u6gq0ks1t59_1787296225509.jpg)
+  C. ![Hình ảnh](https://xnnwrymrcuaqyfxhsmer.supabase.co/storage/v1/object/public/lesson_images/editor_images/fn5qmccnys6_1787296281864.jpg)
+  D. ![Hình ảnh](https://xnnwrymrcuaqyfxhsmer.supabase.co/storage/v1/object/public/lesson_images/editor_images/3go2u2euf5e_1787296298801.jpg)
+  ĐÁP ÁN: "B"
+  GIẢI: Phương pháp giải: ⏎ Sử dụng quy tắc nắm tay phải để xác định chiều của véc tơ cảm ứng từ $\vec{B}$ do dòng điện thẳng dài gây ra tại điểm M: Nắm bàn tay phải sao cho ngón cái choãi ra chỉ theo chiều dòng điện, các ngón tay khum lại chỉ chiều của đường sức từ (tiếp tuyến với đường sức từ là véc tơ cảm ứng từ $\vec{B}$). ⏎  ⏎ Lời giải: ⏎ - Dòng điện thẳng có chiều hướng lên trên. ⏎ - Đặt bàn tay phải sao cho ngón cái hướng lên theo chiều dòng điện, khi đó tại điểm M ở bên phải dây dẫn, bốn ngón ta
+
+════ 2. TLN ĐÁP ÁN KHÔNG TÔ ĐƯỢC ════
+
+[CH_1787070824852_xls5] TLN m2 · Bài 4. N · Xử lý số liệu thí nghiệm đo nhiệt dung riêng
+  ĐỀ: Để xác định nhiệt dung riêng của 1 kim loại, người ta bỏ vào nhiệt lượng kế chứa $500$ gam nước ở nhiệt độ $15^\circ$ C một miếng kim loại có $m = 400$ gam được đun nóng tới $100^\circ$ C. Nhiệt độ khi có sự cân bằng nhiệt là $20^\circ$ C. Tính nhiệt dung riêng của kim loại theo đơn vị J/kg $\cdot$ K (làm tròn đến $2$ chữ số thập phân). Bỏ qua nhiệt lượng làm nóng nhiệt lượng kế và không khí. Lấy $c_{\text{H}_2\text{
+  ĐÁP ÁN: "327,34"
+  GIẢI: Phương pháp giải: ⏎ $Q_{\text{tỏa}} = Q_{\text{thu}}$. ⏎  ⏎ Lời giải: ⏎ $Q_{\text{thu}} = 0,5 \cdot 4190 \cdot (20 - 15) = 10475$ J. ⏎ $Q_{\text{tỏa}} = 0,4 \cdot c_{\text{kl}} \cdot (100 - 20) = 32 c_{\text{kl}}$. ⏎ $\Rightarrow 32 c_{\text{kl}} = 10475 \Rightarrow c_{\text{kl}} \approx 327,34$ J/kg $\cdot$ K.
+
+[CH_1787154025960_vr4z] TLN m2 · Bài 8. M · Tính số phân tử $N$, số mol $n$, khối lượng 1 phân tử $m_0 = \frac{M}{N_A}$, mật độ phân tử $\mu = \frac{N}{V}$.
+  ĐỀ: Khối lượng của một phân tử khí hydrogen là bao nhiêu gam?
+  ĐÁP ÁN: "$3{,}32 \\cdot 10^{-24}$ g"
+  GIẢI: Phương pháp giải: ⏎ Khối lượng của 1 phân tử: $m_0 = \frac{M}{N_A}$. ⏎  ⏎ Lời giải: ⏎ Khối lượng phân tử $\text{H}_2$ có $M = 2$ g/mol. ⏎ $m_0 = \frac{2}{6{,}022 \cdot 10^{23}} \approx 3{,}32 \cdot 10^{-24}$ g.
+
+[CH_1787154025960_qju1] TLN m2 · Bài 8. M · Tính số phân tử $N$, số mol $n$, khối lượng 1 phân tử $m_0 = \frac{M}{N_A}$, mật độ phân tử $\mu = \frac{N}{V}$.
+  ĐỀ: Tỉ số khối lượng phân tử nước $\text{H}_2$ O và nguyên tử cacbon 12 là bao nhiêu?
+  ĐÁP ÁN: "$1{,}5$"
+  GIẢI: Phương pháp giải: ⏎ Lấy khối lượng mol của nước chia cho khối lượng mol của cacbon 12. ⏎  ⏎ Lời giải: ⏎ Tỉ số $= \frac{18}{12} = 1{,}5$.
+
+[CH_1787154025960_6daw] TLN m2 · Bài 8. M · Tính số phân tử $N$, số mol $n$, khối lượng 1 phân tử $m_0 = \frac{M}{N_A}$, mật độ phân tử $\mu = \frac{N}{V}$.
+  ĐỀ: Số phân tử nước có trong $1$ gam nước $\text{H}_2$ O là bao nhiêu?
+  ĐÁP ÁN: "$3{,}34 \\cdot 10^{22}$"
+  GIẢI: Phương pháp giải: ⏎ $N = \frac{m}{M} N_A$. ⏎  ⏎ Lời giải: ⏎ $N = \frac{1}{18} \cdot 6{,}022 \cdot 10^{23} \approx 3{,}34 \cdot 10^{22}$ phân tử.
+
+[CH_1787155499882_iyf2] TLN m2 · Bài 9. Đ · Vận dụng trực tiếp định luật Boyle tính $p, V$ khi $T$ không đổi
+  ĐỀ: Cho một lượng khí được dãn đẳng nhiệt từ thể tích từ $4$ lít đến $8$ lít, ban đầu áp suất khí là $8\cdot 10^5$ Pa. Hỏi áp suất của khí tăng hay giảm bao nhiêu Pa?
+  ĐÁP ÁN: "400000"
+  GIẢI: Phương pháp giải: ⏎ $p_1 V_1 = p_2 V_2 \Rightarrow p_2 = \frac{p_1 V_1}{V_2}$. ⏎ Độ giảm áp suất: $\Delta p = p_1 - p_2$. ⏎  ⏎ Lời giải: ⏎ $p_2 = \frac{8\cdot 10^5 \times 4}{8} = 4\cdot 10^5$ Pa. ⏎ Áp suất giảm lượng $\Delta p = 8\cdot 10^5 - 4\cdot 10^5 = 4\cdot 10^5$ Pa $= 400000$ Pa.
+
+[CH_1787451505837_cjwu] TLN m3 · Bài 19.  · Vật lý tổng hợp
+  ĐỀ: Một sóng vô tuyến và một sóng cơ có cùng tần số, khi truyền trong không khí tốc độ hai sóng lần lượt là $300000$ km/s và $340$ m/s. Tỉ số của bước sóng giữa sóng vô tuyến và sóng cơ bằng bao nhiêu?
+  ĐÁP ÁN: "8,82.10^5"
+  GIẢI: Phương pháp giải: ⏎ Công thức tính bước sóng: $\lambda = \frac{v}{f}$. ⏎  ⏎ Lời giải: ⏎ Ta có: ⏎ - Tốc độ truyền sóng vô tuyến: $v_1 = c = 300000$ km/s $= 3.10^8$ m/s. ⏎ - Tốc độ truyền sóng cơ: $v_2 = 340$ m/s. ⏎ - Tần số hai sóng bằng nhau: $f_1 = f_2 = f$. ⏎ Tỉ số bước sóng giữa sóng vô tuyến và sóng cơ là: ⏎ $\frac{\lambda_1}{\lambda_2} = \frac{v_1/f}{v_2/f} = \frac{v_1}{v_2} = \frac{3.10^8}{340} \approx 8,82.10^
+
+[CH_1787276715808_vinh] TLN m3 · Bài 16.  · Định luật Faraday tính suất điện động e, dòng điện I, điện lượng q
+  ĐỀ: Cảm ứng từ của một từ trường đều tạo một góc $30^\circ$ với trục của một ống dây hình trụ gồm $600$ vòng dây có bán kính $4,00$ cm. Độ lớn cảm ứng từ tăng với tốc độ $85,0$ T/s trong khi hướng của nó không đổi. Tìm độ lớn suất điện động cảm ứng trong ống dây.
+  ĐÁP ÁN: "222,08"
+  GIẢI: Phương pháp giải: ⏎ $e_c = N S \frac{\Delta B}{\Delta t} \cos\alpha$. ⏎  ⏎ Lời giải: ⏎ Trục của ống dây chính là véctor pháp tuyến của mặt phẳng các vòng dây, do đó $\alpha = 30^\circ$. ⏎ Diện tích tiết diện ống dây: $S = \pi r^2 = \pi \cdot (0,04)^2 = 1,6\pi \cdot 10^{-3}\ \text{m}^2$. ⏎ Suất điện động cảm ứng: ⏎ $e_c = 600 \cdot (1,6\pi \cdot 10^{-3}) \cdot 85,0 \cdot \cos 30^\circ \approx 222,08$ V.
+
+[CH_1787055802832_zpa0] TLN m2 · Bài 5. N · Bài toán biến đổi nhiệt đa giai đoạn
+  ĐỀ: Một thỏi nhôm có khối lượng $500$ g ở $20^\circ$ C. Tính nhiệt lượng $Q$ (tính ra đơn vị kJ) cần cung cấp để làm nóng chảy hoàn toàn thỏi nhôm này. Nhôm nóng chảy ở $658^\circ$ C, nhiệt nóng chảy riêng của nhôm là $3{,}9.10^5$ J/kg và nhiệt dung riêng của nhôm là $880$ J/(kg.K).
+  ĐÁP ÁN: "475,72"
+  GIẢI: Phương pháp giải: ⏎ - Nhiệt lượng làm tăng nhiệt độ của nhôm từ $20^\circ$ C lên nhiệt độ nóng chảy $658^\circ$ C: ⏎ $Q_1 = m \cdot c \cdot (t_{\text{nc}} - t_1)$ ⏎ - Nhiệt lượng làm nóng chảy hoàn toàn nhôm ở $658^\circ$ C: ⏎ $Q_2 = \lambda \cdot m$ ⏎ - Tổng nhiệt lượng cần cung cấp: $Q = Q_1 + Q_2$. ⏎  ⏎ Lời giải: ⏎ Đổi khối lượng: $m = 500$ g $= 0{,}5$ kg. ⏎ Nhiệt lượng cần để làm nóng thỏi nhôm từ $20^\circ$ C lê
+
+[CH_1787154025960_k7nz] TLN m2 · Bài 8. M · Tính số phân tử $N$, số mol $n$, khối lượng 1 phân tử $m_0 = \frac{M}{N_A}$, mật độ phân tử $\mu = \frac{N}{V}$.
+  ĐỀ: Số phân tử $\text{CO}_2$ hình thành khi cho $64$ gam $\text{O}_2$ phản ứng vừa đủ với cacbon (C) là bao nhiêu?
+  ĐÁP ÁN: "$1{,}204 \\cdot 10^{24}$"
+  GIẢI: Phương pháp giải: ⏎ Phương trình hóa học: C $+ \text{O}_2 \rightarrow \text{CO}_2$. ⏎ $n_{\text{CO}_2} = n_{\text{O}_2} = \frac{m_{\text{O}_2}}{M_{\text{O}_2}}$. ⏎ $N = n_{\text{CO}_2} \cdot N_A$. ⏎  ⏎ Lời giải: ⏎ $n_{\text{O}_2} = \frac{64}{32} = 2$ mol $\Rightarrow n_{\text{CO}_2} = 2$ mol. ⏎ Số phân tử $\text{CO}_2$ hình thành là: ⏎ $N = 2 \cdot 6{,}022 \cdot 10^{23} \approx 1{,}204 \cdot 10^{24}$ phân tử.
+
+[CH_1787384951279_vepk] TLN m3 · Bài 16.  · Suất điện động trong thanh dẫn chuyển động
+  ĐỀ: Đoạn dây dẫn MN như hình bên dưới dài $0,2$ m đang bị kéo về bên phải với tốc độ $2$ m/s. Biết $B = 1,2$ T, điện trở của MN là $100\ \Omega$, bỏ qua điện trở các thành phần còn lại của mạch điện. Tìm độ lớn lực cần thiết để kéo thanh ở tốc độ không đổi này (bỏ qua ma sát) theo đơn vị N. ⏎  ⏎ ![Hình ảnh](https://xnnwrymrcuaqyfxhsmer.supabase.co/storage/v1/object/public/lesson_images/editor_images/5gss6916xeg_178738481
+  ĐÁP ÁN: "1,152.10^-3"
+  GIẢI: Phương pháp giải: ⏎ - Suất điện động cảm ứng sinh ra trong thanh: $e_c = B v l$. ⏎ - Cường độ dòng điện cảm ứng: $I = \frac{e_c}{R} = \frac{B v l}{R}$. ⏎ - Để thanh chuyển động đều thì lực kéo phải cân bằng với lực từ cản trở chuyển động: $F = F_t = I l B = \frac{B^2 l^2 v}{R}$. ⏎  ⏎ Lời giải: ⏎ - Suất điện động cảm ứng xuất hiện trên đoạn dây MN: ⏎ $e_c = B v l = 1,2 \cdot 2 \cdot 0,2 = 0,48$ V. ⏎ - Cường độ dòng đi
+
+════ 3. NLC HAI PHƯƠNG ÁN GIỐNG NHAU ════
+
+[CH_1787191330545_rlc9] NLC m2 · Bài 11.  · Vận dụng phương trình Clapeyron – Mendeleev
+  ĐỀ: Có $4,4$ gam khí $\text{CO}_2$ ở áp suất $2$ atm có thể tích $1,64$ lít. Nhiệt độ của khối khí là
+  A. $400$ K.
+  B. $400^\circ$ C.
+  C. $400$ K.
+  D. $600^\circ$ C.
+  ĐÁP ÁN: "A"
+  GIẢI: Phương pháp giải: ⏎ Áp dụng phương trình Clapeyron – Mendeleev $T = \frac{p V M}{m R}$. ⏎  ⏎ Lời giải: ⏎ $m = 4,4$ g, $M = 44$ g/mol. ⏎ $T = \frac{2 \cdot 1,64 \cdot 44}{4,4 \cdot 0,0821} = 400$ K.
+
+[CH_1787385363221_yyns] NLC m1 · Bài 17.  · Xác định thông số từ phương trình u, i, e
+  ĐỀ: Suất điện động $e = 100\cos(100\pi t + \pi)$ (V) có giá trị cực đại là
+  A. $50$ V.
+  B. $100$ V.
+  C. $100$ V.
+  D. $50$ V.
+  ĐÁP ÁN: "C"
+  GIẢI: Phương pháp giải: ⏎ Phương trình của suất điện động xoay chiều có dạng tổng quát là $e = E_0\cos(\omega t + \varphi)$, trong đó $E_0$ là giá trị cực đại. ⏎  ⏎ Lời giải: ⏎ Từ phương trình $e = 100\cos(100\pi t + \pi)$ (V), ta có giá trị cực đại của suất điện động là $E_0 = 100$ V. ⏎ Chọn C.
+
+[CH_1787191062146_cs2z] NLC m3 · Bài 11.  · Bài toán biến đổi trạng thái tổng quát khi cả 3 thông số $(p, V, T)$ thay đổi
+  ĐỀ: Một lượng khí lúc đầu có các thông số trạng thái là $p_1, V_1, T_1$. Lượng khí biến đổi đẳng áp đến thể tích tăng hai lần thì biến đổi đẳng tích, sao cho nhiệt độ bằng 1,5 lần nhiệt độ ở cuối quá trình đẳng áp. Áp suất và nhiệt độ của khí ở cuối quá trình là
+  A. $p_1, 2T_1$.
+  B. $1,5p_1, 3T_1$.
+  C. $1,5p_1, 1,5T_1$.
+  D. $1,5p_1, 3T_1$.
+  ĐÁP ÁN: "B"
+  GIẢI: Phương pháp giải: ⏎ Sử dụng tính chất các quá trình đẳng áp và đẳng tích. ⏎  ⏎ Lời giải: ⏎ - Trạng thái 1: $p_1, V_1, T_1$. ⏎ - Quá trình 1 $\rightarrow$ 2 (đẳng áp): $p_2 = p_1, V_2 = 2V_1 \Rightarrow \frac{V_1}{T_1} = \frac{2V_1}{T_2} \Rightarrow T_2 = 2T_1$. ⏎ - Quá trình 2 $\rightarrow$ 3 (đẳng tích): $V_3 = V_2 = 2V_1, T_3 = 1,5T_2 = 1,5 \cdot 2T_1 = 3T_1$. ⏎ Vì là đẳng tích nên $\frac{p_2}{T_2} = \frac{p_3}{T_3} \Rightarrow p_3 = p_2 \cdot \frac{T_3}{T_2} = p_1 \cdot 1,5 = 1,5p_1$. ⏎ Vậy áp suất và nhiệt độ cuối cùng là $1,5p_1$ và $3T_1$.
+
+[CH_1787549492341_bhfn] NLC m3 · Bài 23.  · Đọc và phân tích đồ thị phóng xạ (đồ thị hàm mũ, đồ thị bán logarit biểu diễn số hạt/khối lượng/độ phóng xạ)
+  ĐỀ: Hai mẫu chất phóng xạ: Mẫu 1 chứa hai chất phóng xạ (1) và (2), Mẫu 2 chứa hai chất phóng xạ (3) và (4). Tại thời điểm $t = 0$, số hạt nhân của hai chất phóng xạ trong một nhóm là bằng nhau. Gọi $N_1, N_2, N_3$ và $N_4$ lần lượt là số hạt nhân của chất 1, 2, 3 và 4 ở cùng một thời điểm $t$. Hình vẽ là đồ thị phụ thuộc thời gian của $N_1/N_2$ (đường 1) và $N_3/N_4$ (đường 2). ⏎  ⏎ ![Hình ảnh](https://xnnwrymrcuaqyfxhsmer.supabase.co/storage/v1/object/public/lesson_images/editor_images/2zj8nfp1esl_1787549393196.jpg) ⏎  ⏎ Biểu thức nào sau đây là đúng?
+  A. $A + B = 2,21$.
+  B. $A + B = 0,61$.
+  C. $A + B = 0,61$.
+  D. $A + B = 0,81$.
+  ĐÁP ÁN: "A"
+  GIẢI: Phương pháp giải: ⏎ Thiết lập tỉ số số hạt theo thời gian: $\frac{N_1}{N_2} = e^{(\lambda_2 - \lambda_1)t}$ và $\frac{N_3}{N_4} = e^{(\lambda_4 - \lambda_3)t}$. ⏎  ⏎ Lời giải: ⏎ Ta có $\frac{N_1}{N_2} = e^{(\lambda_2 - \lambda_1)t}$. ⏎ - Tại $t = 2t_0$: $\frac{N_1}{N_2} = 2 = e^{(\lambda_2 - \lambda_1)2t_0}$. ⏎ - Tại $t = t_0$: $A = e^{(\lambda_2 - \lambda_1)t_0} = \sqrt{2} \approx 1,414$. ⏎ Tương tự, $\frac{N_3}{N_4} = e^{(\lambda_4 - \lambda_3)t}$. ⏎ - Tại $t = 2t_0$: $\frac{N_3}{N_4} = 0,5 = e^{(\lambda_4 - \lambda_3)2t_0}$. ⏎ - Tại $t = t_0$: $B = e^{(\lambda_4 - \lambda_3)t_0} = \frac{1}{\sqrt{2}} \approx 0,707$. ⏎ Tổng giá trị $A + B = \sqrt{2} + \frac{1}{\sqrt{2}} = \frac{3}{\sqrt{2}}
+
+════ 4. DS ĐÁP ÁN "SSĐ" ════
+
+[CH_1787191330545_3g1n] DS m3 · Bài 11.  · Bài toán biến đổi trạng thái tổng quát khi cả 3 thông số $(p, V, T)$ thay đổi
+  ĐỀ: Có $10$ gam khí oxygen ở $47^\circ$ C, áp suất $2,1$ at. Sau khi đun nóng đẳng áp thể tích khí là $10$ lít.
+  A. Thể tích khí trước khi đun là $6,4$ lít.
+  B. Nhiệt độ sau khi đun là $527$ K.
+  C. Khối lượng riêng của khí trước khi đun là $2,5$ g/lít.
+  D. 
+  ĐÁP ÁN: "SSĐ"
+  GIẢI: Phương pháp giải: ⏎ - Thể tích $V_1 = \frac{m R T_1}{M p_1}$. ⏎ - Đẳng áp: $\frac{V_1}{T_1} = \frac{V_2}{T_2}$. ⏎ - Khối lượng riêng $\rho_1 = \frac{m}{V_1}$. ⏎  ⏎ Lời giải: ⏎ $T_1 = 47 + 273 = 320$ K. ⏎ Thể tích ban đầu $V_1 = \frac{10}{32} \cdot \frac{0,0821 \cdot 320}{2,1} \approx 3,91$ lít $\approx 4$ lít. ⏎ a) $V_1 \approx 4$ lít $\neq 6,4$ lít $\Rightarrow$ Sai. ⏎ b) Nhiệt độ sau khi đun $T_2 = T_1 \cdot \frac{V_2}{V_1} = 320 \cdot \frac{10}{4} = 800$ K $\neq 527$ K $\Rightarrow$ Sai. ⏎ c) Khối lượng riêng trước khi đun $\rho_1 = \frac{m}{V_1} = \frac{10}{4} = 2,5$ g/lít $\Rightarrow$ Đúng.
+
+════ 5. THIẾU DẤU $ ════
+
+[CH_1787130555318_ceix] DS m3 · Bài 6. N · Bài toán kết hợp đun nóng và hoá hơi
+  ĐỀ: Khi đun một khối nước đá từ nhiệt độ ban đầu đến khi hóa hơi, một người ghi lại được sự phụ thuộc của nhiệt lượng mà khối nước đá nhận được và độ tăng nhiệt độ như đồ thị hình bên. Lấy nhiệt nóng chảy của nước đá là $3,3\cdot 10^5$ J/kg, nhiệt dung riêng gần đúng của nước là $4200$ J/kg $\cdot$ K và của nước đá là $1800$ J/kg $\cdot$ K, nhiệt hóa hơi của nước là $2,3\cdot 10^6\ \text{J/kg}. ⏎  ⏎ ![Hình ảnh](https://xnnwrymrcuaqyfxhsmer.supabase.co/storage/v1/object/public/lesson_images/editor_images/m6bb98lt0gn_1787130549207.jpg)
+  A. Tại điểm B trên đồ thị, nước đá đã chuyển hoàn toàn sang thể lỏng.
+  B. Trong giai đoạn DE trên đồ thị đang diễn ra quá trình bay hơi.
+  C. Khối lượng nước đá là $0,5$ kg.
+  D. Trong giai đoạn AB trên đồ thị, khối nước đá đã nhận nhiệt lượng là $9$ kJ.
+  ĐÁP ÁN: "SĐĐĐ"
+  GIẢI: Phương pháp giải: ⏎ 1. Phân tích từng giai đoạn trên đồ thị: AB (tăng nhiệt độ đá), BC (nóng chảy), CD (tăng nhiệt độ nước), DE (hóa hơi). ⏎ 2. $Q_C = m c_{đá} \cdot 10 + m \lambda = 174$ kJ. ⏎  ⏎ Lời giải: ⏎ a) Sai, tại B nước đá bắt đầu nóng chảy, đến C mới tan hoàn toàn. ⏎ c) $1800 \cdot 10 \cdot m + 330000 m = 174000 \implies 348000 m = 174000 \implies m = 0,5$ kg (Đúng). ⏎ b) Giai đoạn DE nhiệt độ dừng ở $100^\circ$ C nên là quá trình bay hơi (hóa hơi) (Đúng). ⏎ d) $Q_{AB} = m c_{đá} \Delta t = 0,5 \cdot 1800 \cdot 10 = 9000$ J $= 9$ kJ (Đúng).
+
+[CH_1787135757516_p7ka] TLN m3 · Bài 10.  · Bài toán giọt nước/thủy ngân trong ống mao dẫn nằm ngang thông khí quyển.
+  ĐỀ: Một ống thủy tinh có chiều cao $30$ cm, một đầu kín và một đầu ngăn bởi giọt thủy ngân. Nếu nhiệt độ trong ống thủy tinh tăng từ $20^\circ$ C lên $40^\circ$ C, chiều cao của cột không khí bên trong ống sau khi tăng nhiệt độ tăng lên bao nhiêu phần trăm (kết quả làm tròn 1 số thập phân)?
+  ĐÁP ÁN: "6,8"
+  GIẢI: Phương pháp giải: ⏎ Tỉ lệ chiều cao cột khí tỉ lệ thuận với nhiệt độ tuyệt đối: $\frac{l_2}{l_1} = \frac{T_2}{T_1}$. ⏎  ⏎ Lời giải: ⏎ $T_1 = 20 + 273 = 293$ K ⏎ $T_2 = 40 + 273 = 313$ K ⏎ Phần trăm tăng chiều cao: ⏎ \%\Delta l = \frac{T_2 - T_1}{T_1} \cdot 100\% = \frac{313 - 293}{293} \cdot 100\% = \frac{20}{293} \cdot 100\% \approx 6{,}8\%$.
+
+════ 6. DANH MỤC RỖNG ════
+  e2b6554d-5954-4462-8bd4-cd322652ae8a · Chương 1.  · Bài 2. N · Đọc đồ thị p - V
+  e7250104-3d36-4dec-8af5-6e71493b35b4 · Chương 1.  · Ôn tập c · Vật lý tổng hợp
+  eda7a87c-7263-4a4c-9f6e-e8f5bbe13203 · Chương 2.  · Bài 13.  · Hỗn hợp khí và bình thông nhau
+  7cafc3b2-b403-4baa-94d0-841eee9fa96d · Chương 2.  · Bài 13.  · Khinh khí cầu / Bóng thám không & Lực đẩy Ác-si-mét
+  524abeee-1856-4332-965f-b7b09596ba72 · Chương 3.  · Bài 18.  · Truyền tải với công suất tiêu thụ không đổi
+  eec46918-271d-4bd3-9bbc-497cf94b2aca · Chương 3.  · Ôn tập c · Vật lý tổng hợp
+  6aaf95d9-c37d-4ebe-928b-fb42d97783cb · Chương 4.  · Bài 21.  · Lực hạt nhân (lực tương tác mạnh) và bán kính tác dụng
+  5de0f1c7-2fff-4ca1-8781-7e08061c836d · Chương 2.  · Bài 13.  · Đồ thị biến đổi tuyến tính & Cực trị nhiệt độ $T_{max}$
+  37d2bfa6-3c76-4012-aa98-172c0f582c6e · Chương 4.  · Bài 24.  · Phản ứng phân hạch và phản ứng nhiệt hạch (tổng hợp hạt nhân): điều kiện, đặc điểm và năng lượng tỏa ra
+  f986a6ac-4b7e-4038-87da-9452dbd3ffe8 · Chương 4.  · Bài 25.  · Bài toán tổng hợp năng lượng liên kết, độ hụt khối và năng lượng phản ứng hạt nhân
+  d791dab2-a8fc-467b-8e9c-dc9ad2897f03 · Chương 4.  · Bài 25.  · Bài toán tổng hợp về phóng xạ: số hạt phân rã, số hạt nhân con tạo thành, tỉ số giữa số hạt nhân con và hạt nhân mẹ
+  f8368c82-e1d6-47b0-9486-ecbc999416ce · Chương 4.  · Bài 25.  · Bài toán bảo toàn động lượng và năng lượng trong phân rã và phản ứng hạt nhân (góc lệch, vận tốc, động năng các hạt)
+  3144d503-599e-4c46-971b-17879d76d913 · Chương 4.  · Bài 25.  · Bài toán thực tế về năng lượng hạt nhân, công suất lò phản ứng và hiệu suất phát điện
+  5d00b54d-fac9-4829-9a40-b4040dd9994c · Chương 4.  · Bài 23.  · Bài toán tổng hợp về phóng xạ: số hạt phân rã, số hạt nhân con tạo thành, tỉ số giữa số hạt nhân con và hạt nhân mẹ
